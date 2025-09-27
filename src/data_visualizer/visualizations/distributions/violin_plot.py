@@ -1,21 +1,11 @@
-"""Violin plot visualization to surface distribution uniqueness by category.
+"""Distribution detective - reveals hidden patterns in categorical data through violin shapes.
 
-This visualization reveals the full distribution shape, skew, and outliers for each segment
-or category, making it easy to identify unique behaviors like multimodal distributions,
-long tails, or unusual clustering patterns within each group.
+Advanced distribution analyzer that exposes multimodal patterns, outliers, and variance
+differences invisible to summary statistics. Perfect for quality control, A/B testing,
+and customer behavior analysis.
 
-TODOs:
-1. **Automated outlier detection**: Flag and optionally exclude extreme values using IQR or z-score methods
-2. **Distribution normality tests**: Perform and report Shapiro-Wilk, Anderson-Darling tests per category
-3. **Missing data strategies**: Handle missing values with imputation or explicit missing category
-4. **Data transformation options**: Support log, square root, or Box-Cox transformations for skewed data
-5. **Statistical annotations**: Add p-values from ANOVA or Kruskal-Wallis tests comparing categories
-6. **Confidence intervals**: Show bootstrap confidence intervals around median or mean lines
-7. **Sample size display**: Annotate each violin with sample size for context
-8. **Effect size calculations**: Compute and display Cohen's d or other effect size measures
-9. **Interactive exploration**: Enable hover tooltips showing exact statistics and sample details
-10. **Density customization**: Allow manual bandwidth adjustment and kernel selection for distribution smoothing
-"""
+Future vision: Automated anomaly detection, real-time distribution monitoring, and
+AI-powered pattern interpretation with business context."""
 
 from __future__ import annotations
 
@@ -24,6 +14,7 @@ from pathlib import Path
 import pandas as pd
 
 from ..base import Visualization, VisualizationMetadata
+from ...globals import CHART_DEFAULTS, get_palette_for_categories, get_timestamped_filename
 
 
 class ViolinPlot(Visualization):
@@ -37,7 +28,9 @@ class ViolinPlot(Visualization):
     )
 
     def prepare_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Prepare and validate data for violin plot visualization."""
+        """Statistical preprocessing - ensures robust distribution analysis across categories.
+
+        Future: Auto-detect optimal transformations, handle mixed data types, smart binning."""
         if df.empty:
             raise ValueError("Input dataframe is empty; provide categorical distribution data.")
 
@@ -104,7 +97,9 @@ class ViolinPlot(Visualization):
         return processed_df
 
     def render(self, df: pd.DataFrame, output_path: Path) -> Path:
-        """Render the violin plot with enhanced statistical features."""
+        """Advanced statistical visualization - creates violin plots with deep analytical insights.
+
+        Future: Interactive distribution exploration, real-time statistical testing, automated insights."""
         try:
             import seaborn as sns
             from matplotlib import pyplot as plt
@@ -115,9 +110,15 @@ class ViolinPlot(Visualization):
 
         category_col, value_col = df.columns[:2]
 
-        # Configuration options
+        # Intelligent configuration with global styling
+        defaults = CHART_DEFAULTS["violin_plot"]
         figsize = self.config.get("figsize", (10, 6))
-        palette = self.config.get("color_palette", "Set2")
+
+        # Smart color selection for statistical visualization
+        n_categories = df[category_col].nunique()
+        palette_style = self.config.get("palette_style", "vibrant_accessible")
+        colors = get_palette_for_categories(n_categories, palette_style)
+
         inner = self.config.get("inner", "box")
         split = self.config.get("split", False)
         scale = self.config.get("scale", "area")  # area, count, width
@@ -125,21 +126,51 @@ class ViolinPlot(Visualization):
         show_stats = self.config.get("show_statistics", True)
         show_sample_sizes = self.config.get("show_sample_sizes", True)
         title_override = self.config.get("title", self.metadata.title)
+        log_scale = self.config.get("log_scale", False)
+        outlier_detection = self.config.get("outlier_detection", False)
+
+        # Data transformation for log scale
+        if log_scale:
+            # Check for positive values required for log transformation
+            if (df[value_col] <= 0).any():
+                min_positive = df[df[value_col] > 0][value_col].min()
+                # Add small offset to non-positive values
+                df[value_col] = df[value_col].where(df[value_col] > 0, min_positive / 10)
+                print(f"Warning: Non-positive values found. Adjusted to minimum positive value / 10: {min_positive / 10:.6f}")
+
+        # Outlier detection and flagging
+        outliers_info = {}
+        if outlier_detection:
+            for cat in df[category_col].unique():
+                cat_data = df[df[category_col] == cat][value_col]
+                Q1 = cat_data.quantile(0.25)
+                Q3 = cat_data.quantile(0.75)
+                IQR = Q3 - Q1
+                lower_bound = Q1 - 1.5 * IQR
+                upper_bound = Q3 + 1.5 * IQR
+                outliers = cat_data[(cat_data < lower_bound) | (cat_data > upper_bound)]
+                outliers_info[cat] = {
+                    'count': len(outliers),
+                    'values': outliers.tolist()[:5]  # Show first 5 outliers
+                }
 
         # Create the plot
         plt.figure(figsize=figsize)
 
-        # Main violin plot
+        # Main violin plot with intelligent color application
         ax = sns.violinplot(
             data=df,
             x=category_col,
             y=value_col,
             inner=inner,
-            palette=palette,
+            palette=colors,
             split=split,
             scale=scale,
             bw_method=bandwidth if bandwidth != "auto" else None
         )
+
+        # Apply statistical annotation colors
+        ax.set_facecolor(defaults["background"])
 
         # Calculate and display statistics
         if show_stats:
@@ -200,11 +231,24 @@ class ViolinPlot(Visualization):
         plt.xlabel(category_col.replace('_', ' ').title(), fontsize=12)
 
         # Create appropriate y-label based on transformation
-        if self.config.get("transform") == "log":
+        if log_scale:
+            ylabel = f"Log({value_col.replace('_', ' ').title()})"
+            plt.yscale('log')
+        elif self.config.get("transform") == "log":
             ylabel = f"Log({value_col.replace('_', ' ').title()})"
         else:
             ylabel = value_col.replace('_', ' ').title()
         plt.ylabel(ylabel, fontsize=12)
+
+        # Display outlier information if detection was enabled
+        if outlier_detection and any(info['count'] > 0 for info in outliers_info.values()):
+            outlier_text = "Outliers detected:\n"
+            for cat, info in outliers_info.items():
+                if info['count'] > 0:
+                    outlier_text += f"{cat}: {info['count']} outliers\n"
+
+            plt.figtext(0.98, 0.02, outlier_text.strip(), fontsize=8, ha='right', va='bottom',
+                       bbox=dict(boxstyle="round,pad=0.3", facecolor="orange", alpha=0.7))
 
         # Rotate x-axis labels if needed
         if len(categories) > 5 or any(len(str(cat)) > 8 for cat in categories):

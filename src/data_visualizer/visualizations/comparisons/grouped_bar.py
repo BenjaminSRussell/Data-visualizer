@@ -1,20 +1,10 @@
-"""Grouped bar chart visualization using seaborn.
+"""Comparative grouping through clustered bars - reveals performance gaps across categories.
 
-This visualization compares sub-categories within discrete groups, making it easy to spot
-relative performance differences between peer categories. Each group becomes a cluster of
-bars, where each bar represents a sub-category's value.
+Smart comparison engine that transforms grouped data into visual stories about relative
+performance. Perfect for spotting winners/losers across regions, time periods, or segments.
 
-TODOs:
-1. **Custom aggregation functions**: Support mean, median, percentiles via config instead of just sum
-2. **Data normalization options**: Add percentage-of-group-total and z-score normalization modes
-3. **Missing data handling**: Implement strategies for incomplete category-group combinations
-4. **Outlier detection**: Flag and optionally exclude extreme values that skew comparisons
-5. **Advanced sorting**: Sort groups by total value, max category, or custom criteria
-6. **Error bars and confidence intervals**: Show variability when data represents samples
-7. **Color palette management**: Support custom palettes, accessibility modes, and brand colors
-8. **Label optimization**: Auto-truncate long labels, rotate for space, add tooltips
-9. **Interactive drill-down**: Click groups to filter detailed views, hover for exact values
-10. **Summary table export**: Generate comparison matrices showing top/bottom performers per group
+Future thinking: Interactive drill-downs, statistical significance testing, automatic
+insight generation, and dynamic grouping based on similarity patterns.
 """
 
 from __future__ import annotations
@@ -25,6 +15,7 @@ from typing import Iterable
 import pandas as pd
 
 from ..base import Visualization, VisualizationMetadata
+from ...globals import CHART_DEFAULTS, get_palette_for_categories, get_timestamped_filename
 
 
 class GroupedBarChart(Visualization):
@@ -38,7 +29,9 @@ class GroupedBarChart(Visualization):
     )
 
     def prepare_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Prepare and validate data for grouped bar chart visualization."""
+        """Data wrangling and validation - ensures clean categorical groupings for comparison.
+
+        Future: Auto-detect optimal groupings, handle temporal data, smart category merging."""
         if df.empty:
             raise ValueError("Input dataframe is empty; provide grouped categorical data.")
 
@@ -95,7 +88,9 @@ class GroupedBarChart(Visualization):
         return processed_df
 
     def render(self, df: pd.DataFrame, output_path: Path) -> Path:
-        """Render the grouped bar chart with enhanced customization options."""
+        """Visual rendering engine - transforms data into compelling comparison stories.
+
+        Future: Real-time interactivity, animated transitions, AI-generated insights."""
         try:
             import seaborn as sns
             from matplotlib import pyplot as plt
@@ -105,13 +100,21 @@ class GroupedBarChart(Visualization):
 
         group_col, category_col, value_col = df.columns[:3]
 
-        # Configuration options
+        # Configuration with global color intelligence
+        defaults = CHART_DEFAULTS["grouped_bar"]
         figsize = self.config.get("figsize", (10, 6))
-        palette = self.config.get("color_palette", "colorblind")
+
+        # Smart palette selection based on data complexity
+        n_categories = df[df.columns[1]].nunique()
+        palette_style = self.config.get("palette_style", "corporate_safe")
+        colors = get_palette_for_categories(n_categories, palette_style)
+
         aggregation = self.config.get("aggregation", "sum")
         sort_by = self.config.get("sort_by", None)
         title_override = self.config.get("title", self.metadata.title)
         show_values = self.config.get("show_values", False)
+        normalize = self.config.get("normalize", False)
+        chart_type = self.config.get("chart_type", "grouped")  # "grouped", "stacked", "percent_stacked"
 
         # Aggregation function mapping
         agg_funcs = {
@@ -123,6 +126,23 @@ class GroupedBarChart(Visualization):
         }
 
         estimator = agg_funcs.get(aggregation, sum)
+
+        # Apply normalization if requested
+        if normalize or chart_type == "percent_stacked":
+            # Group data and calculate group totals for normalization
+            grouped_data = df.groupby([group_col, category_col])[value_col].apply(estimator).reset_index()
+            group_totals = grouped_data.groupby(group_col)[value_col].sum()
+
+            # Normalize to percentages within each group
+            for group in group_totals.index:
+                mask = grouped_data[group_col] == group
+                if group_totals[group] > 0:  # Avoid division by zero
+                    grouped_data.loc[mask, value_col] = (
+                        grouped_data.loc[mask, value_col] / group_totals[group] * 100
+                    )
+
+            # Use the normalized data for plotting
+            df = grouped_data
 
         # Sort groups if requested
         if sort_by == "total_value":
@@ -136,22 +156,52 @@ class GroupedBarChart(Visualization):
         # Create the plot
         plt.figure(figsize=figsize)
 
-        # Main bar plot
-        ax = sns.barplot(
-            data=df,
-            x=group_col,
-            y=value_col,
-            hue=category_col,
-            estimator=estimator,
-            palette=palette,
-            order=group_order,
-            errorbar=self.config.get("error_bars", None)
-        )
+        # Choose plotting method based on chart type
+        if chart_type in ["stacked", "percent_stacked"]:
+            # Create stacked bar chart
+            pivot_data = df.pivot_table(
+                values=value_col,
+                index=group_col,
+                columns=category_col,
+                aggfunc=estimator,
+                fill_value=0
+            )
+
+            # Reorder based on group_order
+            pivot_data = pivot_data.reindex(group_order)
+
+            ax = pivot_data.plot(
+                kind='bar',
+                stacked=True,
+                color=colors[:len(pivot_data.columns)],
+                figsize=figsize,
+                width=0.8
+            )
+        else:
+            # Main bar plot with intelligent color application
+            ax = sns.barplot(
+                data=df,
+                x=group_col,
+                y=value_col,
+                hue=category_col,
+                estimator=estimator if not normalize else 'mean',  # Use mean for pre-aggregated normalized data
+                palette=colors,
+                order=group_order,
+                errorbar=self.config.get("error_bars", None)
+            )
+
+        # Apply global styling preferences
+        ax.set_facecolor(defaults["background"])
 
         # Customize the plot
         plt.title(title_override, fontsize=14, fontweight='bold')
         plt.xlabel(group_col.replace('_', ' ').title(), fontsize=12)
-        plt.ylabel(f"{value_col.replace('_', ' ').title()} ({aggregation})", fontsize=12)
+
+        # Update y-axis label based on normalization and chart type
+        if normalize or chart_type == "percent_stacked":
+            plt.ylabel("Percentage (%)", fontsize=12)
+        else:
+            plt.ylabel(f"{value_col.replace('_', ' ').title()} ({aggregation})", fontsize=12)
 
         # Rotate x-axis labels if needed
         if len(group_order) > 5 or any(len(str(g)) > 8 for g in group_order):
@@ -175,9 +225,13 @@ class GroupedBarChart(Visualization):
         plt.tight_layout()
         plt.subplots_adjust(right=0.85)
 
-        # Save with high DPI for quality
-        plt.savefig(output_path, dpi=300, bbox_inches='tight',
-                   facecolor='white', edgecolor='none')
+        # Generate timestamped filename for unique outputs
+        timestamped_filename = get_timestamped_filename(self.metadata.key)
+        final_output_path = output_path.parent / timestamped_filename
+
+        # Save with professional quality settings
+        plt.savefig(final_output_path, dpi=300, bbox_inches='tight',
+                   facecolor=defaults["background"], edgecolor='none')
         plt.close()
 
-        return output_path
+        return final_output_path

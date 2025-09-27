@@ -7,6 +7,7 @@ Reference datasets are stored alongside their matching visualization build so us
 - `comparison_grouped_bar/` — Regional revenue split by channel.
 - `distribution_violin/` — Segment scores showcasing varied distribution shapes.
 - `relationship_cluster_scatter/` — Customer metrics for clustering demonstrations.
+- `sample_words.csv` — Ten random tokens used in tests to confirm validation errors appear when data is incompatible.
 
 When adding a new visualization:
 1. Create a subdirectory named after the visualization key.

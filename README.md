@@ -39,10 +39,14 @@ Tip: generated charts land in `outputs/<program_key>/` (ignored by git). Keep on
 
 Each catalog README restates the command, explains the dataset, and highlights potential interpretation pitfalls so new users can explore confidently.
 
+## Testing
+- Execute `PYTHONPATH=src pytest` to run smoke tests that import each visualization, render a basic output, and confirm invalid inputs raise helpful errors. Optional dependencies such as matplotlib, seaborn, and scikit-learn are loaded lazily—tests are skipped automatically if they are not installed.
+
 ## Visualization Builds at a Glance
 - **Trend Line Chart (`trend_line_chart`)**
   - Use case: Surface trend breaks and seasonality to explain when a metric behaves differently.
-  - Catalog notes: `/catalog/trend_line_chart/README.md` with ten TODOs covering multi-series overlays, anomaly callouts, interactive output, and more.
+  - **✅ NEW**: Multi-series support for comparing peer metrics, rolling averages, smart datetime formatting
+  - Catalog notes: `/catalog/trend_line_chart/README.md` with ten TODOs covering anomaly callouts, interactive output, and more.
   - Dataset: `/datasets/trend_line_chart/sample_timeseries.csv`.
 - **Grouped Bar Comparison (`comparison_grouped_bar`)**
   - Use case: Contrast sub-categories inside groups to expose standout regions or channels.

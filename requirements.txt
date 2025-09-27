@@ -1,5 +1,9 @@
-pandas
-matplotlib
-seaborn
+# Core dependencies for running the visualization catalog
+pandas>=2.0
+matplotlib>=3.7
+seaborn>=0.13
+scikit-learn>=1.4
+scipy>=1.11
 
-scikit-learn
+# Tooling for local development and smoke tests
+pytest>=7.4
