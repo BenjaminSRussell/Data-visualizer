@@ -1,0 +1,1 @@
+"""Trend-focused visualization modules."""
