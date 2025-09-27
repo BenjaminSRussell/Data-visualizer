@@ -1,4 +1,17 @@
-"""Simple line chart visualization using matplotlib."""
+"""Simple line chart visualization using matplotlib.
+
+TODOs:
+1. Support multiple value columns to compare peer metrics on the same timeline.
+2. Add rolling-average and seasonal decomposition overlays for noisy series.
+3. Highlight detected anomalies or regime changes directly on the chart.
+4. Accept irregular time intervals and resample to user-defined frequencies.
+5. Provide automatic axis formatting for hourly/daily/weekly granularities.
+6. Enable interactive output (Plotly/Altair) for hover inspection of points.
+7. Offer export of aggregated statistics (trend slope, CAGR, breakpoints).
+8. Integrate confidence bands for forecasts when a model is supplied.
+9. Allow faceting by category to split unique trend profiles side-by-side.
+10. Document best practices for handling missing periods and time zone normalization.
+"""
 
 from __future__ import annotations
 

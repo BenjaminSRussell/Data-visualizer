@@ -1,4 +1,17 @@
-"""Grouped bar chart visualization using seaborn."""
+"""Grouped bar chart visualization using seaborn.
+
+TODOs:
+1. Accept custom aggregation functions (mean, median) via configuration.
+2. Add confidence interval/error bars to convey variability within groups.
+3. Enable sorting of groups by total value or max subcategory.
+4. Provide optional data normalization to show share of group total.
+5. Offer stacked/100% stacked variants for dense categorical sets.
+6. Introduce drill-down capability that filters on a selected group.
+7. Support color palette overrides and accessibility-safe defaults.
+8. Auto-truncate long category labels and expose tooltips in interactive mode.
+9. Export summary tables comparing highest and lowest performers per group.
+10. Warn users when group/category cardinality exceeds readability thresholds.
+"""
 
 from __future__ import annotations
 

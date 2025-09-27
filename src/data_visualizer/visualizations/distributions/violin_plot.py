@@ -1,4 +1,17 @@
-"""Violin plot visualization to surface distribution uniqueness by category."""
+"""Violin plot visualization to surface distribution uniqueness by category.
+
+TODOs:
+1. Allow bandwidth and kernel adjustments to suit small or large samples.
+2. Provide log-scale option for highly skewed distributions.
+3. Overlay quartile/median lines and summary statistics in the legend.
+4. Add jittered raw points (swarmplot) for low sample counts.
+5. Support secondary facet dimension for contextual comparisons (e.g., region).
+6. Include automatic detection of heavy tails or bimodality with textual notes.
+7. Offer histogram/boxplot hybrids when stakeholders prefer familiar shapes.
+8. Implement density difference highlights to show how one segment deviates from another.
+9. Export segment-specific descriptive statistics tables alongside the chart.
+10. Warn when category sample size falls below a recommended minimum.
+"""
 
 from __future__ import annotations
 

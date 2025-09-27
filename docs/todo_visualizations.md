@@ -1,80 +1,65 @@
 # Visualization Program TODOs
 
-These notes outline the next steps, goals, and potential pitfalls for each visualization program so new contributors see where differentiation work is headed.
+Source of truth for program-specific enhancements. Each section mirrors the ten-item backlog captured in the catalog README and module docstring so contributors can pick up work quickly.
 
 ## trend_line_chart — Line Chart
-- **Goals**
-  - Highlight temporal shifts that make a metric feel unique compared with its historical baseline.
-  - Support multi-series comparisons to spot diverging trajectories.
-- **TODOs**
-  - Allow optional grouping/overlay to plot multiple series with legend support.
-  - Add smoothing or rolling-mean option to reduce noise when data is volatile.
-  - Provide automatic detection of breakpoints or anomalies to call out unusual periods.
-- **Approach Ideas**
-  - Extend `prepare_data` to accept a config describing `time_column`, `value_columns`, and aggregation windows.
-  - Integrate `pandas` resampling for datasets that arrive in irregular intervals.
-- **Considerations & Risks**
-  - Trend charts can mislead if time zones or missing periods are not handled; document preprocessing expectations clearly.
-  - Over-plotting many series can reduce readability—consider fallback to facetting.
+- Support multiple value columns to compare peer metrics on the same timeline.
+- Add rolling-average and seasonal decomposition overlays for noisy series.
+- Highlight detected anomalies or regime changes directly on the chart.
+- Accept irregular time intervals and resample to user-defined frequencies.
+- Provide automatic axis formatting for hourly/daily/weekly granularities.
+- Enable interactive output (Plotly/Altair) for hover inspection of points.
+- Offer export of aggregated statistics (trend slope, CAGR, breakpoints).
+- Integrate confidence bands for forecasts when a model is supplied.
+- Allow faceting by category to split unique trend profiles side-by-side.
+- Document best practices for handling missing periods and time zone normalization.
 
 ## comparison_grouped_bar — Grouped Bar Chart
-- **Goals**
-  - Compare sub-categories inside each group to expose which combinations are exceptional.
-  - Offer insight into relative share differences across segments.
-- **TODOs**
-  - Accept custom aggregation functions (mean, median) instead of hard-coded sums.
-  - Add support for confidence intervals/error bars to show variability.
-  - Enable sorting of groups by a key metric so the most important differences surface first.
-- **Approach Ideas**
-  - Use `seaborn.barplot` parameters for estimator and `ci`; expose those via config.
-  - Consider stacked or normalized variants when group counts grow large.
-- **Considerations & Risks**
-  - Performance may degrade with very wide categorical data; warn about trimming categories.
-  - Colors must stay colorblind-friendly if more hues are added—define a central palette.
+- Accept custom aggregation functions (mean, median) via configuration.
+- Add confidence interval/error bars to convey variability within groups.
+- Enable sorting of groups by total value or max subcategory.
+- Provide optional data normalization to show share of group total.
+- Offer stacked/100% stacked variants for dense categorical sets.
+- Introduce drill-down capability that filters on a selected group.
+- Support color palette overrides and accessibility-safe defaults.
+- Auto-truncate long category labels and expose tooltips in interactive mode.
+- Export summary tables comparing highest and lowest performers per group.
+- Warn users when group/category cardinality exceeds readability thresholds.
 
 ## distribution_violin — Category Violin Plot
-- **Goals**
-  - Reveal distribution shapes and tails that indicate unique behaviors inside each category.
-  - Quantify how much variance or skew differentiates segments.
-- **TODOs**
-  - Offer toggles for log scaling and bandwidth tweaks for small samples.
-  - Add overlay of summary statistics (median, quartiles) in the legend for quick interpretation.
-  - Provide optional facet-by-secondary-dimension to compare distributions across contexts (e.g., region).
-- **Approach Ideas**
-  - Leverage `seaborn.violinplot` parameters (`scale`, `bw`) driven by config.
-  - Use `sns.swarmplot` overlay for showing individual observations when sample sizes are modest.
-- **Considerations & Risks**
-  - Violin plots can mislead with very small datasets; add guidance on minimum sample sizes.
-  - Faceting multiplies charts quickly—ensure output size handles multiple panels without cramming.
+- Allow bandwidth and kernel adjustments to suit small or large samples.
+- Provide log-scale option for highly skewed distributions.
+- Overlay quartile/median lines and summary statistics in the legend.
+- Add jittered raw points (swarmplot) for low sample counts.
+- Support secondary facet dimension for contextual comparisons (e.g., region).
+- Include automatic detection of heavy tails or bimodality with textual notes.
+- Offer histogram/boxplot hybrids when stakeholders prefer familiar shapes.
+- Implement density difference highlights to show how one segment deviates from another.
+- Export segment-specific descriptive statistics tables alongside the chart.
+- Warn when category sample size falls below a recommended minimum.
 
 ## relationship_cluster_scatter — Clustered Scatter
-- **Goals**
-  - Automatically differentiate cohorts through clustering and dimensionality reduction.
-  - Help analysts explain which feature combinations drive uniqueness.
-- **TODOs**
-  - Expose multiple clustering algorithms (DBSCAN, Agglomerative) and distance metrics.
-  - Provide optional tooltips/labels for top outliers to explain why they are distant.
-  - Persist model artifacts (centroids, PCA loadings) for reproducibility and storytelling.
-- **Approach Ideas**
-  - Wrap clustering choice in config; use `sklearn` pipelines to standardize features before modeling.
-  - Offer auto-tuning for `n_clusters` using silhouette scores when the user does not supply a value.
-- **Considerations & Risks**
-  - PCA obscures original feature meaning; document loadings or offer biplot overlays.
-  - High-dimensional datasets may need normalization—warn when data includes non-scaled features.
+- Add support for alternative clustering algorithms (DBSCAN, Agglomerative, Gaussian Mixture).
+- Provide feature scaling options (standardization, min-max) controlled via config.
+- Auto-select optimal `n_clusters` using silhouette or elbow heuristics when not specified.
+- Export cluster centroids and PCA component loadings for deeper analysis.
+- Enable interactive tooltips listing record identifiers and feature values.
+- Allow 3D scatter or pair plot outputs when two components are insufficient.
+- Flag outliers beyond a configurable distance threshold and label them on the chart.
+- Offer cluster stability diagnostics (e.g., repeated runs) to build trust in segmentation.
+- Log model parameters and random seeds for reproducibility.
+- Integrate optional supervised overlay (e.g., color by known label) to validate clustering quality.
 
 ## CLI Orchestration — `data_visualizer.cli`
-- **Goals**
-  - Provide a seamless experience for selecting, configuring, and running visualizations.
-  - Make it simple to catalog new programs as they are created.
-- **TODOs**
-  - Add subcommand for generating a markdown playbook entry from visualization metadata automatically.
-  - Implement validation that checks required columns exist before execution.
-  - Offer presets (YAML/JSON templates) so recurring analyses can be launched with a single command.
-- **Approach Ideas**
-  - Integrate `argparse` subparsers for commands like `run`, `generate-playbook`, `describe`.
-  - Use schema validation (`pydantic` or `cerberus`) on configuration files to catch mistakes early.
-- **Considerations & Risks**
-  - Error messages need to stay human-readable—wrap stack traces with clear tips.
-  - Supporting many optional dependencies may complicate installation; consider optional extras in `setup.cfg` later.
+- Add subcommands for `run`, `describe`, and `generate-playbook` to streamline workflows.
+- Surface visualization metadata (required columns, description, example URL) before execution.
+- Validate dataset schemas against visualization expectations with friendly error messages.
+- Support configuration files in JSON/YAML plus inline overrides via CLI flags.
+- Introduce presets that bundle dataset + visualization + config into one shortcut command.
+- Offer dry-run mode to print planned operations without generating charts.
+- Track execution logs and output paths for auditability.
+- Allow optional profiling of runtime (dataset load, prepare, render) to spot bottlenecks.
+- Provide hooks for publishing generated charts to dashboards or shared drives.
+- Package CLI as console script entry point for easier installation.
 
-Keeping these todos visible should help prioritize the unique storytelling power of each visualization and ensure future additions slot cleanly into the workflow.
+Revisit these lists alongside stakeholder feedback to keep the catalog aligned with the overarching goal: exposing what makes each dataset unique.

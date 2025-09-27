@@ -1,4 +1,17 @@
-"""Scatter plot that highlights discovered clusters to differentiate cohorts."""
+"""Scatter plot that highlights discovered clusters to differentiate cohorts.
+
+TODOs:
+1. Add support for alternative clustering algorithms (DBSCAN, Agglomerative, Gaussian Mixture).
+2. Provide feature scaling options (standardization, min-max) controlled via config.
+3. Auto-select optimal `n_clusters` using silhouette or elbow heuristics when not specified.
+4. Export cluster centroids and PCA component loadings for deeper analysis.
+5. Enable interactive tooltips listing record identifiers and feature values.
+6. Allow 3D scatter or pair plot outputs when two components are insufficient.
+7. Flag outliers beyond a configurable distance threshold and label them on the chart.
+8. Offer cluster stability diagnostics (e.g., repeated runs) to build trust in segmentation.
+9. Log model parameters and random seeds for reproducibility.
+10. Integrate optional supervised overlay (e.g., color by known label) to validate clustering quality.
+"""
 
 from __future__ import annotations
 
