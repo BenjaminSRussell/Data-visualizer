@@ -4,6 +4,7 @@ matplotlib>=3.7
 seaborn>=0.13
 scikit-learn>=1.4
 scipy>=1.11
+plotly>=5.17.0
 
 # Tooling for local development and smoke tests
 pytest>=7.4

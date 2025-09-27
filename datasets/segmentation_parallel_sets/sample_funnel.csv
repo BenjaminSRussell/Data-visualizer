@@ -1,0 +1,31 @@
+acquisition_channel,plan_type,retention_status,user_count
+Organic,Free,Churned,1200
+Organic,Free,Active,800
+Organic,Premium,Churned,150
+Organic,Premium,Active,350
+Organic,Enterprise,Churned,25
+Organic,Enterprise,Active,75
+Paid Social,Free,Churned,800
+Paid Social,Free,Active,400
+Paid Social,Premium,Churned,120
+Paid Social,Premium,Active,180
+Paid Social,Enterprise,Churned,10
+Paid Social,Enterprise,Active,30
+Email Marketing,Free,Churned,600
+Email Marketing,Free,Active,900
+Email Marketing,Premium,Churned,80
+Email Marketing,Premium,Active,320
+Email Marketing,Enterprise,Churned,15
+Email Marketing,Enterprise,Active,85
+Referral,Free,Churned,400
+Referral,Free,Active,600
+Referral,Premium,Churned,60
+Referral,Premium,Active,240
+Referral,Enterprise,Churned,20
+Referral,Enterprise,Active,80
+Direct,Free,Churned,300
+Direct,Free,Active,500
+Direct,Premium,Churned,40
+Direct,Premium,Active,160
+Direct,Enterprise,Churned,8
+Direct,Enterprise,Active,32

@@ -1,0 +1,8 @@
+{
+  "description": "Quick overview preset for fast exploratory analysis",
+  "show_values": true,
+  "show_statistics": true,
+  "show_sample_sizes": true,
+  "figsize": [8, 6],
+  "palette_style": "corporate_safe"
+}

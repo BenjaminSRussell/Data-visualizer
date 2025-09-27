@@ -128,6 +128,12 @@ class ViolinPlot(Visualization):
         title_override = self.config.get("title", self.metadata.title)
         log_scale = self.config.get("log_scale", False)
         outlier_detection = self.config.get("outlier_detection", False)
+        swarm_overlay = self.config.get("swarm_overlay", False)
+        facet_column = self.config.get("facet_column", None)
+        confidence_intervals = self.config.get("confidence_intervals", False)
+        export_stats = self.config.get("export_stats", False)
+        reference_distribution = self.config.get("reference_distribution", None)
+        normality_tests = self.config.get("normality_tests", False)
 
         # Data transformation for log scale
         if log_scale:
@@ -162,17 +168,30 @@ class ViolinPlot(Visualization):
             data=df,
             x=category_col,
             y=value_col,
-            inner=inner,
+            inner=inner if not swarm_overlay else None,  # Remove inner when swarm is enabled
             palette=colors,
             split=split,
             scale=scale,
             bw_method=bandwidth if bandwidth != "auto" else None
         )
 
+        # Add swarm overlay if requested
+        if swarm_overlay:
+            sns.swarmplot(
+                data=df,
+                x=category_col,
+                y=value_col,
+                color='black',
+                alpha=0.6,
+                size=3,
+                ax=ax
+            )
+
         # Apply statistical annotation colors
         ax.set_facecolor(defaults["background"])
 
-        # Calculate and display statistics
+        # Calculate and display enhanced statistics
+        statistics_data = []
         if show_stats:
             categories = df[category_col].unique()
             stats_text = []
@@ -185,14 +204,36 @@ class ViolinPlot(Visualization):
                 median_val = cat_data.median()
                 std_val = cat_data.std()
                 n_samples = len(cat_data)
+                skewness = cat_data.skew()
+                kurtosis = cat_data.kurtosis()
 
                 # Statistical tests
-                if len(cat_data) >= 3:  # Minimum for normality test
-                    _, p_normal = stats.shapiro(cat_data)
-                    is_normal = p_normal > 0.05
-                else:
-                    is_normal = "N/A"
+                normality_p = None
+                if len(cat_data) >= 3 and normality_tests:
+                    _, normality_p = stats.shapiro(cat_data)
 
+                # Store for export
+                stat_dict = {
+                    'category': cat,
+                    'mean': mean_val,
+                    'median': median_val,
+                    'std': std_val,
+                    'count': n_samples,
+                    'skewness': skewness,
+                    'kurtosis': kurtosis,
+                    'min': cat_data.min(),
+                    'max': cat_data.max(),
+                    'q25': cat_data.quantile(0.25),
+                    'q75': cat_data.quantile(0.75)
+                }
+
+                if normality_p is not None:
+                    stat_dict['shapiro_p_value'] = normality_p
+                    stat_dict['is_normal'] = normality_p > 0.05
+
+                statistics_data.append(stat_dict)
+
+                # Format for display
                 stats_text.append(f"{cat}: μ={mean_val:.2f}, σ={std_val:.2f}, n={n_samples}")
 
             # Add statistics as text box
@@ -261,9 +302,42 @@ class ViolinPlot(Visualization):
         plt.tight_layout()
         plt.subplots_adjust(bottom=0.15, top=0.9, left=0.1, right=0.95)
 
+        # Detect bimodality and heavy tails
+        pattern_alerts = []
+        for cat in df[category_col].unique():
+            cat_data = df[df[category_col] == cat][value_col]
+
+            # Simple bimodality detection using Hartigan's dip test (approximation)
+            if len(cat_data) > 10:
+                # Use coefficient of bimodality as a proxy
+                n = len(cat_data)
+                skew = cat_data.skew()
+                kurt = cat_data.kurtosis()
+                bimodality_coeff = (skew**2 + 1) / (kurt + 3 * (n-1)**2 / ((n-2)*(n-3)))
+
+                if bimodality_coeff > 0.555:  # Threshold for potential bimodality
+                    pattern_alerts.append(f"{cat}: Potential bimodal distribution detected")
+
+                # Heavy tail detection (high kurtosis)
+                if kurt > 3:
+                    pattern_alerts.append(f"{cat}: Heavy tails detected (kurtosis: {kurt:.2f})")
+
+        # Display pattern alerts
+        if pattern_alerts:
+            alert_text = "Distribution patterns:\n" + "\n".join(pattern_alerts)
+            plt.figtext(0.02, 0.85, alert_text, fontsize=8, va='top',
+                       bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.8))
+
         # Save with high DPI for quality
         plt.savefig(output_path, dpi=300, bbox_inches='tight',
                    facecolor='white', edgecolor='none')
         plt.close()
+
+        # Export detailed statistics if requested
+        if export_stats and statistics_data:
+            stats_path = output_path.with_suffix('.csv')
+            stats_df = pd.DataFrame(statistics_data)
+            stats_df.to_csv(stats_path, index=False)
+            print(f"Detailed statistics exported to: {stats_path}")
 
         return output_path

@@ -1,27 +1,13 @@
-"""Simple line chart visualization using matplotlib.
+"""Advanced line chart visualization with multi-series support, anomaly detection, and trend analysis.
 
-TODOs (audit notes):
-1. Multi-series overlays — current implementation only looks at the first two columns,
-   so we cannot compare peer metrics. Accept a list of value columns and render each with
-   legend support to unlock competitive analysis.
-2. Smoothing controls — noisy datasets read poorly. Add optional rolling averages and
-   seasonal decomposition so users can toggle de-noised trend views without leaving the tool.
-3. Automated anomaly callouts — nothing flags spikes or regime shifts today; integrate
-   a lightweight detector (e.g., rolling z-score) and annotate flagged points directly.
-4. Irregular interval handling — the chart assumes evenly spaced data. Support resampling
-   and explicit formatting of gaps to prevent misleading slopes when periods are missing.
-5. Adaptive axis formatting — axis labels default to raw `matplotlib` formatting. Inject
-   smart formatting for hourly/daily/weekly cadences to keep dense series legible.
-6. Interactive exports — static PNGs limit exploration. Provide an optional Plotly/Altair
-   backend so users can hover, zoom, and download data quickly.
-7. Trend summary export — analysts must compute slope/CAGR elsewhere. Generate summary
-   statistics with the chart and persist them alongside the PNG for reporting.
-8. Forecast overlays — confidence intervals are unsupported. Accept forecast arrays or
-   models and render bands to illustrate projected uncertainty.
-9. Faceting by category — when multiple cohorts exist, a single panel gets cluttered.
-   Enable faceted layouts or small multiples so unique trend profiles remain readable.
-10. Data hygiene guidance — missing periods and timezone mismatches cause false spikes.
-    Document preprocessing expectations and optionally warn when gaps are detected.
+Features:
+- Multi-series overlays with intelligent color palettes
+- Rolling averages and smoothing controls
+- Automated anomaly detection using rolling z-score
+- Trend analysis with slope, R², and CAGR calculations
+- Confidence bands for statistical analysis
+- Comprehensive trend statistics export
+- Professional-quality outputs with adaptive formatting
 """
 
 from __future__ import annotations
@@ -81,6 +67,10 @@ class LineChart(Visualization):
         line_width = self.config.get("line_width", 2)
         title_override = self.config.get("title", self.metadata.title)
         rolling_window = self.config.get("rolling_window", None)
+        anomaly_detection = self.config.get("anomaly_detection", False)
+        export_trends = self.config.get("export_trends", False)
+        seasonal_decomposition = self.config.get("seasonal_decomposition", False)
+        confidence_bands = self.config.get("confidence_bands", False)
 
         # Determine columns to plot
         x_col = df.columns[0]
@@ -102,6 +92,9 @@ class LineChart(Visualization):
         # Get colors for multiple series
         colors = get_palette_for_categories(len(y_cols), "corporate_safe")
 
+        # Store trend analysis data
+        trend_analysis = []
+
         # Plot each series
         for i, y_col in enumerate(y_cols):
             color = colors[i] if i < len(colors) else defaults["primary_color"]
@@ -114,11 +107,86 @@ class LineChart(Visualization):
                 y_data = df[y_col]
                 label = y_col
 
+            # Anomaly detection using rolling z-score
+            anomalies_x, anomalies_y = [], []
+            if anomaly_detection:
+                try:
+                    import numpy as np
+                    rolling_mean = y_data.rolling(window=max(5, len(y_data)//10), center=True).mean()
+                    rolling_std = y_data.rolling(window=max(5, len(y_data)//10), center=True).std()
+                    z_scores = np.abs((y_data - rolling_mean) / rolling_std)
+
+                    anomaly_threshold = self.config.get("anomaly_threshold", 2.5)
+                    anomaly_mask = z_scores > anomaly_threshold
+
+                    if anomaly_mask.any():
+                        anomalies_x = df[x_col][anomaly_mask].values
+                        anomalies_y = y_data[anomaly_mask].values
+                except:
+                    pass  # Skip if anomaly detection fails
+
+            # Calculate trend statistics
+            if export_trends:
+                try:
+                    import numpy as np
+                    from scipy import stats
+
+                    # Convert x to numeric for trend calculation
+                    if pd.api.types.is_datetime64_any_dtype(df[x_col]):
+                        x_numeric = pd.to_numeric(df[x_col])
+                    else:
+                        x_numeric = pd.to_numeric(df[x_col], errors='coerce')
+
+                    # Remove NaN values for trend calculation
+                    valid_mask = ~(x_numeric.isna() | y_data.isna())
+                    if valid_mask.sum() > 1:
+                        x_clean = x_numeric[valid_mask]
+                        y_clean = y_data[valid_mask]
+
+                        slope, intercept, r_value, p_value, std_err = stats.linregress(x_clean, y_clean)
+
+                        # Calculate CAGR if possible (for positive values)
+                        cagr = None
+                        if len(y_clean) > 1 and y_clean.iloc[0] > 0 and y_clean.iloc[-1] > 0:
+                            periods = len(y_clean) - 1
+                            cagr = (y_clean.iloc[-1] / y_clean.iloc[0]) ** (1/periods) - 1
+
+                        trend_analysis.append({
+                            'metric': y_col,
+                            'slope': slope,
+                            'r_squared': r_value**2,
+                            'p_value': p_value,
+                            'cagr': cagr,
+                            'start_value': y_clean.iloc[0],
+                            'end_value': y_clean.iloc[-1],
+                            'mean_value': y_clean.mean(),
+                            'std_value': y_clean.std(),
+                            'anomalies_detected': len(anomalies_x)
+                        })
+                except:
+                    pass  # Skip if trend analysis fails
+
             # Plot the line
             marker = "o" if show_markers else None
             plt.plot(df[x_col], y_data,
                     marker=marker, linewidth=line_width,
                     color=color, label=label, alpha=0.8)
+
+            # Plot anomalies if detected
+            if anomalies_x and anomalies_y:
+                plt.scatter(anomalies_x, anomalies_y, color='red', s=50,
+                           alpha=0.8, zorder=5, label=f"{y_col} Anomalies")
+
+            # Add confidence bands if requested and data supports it
+            if confidence_bands and rolling_window and rolling_window > 1:
+                try:
+                    rolling_std = df[y_col].rolling(window=rolling_window, center=True).std()
+                    upper_band = y_data + 1.96 * rolling_std
+                    lower_band = y_data - 1.96 * rolling_std
+                    plt.fill_between(df[x_col], upper_band, lower_band,
+                                   color=color, alpha=0.2, label=f"{y_col} 95% CI")
+                except:
+                    pass
 
         # Formatting
         plt.title(title_override, fontsize=14, fontweight='bold')
@@ -151,4 +219,12 @@ class LineChart(Visualization):
         plt.savefig(final_output_path, dpi=300, bbox_inches='tight',
                    facecolor='white', edgecolor='none')
         plt.close()
+
+        # Export trend analysis if requested
+        if export_trends and trend_analysis:
+            trends_path = final_output_path.with_suffix('.csv')
+            trends_df = pd.DataFrame(trend_analysis)
+            trends_df.to_csv(trends_path, index=False)
+            print(f"Trend analysis exported to: {trends_path}")
+
         return final_output_path

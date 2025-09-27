@@ -115,6 +115,31 @@ class GroupedBarChart(Visualization):
         show_values = self.config.get("show_values", False)
         normalize = self.config.get("normalize", False)
         chart_type = self.config.get("chart_type", "grouped")  # "grouped", "stacked", "percent_stacked"
+        show_error_bars = self.config.get("show_error_bars", False)
+        outlier_detection = self.config.get("outlier_detection", False)
+        export_summary = self.config.get("export_summary", False)
+        custom_palette = self.config.get("custom_palette", None)
+
+        # Apply custom palette if provided
+        if custom_palette:
+            colors = custom_palette[:n_categories]
+
+        # Outlier detection and handling
+        outliers_removed = 0
+        if outlier_detection:
+            # Use IQR method to detect outliers
+            Q1 = df[value_col].quantile(0.25)
+            Q3 = df[value_col].quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+
+            initial_count = len(df)
+            df = df[(df[value_col] >= lower_bound) & (df[value_col] <= upper_bound)]
+            outliers_removed = initial_count - len(df)
+
+            if outliers_removed > 0:
+                print(f"Outlier detection: Removed {outliers_removed} outlier(s)")
 
         # Aggregation function mapping
         agg_funcs = {
@@ -122,7 +147,9 @@ class GroupedBarChart(Visualization):
             "mean": np.mean,
             "median": np.median,
             "count": len,
-            "std": np.std
+            "std": np.std,
+            "min": np.min,
+            "max": np.max
         }
 
         estimator = agg_funcs.get(aggregation, sum)
@@ -144,12 +171,24 @@ class GroupedBarChart(Visualization):
             # Use the normalized data for plotting
             df = grouped_data
 
-        # Sort groups if requested
+        # Enhanced sorting options
         if sort_by == "total_value":
             group_totals = df.groupby(group_col)[value_col].sum().sort_values(ascending=False)
             group_order = group_totals.index.tolist()
         elif sort_by == "alphabetical":
             group_order = sorted(df[group_col].unique())
+        elif sort_by == "max_category":
+            # Sort by the maximum category value within each group
+            group_max = df.groupby(group_col)[value_col].max().sort_values(ascending=False)
+            group_order = group_max.index.tolist()
+        elif sort_by == "mean_value":
+            # Sort by mean value across categories
+            group_mean = df.groupby(group_col)[value_col].mean().sort_values(ascending=False)
+            group_order = group_mean.index.tolist()
+        elif sort_by == "category_count":
+            # Sort by number of categories per group
+            group_counts = df.groupby(group_col)[category_col].nunique().sort_values(ascending=False)
+            group_order = group_counts.index.tolist()
         else:
             group_order = df[group_col].unique()
 
@@ -178,6 +217,11 @@ class GroupedBarChart(Visualization):
                 width=0.8
             )
         else:
+            # Determine error bar method
+            error_bar_method = None
+            if show_error_bars:
+                error_bar_method = self.config.get("error_bar_method", "se")  # se, sd, ci
+
             # Main bar plot with intelligent color application
             ax = sns.barplot(
                 data=df,
@@ -187,7 +231,7 @@ class GroupedBarChart(Visualization):
                 estimator=estimator if not normalize else 'mean',  # Use mean for pre-aggregated normalized data
                 palette=colors,
                 order=group_order,
-                errorbar=self.config.get("error_bars", None)
+                errorbar=error_bar_method
             )
 
         # Apply global styling preferences
@@ -233,5 +277,25 @@ class GroupedBarChart(Visualization):
         plt.savefig(final_output_path, dpi=300, bbox_inches='tight',
                    facecolor=defaults["background"], edgecolor='none')
         plt.close()
+
+        # Export summary statistics if requested
+        if export_summary:
+            summary_path = final_output_path.with_suffix('.csv')
+
+            # Calculate summary statistics
+            summary_stats = df.groupby([group_col, category_col])[value_col].agg([
+                'sum', 'mean', 'median', 'std', 'count', 'min', 'max'
+            ]).reset_index()
+
+            # Add metadata
+            summary_stats['chart_type'] = chart_type
+            summary_stats['aggregation_method'] = aggregation
+            summary_stats['normalization_applied'] = normalize
+            summary_stats['outliers_removed'] = outliers_removed
+            summary_stats['sort_method'] = sort_by or 'original_order'
+
+            # Save summary
+            summary_stats.to_csv(summary_path, index=False)
+            print(f"Summary statistics exported to: {summary_path}")
 
         return final_output_path

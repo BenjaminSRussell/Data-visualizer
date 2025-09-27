@@ -6,8 +6,11 @@ import pandas as pd
 import pytest
 
 from data_visualizer.visualizations.comparisons.grouped_bar import GroupedBarChart
+from data_visualizer.visualizations.comparisons.heatmap import ComparisonHeatmap
+from data_visualizer.visualizations.comparisons.treemap import HierarchyTreemap
 from data_visualizer.visualizations.distributions.violin_plot import ViolinPlot
 from data_visualizer.visualizations.relationships.cluster_scatter import ClusterScatter
+from data_visualizer.visualizations.relationships.parallel_sets import SegmentationParallelSets
 from data_visualizer.visualizations.trends.line_chart import LineChart
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -62,6 +65,46 @@ def test_cluster_scatter_runs(tmp_path):
         }
     )
     output_path = ClusterScatter().run(df, tmp_path)
+    assert output_path.exists()
+
+
+def test_comparison_heatmap_runs(tmp_path):
+    pytest.importorskip("seaborn")
+    df = pd.DataFrame(
+        {
+            "region": ["North", "North", "South", "South", "East", "East"],
+            "product": ["A", "B", "A", "B", "A", "B"],
+            "sales": [1250, 850, 980, 1100, 1400, 700],
+        }
+    )
+    output_path = ComparisonHeatmap().run(df, tmp_path)
+    assert output_path.exists()
+
+
+def test_hierarchy_treemap_runs(tmp_path):
+    pytest.importorskip("plotly")
+    df = pd.DataFrame(
+        {
+            "region": ["North", "North", "South", "South"],
+            "country": ["USA", "Canada", "USA", "Mexico"],
+            "population": [8400000, 2700000, 4000000, 9200000],
+        }
+    )
+    output_path = HierarchyTreemap().run(df, tmp_path)
+    assert output_path.exists()
+
+
+def test_parallel_sets_runs(tmp_path):
+    pytest.importorskip("plotly")
+    df = pd.DataFrame(
+        {
+            "channel": ["Organic", "Organic", "Paid", "Paid"],
+            "plan": ["Free", "Premium", "Free", "Premium"],
+            "status": ["Active", "Active", "Churned", "Active"],
+            "count": [800, 350, 400, 180],
+        }
+    )
+    output_path = SegmentationParallelSets().run(df, tmp_path)
     assert output_path.exists()
 
 
