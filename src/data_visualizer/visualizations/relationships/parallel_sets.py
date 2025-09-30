@@ -100,7 +100,7 @@ class SegmentationParallelSets(Visualization):
 
         # Configuration
         title_override = self.config.get("title", self.metadata.title)
-        color_scheme = self.config.get("color_scheme", "plotly")
+        color_scheme = self.config.get("color_scheme", "plotly3")
         width = self.config.get("width", 1000)
         height = self.config.get("height", 600)
         show_counts = self.config.get("show_counts", True)

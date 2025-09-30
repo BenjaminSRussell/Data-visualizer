@@ -187,3 +187,75 @@ def validate_accessibility(colors: List[str]) -> Dict[str, bool]:
         "colorblind_safe": True,  # Would implement actual checking
         "distinct_hues": len(set(colors)) == len(colors)
     }
+
+
+# Centralized schema and configuration options for each visualization
+SCHEMA_REQUIREMENTS = {
+    "trend_line_chart": {
+        "min_columns": 2,
+        "description": "Requires at least 2 columns (x-axis, y-axis)",
+        "example_columns": ["date", "value"],
+        "config_options": {
+            "value_columns": {"type": "multiselect", "label": "Value Columns", "options": "data_columns"},
+            "rolling_window": {"type": "integer", "label": "Rolling Average Window", "default": 1},
+            "anomaly_detection": {"type": "boolean", "label": "Detect Anomalies", "default": False},
+            "export_trends": {"type": "boolean", "label": "Export Trend Data", "default": False},
+        }
+    },
+    "comparison_grouped_bar": {
+        "min_columns": 3,
+        "description": "Requires exactly 3 columns (group, category, value)",
+        "example_columns": ["region", "product", "sales"],
+        "config_options": {
+            "aggregation": {"type": "dropdown", "label": "Aggregation", "options": ["mean", "sum", "median", "count"], "default": "sum"},
+            "chart_type": {"type": "dropdown", "label": "Chart Type", "options": ["grouped", "stacked", "100% stacked"], "default": "grouped"},
+            "normalize": {"type": "boolean", "label": "Normalize Data", "default": False},
+            "show_error_bars": {"type": "boolean", "label": "Show Error Bars", "default": False},
+        }
+    },
+    "distribution_violin": {
+        "min_columns": 2,
+        "description": "Requires at least 2 columns (category, numeric_value)",
+        "example_columns": ["segment", "score"],
+        "config_options": {
+            "swarm_overlay": {"type": "boolean", "label": "Overlay Swarm Plot", "default": True},
+            "log_scale": {"type": "boolean", "label": "Use Log Scale", "default": False},
+            "outlier_detection": {"type": "boolean", "label": "Detect Outliers", "default": True},
+        }
+    },
+    "relationship_cluster_scatter": {
+        "min_columns": 2,
+        "description": "Requires at least 2 numeric columns for clustering",
+        "example_columns": ["feature1", "feature2", "feature3"],
+        "config_options": {
+            "algorithm": {"type": "dropdown", "label": "Clustering Algorithm", "options": ["KMeans", "DBSCAN", "AgglomerativeClustering"], "default": "KMeans"},
+            "n_clusters": {"type": "integer", "label": "Number of Clusters", "default": 3},
+            "detect_outliers": {"type": "boolean", "label": "Detect Outliers", "default": True},
+        }
+    },
+    "comparison_heatmap": {
+        "min_columns": 3,
+        "description": "Requires 3 columns (row_category, column_category, value)",
+        "example_columns": ["region", "product", "sales"],
+        "config_options": {
+            "aggregation": {"type": "dropdown", "label": "Aggregation", "options": ["mean", "sum"], "default": "mean"},
+            "cluster_rows": {"type": "boolean", "label": "Cluster Rows", "default": False},
+        }
+    },
+    "hierarchy_treemap": {
+        "min_columns": 2,
+        "description": "Requires at least 2 columns (hierarchy + value)",
+        "example_columns": ["region", "country", "city", "population"],
+        "config_options": {
+            "threshold_filter": {"type": "float", "label": "Value Threshold", "default": 0.0},
+        }
+    },
+    "segmentation_parallel_sets": {
+        "min_columns": 2,
+        "description": "Requires at least 2 categorical columns for flow analysis",
+        "example_columns": ["channel", "plan", "status", "count"],
+        "config_options": {
+            "conversion_analysis": {"type": "boolean", "label": "Analyze Conversion", "default": False},
+        }
+    }
+}

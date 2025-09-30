@@ -10,6 +10,7 @@ from typing import Any
 import pandas as pd
 
 from . import list_visualizations, load_visualization
+from .globals import SCHEMA_REQUIREMENTS
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -102,62 +103,16 @@ def describe_visualization(viz_key: str) -> None:
         print(f"Example: {metadata.example_url}")
         print()
 
-        # Schema requirements
-        schema_requirements = {
-            "trend_line_chart": {
-                "min_columns": 2,
-                "description": "Requires at least 2 columns (x-axis, y-axis)",
-                "example_columns": ["date", "value"],
-                "config_options": ["value_columns", "rolling_window", "anomaly_detection", "export_trends"]
-            },
-            "comparison_grouped_bar": {
-                "min_columns": 3,
-                "description": "Requires exactly 3 columns (group, category, value)",
-                "example_columns": ["region", "product", "sales"],
-                "config_options": ["aggregation", "sort_by", "chart_type", "normalize", "show_error_bars", "export_summary"]
-            },
-            "distribution_violin": {
-                "min_columns": 2,
-                "description": "Requires at least 2 columns (category, numeric_value)",
-                "example_columns": ["segment", "score"],
-                "config_options": ["swarm_overlay", "log_scale", "outlier_detection", "export_stats", "normality_tests"]
-            },
-            "relationship_cluster_scatter": {
-                "min_columns": 2,
-                "description": "Requires at least 2 numeric columns for clustering",
-                "example_columns": ["feature1", "feature2", "feature3"],
-                "config_options": ["algorithm", "n_clusters", "detect_outliers", "stability_analysis", "export_analysis"]
-            },
-            "comparison_heatmap": {
-                "min_columns": 3,
-                "description": "Requires 3 columns (row_category, column_category, value)",
-                "example_columns": ["region", "product", "sales"],
-                "config_options": ["aggregation", "cluster_rows", "statistical_testing", "export_rankings"]
-            },
-            "hierarchy_treemap": {
-                "min_columns": 2,
-                "description": "Requires at least 2 columns (hierarchy + value)",
-                "example_columns": ["region", "country", "city", "population"],
-                "config_options": ["threshold_filter", "variance_coloring", "pattern_detection", "export_hierarchy"]
-            },
-            "segmentation_parallel_sets": {
-                "min_columns": 2,
-                "description": "Requires at least 2 categorical columns for flow analysis",
-                "example_columns": ["channel", "plan", "status", "count"],
-                "config_options": ["conversion_analysis", "drop_off_analysis", "export_funnel"]
-            }
-        }
-
-        if viz_key in schema_requirements:
-            req = schema_requirements[viz_key]
+        if viz_key in SCHEMA_REQUIREMENTS:
+            req = SCHEMA_REQUIREMENTS[viz_key]
             print("📋 Requirements:")
             print(f"  Minimum columns: {req['min_columns']}")
             print(f"  Description: {req['description']}")
             print(f"  Example columns: {', '.join(req['example_columns'])}")
             print()
             print("⚙️  Key configuration options:")
-            for option in req['config_options']:
-                print(f"  - {option}")
+            for option_key, option_details in req['config_options'].items():
+                print(f"  - {option_key} ({option_details.get('label', 'N/A')})")
 
     except KeyError:
         print(f"❌ Visualization '{viz_key}' not found")
@@ -208,47 +163,8 @@ def validate_dataset_schema(df: pd.DataFrame, viz_key: str) -> list[str]:
         errors.append("Dataset is empty - no rows to visualize")
         return errors
 
-    # Define schema requirements for each visualization type
-    schema_requirements = {
-        "trend_line_chart": {
-            "min_columns": 2,
-            "description": "Requires at least 2 columns (x-axis, y-axis)",
-            "column_types": {"numeric_columns": 1}  # At least 1 numeric column
-        },
-        "comparison_grouped_bar": {
-            "min_columns": 3,
-            "description": "Requires exactly 3 columns (group, category, value)",
-            "column_types": {"numeric_columns": 1}  # At least 1 numeric column for values
-        },
-        "distribution_violin": {
-            "min_columns": 2,
-            "description": "Requires at least 2 columns (category, numeric_value)",
-            "column_types": {"numeric_columns": 1}  # At least 1 numeric column
-        },
-        "relationship_cluster_scatter": {
-            "min_columns": 2,
-            "description": "Requires at least 2 numeric columns for clustering",
-            "column_types": {"numeric_columns": 2}  # At least 2 numeric columns
-        },
-        "comparison_heatmap": {
-            "min_columns": 3,
-            "description": "Requires 3 columns (row_category, column_category, value)",
-            "column_types": {"numeric_columns": 1}  # At least 1 numeric column for values
-        },
-        "hierarchy_treemap": {
-            "min_columns": 2,
-            "description": "Requires at least 2 columns (hierarchy + value)",
-            "column_types": {"numeric_columns": 1}  # At least 1 numeric column for sizing
-        },
-        "segmentation_parallel_sets": {
-            "min_columns": 2,
-            "description": "Requires at least 2 categorical columns for flow analysis",
-            "column_types": {}  # No strict numeric requirements (can use counts)
-        }
-    }
-
     # Get requirements for this visualization
-    requirements = schema_requirements.get(viz_key)
+    requirements = SCHEMA_REQUIREMENTS.get(viz_key)
     if not requirements:
         # Unknown visualization, skip validation
         return errors

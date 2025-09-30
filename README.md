@@ -38,6 +38,16 @@ Tip: generated charts land in `outputs/<program_key>/` (ignored by git). Keep on
 
 Each catalog README restates the command, explains the dataset, and highlights potential interpretation pitfalls so new users can explore confidently.
 
+## Interactive GUI
+For a more interactive experience, the toolkit now includes a graphical user interface (GUI). The GUI allows you to load datasets, select visualizations, and customize their options in real-time.
+
+To launch the GUI, run the following command from the root of the repository:
+```bash
+python -m src.data_visualizer.gui.main
+```
+
+For a detailed walkthrough of the GUI's features, please see the [**GUI Guide**](./docs/GUI_GUIDE.md).
+
 ## Recent Enhancements
 
 ### ✅ **Multi-Series Timeline Support** (DV-001)
