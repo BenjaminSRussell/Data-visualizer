@@ -90,7 +90,11 @@ class LineChart(Visualization):
         ax = plt.gca()
 
         # Get colors for multiple series
-        colors = get_palette_for_categories(len(y_cols), "corporate_safe")
+        if self.config.get("colors"):
+            colors = self.config.get("colors")
+        else:
+            palette = self.config.get("palette", "corporate_safe")
+            colors = get_palette_for_categories(len(y_cols), palette)
 
         # Store trend analysis data
         trend_analysis = []

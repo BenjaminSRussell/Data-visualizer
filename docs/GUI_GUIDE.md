@@ -1,64 +1,61 @@
-# GUI Guide for the Data Visualizer Toolkit
+# GUI Guide: The Data Visualizer Toolkit
 
-This guide provides a comprehensive overview of the new graphical user interface (GUI) for the Data Visualizer Toolkit. The GUI provides an interactive way to explore your data and generate visualizations without writing any code.
+Welcome to the official guide for the Data Visualizer Toolkit's graphical user interface (GUI). This document provides a complete walkthrough of the application, designed to help you get the most out of its interactive features.
 
-## Getting Started
+The GUI provides a professional, intuitive, and cross-platform compatible environment for data exploration and visualization.
 
-To launch the GUI, run the following command from the root of the repository:
+## 1. Launching the Application
+
+To get started, launch the GUI by running the following command from the root directory of the project:
 
 ```bash
 python -m src.data_visualizer.gui.main
 ```
 
-This will open the main application window.
+This will open the main application window, which is divided into three main sections: the **Sidebar** on the left, the **Canvas** in the center, and the **Control Panel** on the right.
 
-## Using the GUI
+---
 
-The GUI is designed to be intuitive and easy to use. Here's a step-by-step guide to generating your first visualization.
+## 2. The Workflow: From Data to Plot
 
-### 1. Loading Data
+The application is designed around a simple, linear workflow:
 
-The first step is to load a dataset. The GUI currently supports CSV files.
+1.  **Load Your Data**: Start by loading a CSV file.
+2.  **Explore Your Data**: Use the Data Preview tab to inspect the raw data and summary statistics.
+3.  **Select a Visualization**: Choose the type of plot you want to create.
+4.  **Customize Your Plot**: Use the interactive controls to fine-tune the visualization.
+5.  **Generate and Explore**: View the plot and continue to adjust it in real-time.
 
-1.  Click on the **File** menu in the top-left corner of the application.
-2.  Select **Open CSV**.
-3.  In the file dialog, navigate to and select your desired CSV file.
+### Step 1: Load a Dataset
 
-Once the file is loaded, a confirmation message will appear with the dimensions of the dataset.
+In the top-left corner of the sidebar, click the **"Load Dataset"** button. This will open your system's native file dialog. The application is configured to accept **`.csv`** files.
 
-### 2. Selecting a Visualization
+Once a file is loaded successfully, a confirmation message will appear, and the application will be ready for the next step.
 
-After loading a dataset, you can choose a visualization from the list on the left-hand side of the application.
+### Step 2: Select a Visualization
 
-1.  The **Visualizations** panel displays all the available plot types.
-2.  Click on a visualization to select it.
-3.  A description of the selected visualization and its tags will appear below the list.
+The list in the left sidebar displays all the visualizations available in the toolkit. Simply click on a visualization from the list to select it. When you do, the **Control Panel** on the right will automatically populate with the options available for that specific plot.
 
-### 3. Using Interactive Controls
+### Step 3: Use the Interactive Controls
 
-When you select a visualization, the **Controls** panel will dynamically update with a set of options that are specific to that plot. These controls allow you to customize the appearance and behavior of the visualization.
+The **Control Panel** on the right is the heart of the interactive experience. It dynamically displays a set of styled widgets that allow you to customize the selected visualization.
 
-The available controls include:
+#### The Custom Color Picker
+For visualizations that support color palettes, a **"Set Custom Colors"** button will appear at the bottom of the control panel. Clicking this button will open a color picker dialog.
 
-*   **Checkboxes**: For toggling boolean options (e.g., "Detect Anomalies").
-*   **Text Fields**: for entering numerical or text values (e.g., "Rolling Average Window").
-*   **Dropdown Menus**: For selecting from a list of predefined options (e.g., "Chart Type").
-*   **Multi-Select Lists**: For choosing one or more columns from your dataset.
+You can select multiple colors, one by one, to create a custom palette for your plot. These custom colors will override the default palette selection.
 
-### 4. Generating Plots
+### Step 4: Explore Your Data
 
-Once you have selected a visualization and configured its options, you can generate the plot.
+The central part of the application is a tabbed canvas that lets you switch between viewing your plot and inspecting your data.
 
-*   **Manual Generation**: Click the **Generate Plot** button to render the visualization with the current settings.
-*   **Automatic Regeneration**: For a more interactive experience, ensure the **Auto-Regenerate** checkbox is ticked. With this option enabled, the plot will automatically update whenever you change a control.
+*   **The Data Preview Tab**: When you load a dataset, this tab is automatically populated with the raw data and summary statistics, allowing you to inspect and validate your data before visualizing it.
+*   **The Plot Tab**: This is where your visualizations come to life. Click the **"Generate Plot"** button to render the visualization. For a more interactive experience, ensure the **"Auto-Regenerate"** checkbox is ticked, and the plot will update automatically whenever you change a control.
 
-The generated plot will be displayed in the main area of the window.
+---
 
-## Project Structure
+## 5. Error Handling and Logging
 
-The GUI code is organized in a new directory: `src/data_visualizer/gui`. This directory contains the following files:
+The application includes a robust logging system to help with debugging. All significant actions, warnings, and errors are logged to a file named `app.log` in the root directory. If you encounter an issue, this file will contain detailed information that can help diagnose the problem.
 
-*   `main.py`: The main entry point for the GUI application. It contains the main window, layout, and logic for interacting with the visualization library.
-*   `widgets.py`: A collection of custom `tkinter` widgets used to build the dynamic controls panel.
-
-This structure separates the GUI code from the core visualization logic, making the project easier to maintain and extend in the future.
+We hope you enjoy the new interactive experience of the Data Visualizer Toolkit!

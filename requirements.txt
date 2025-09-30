@@ -8,3 +8,8 @@ plotly>=5.17.0
 
 # Tooling for local development and smoke tests
 pytest>=7.4
+
+# GUI Dependencies
+colorama>=0.4.6
+pandas>=2.0
+matplotlib>=3.7

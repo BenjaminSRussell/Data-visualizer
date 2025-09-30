@@ -195,67 +195,81 @@ SCHEMA_REQUIREMENTS = {
         "min_columns": 2,
         "description": "Requires at least 2 columns (x-axis, y-axis)",
         "example_columns": ["date", "value"],
+        "column_types": {"numeric_columns": 1},
         "config_options": {
             "value_columns": {"type": "multiselect", "label": "Value Columns", "options": "data_columns"},
             "rolling_window": {"type": "integer", "label": "Rolling Average Window", "default": 1},
             "anomaly_detection": {"type": "boolean", "label": "Detect Anomalies", "default": False},
             "export_trends": {"type": "boolean", "label": "Export Trend Data", "default": False},
+            "palette": {"type": "dropdown", "label": "Color Palette", "options": list(QUALITATIVE_PALETTES.keys()), "default": "corporate_safe"}
         }
     },
     "comparison_grouped_bar": {
         "min_columns": 3,
         "description": "Requires exactly 3 columns (group, category, value)",
         "example_columns": ["region", "product", "sales"],
+        "column_types": {"numeric_columns": 1},
         "config_options": {
             "aggregation": {"type": "dropdown", "label": "Aggregation", "options": ["mean", "sum", "median", "count"], "default": "sum"},
             "chart_type": {"type": "dropdown", "label": "Chart Type", "options": ["grouped", "stacked", "100% stacked"], "default": "grouped"},
             "normalize": {"type": "boolean", "label": "Normalize Data", "default": False},
             "show_error_bars": {"type": "boolean", "label": "Show Error Bars", "default": False},
+            "palette": {"type": "dropdown", "label": "Color Palette", "options": list(QUALITATIVE_PALETTES.keys()), "default": "corporate_safe"}
         }
     },
     "distribution_violin": {
         "min_columns": 2,
         "description": "Requires at least 2 columns (category, numeric_value)",
         "example_columns": ["segment", "score"],
+        "column_types": {"numeric_columns": 1},
         "config_options": {
             "swarm_overlay": {"type": "boolean", "label": "Overlay Swarm Plot", "default": True},
             "log_scale": {"type": "boolean", "label": "Use Log Scale", "default": False},
             "outlier_detection": {"type": "boolean", "label": "Detect Outliers", "default": True},
+            "palette": {"type": "dropdown", "label": "Color Palette", "options": list(QUALITATIVE_PALETTES.keys()), "default": "vibrant_accessible"}
         }
     },
     "relationship_cluster_scatter": {
         "min_columns": 2,
         "description": "Requires at least 2 numeric columns for clustering",
         "example_columns": ["feature1", "feature2", "feature3"],
+        "column_types": {"numeric_columns": 2},
         "config_options": {
             "algorithm": {"type": "dropdown", "label": "Clustering Algorithm", "options": ["KMeans", "DBSCAN", "AgglomerativeClustering"], "default": "KMeans"},
             "n_clusters": {"type": "integer", "label": "Number of Clusters", "default": 3},
             "detect_outliers": {"type": "boolean", "label": "Detect Outliers", "default": True},
+            "palette": {"type": "dropdown", "label": "Color Palette", "options": list(QUALITATIVE_PALETTES.keys()), "default": "earth_tones"}
         }
     },
     "comparison_heatmap": {
         "min_columns": 3,
         "description": "Requires 3 columns (row_category, column_category, value)",
         "example_columns": ["region", "product", "sales"],
+        "column_types": {"numeric_columns": 1},
         "config_options": {
             "aggregation": {"type": "dropdown", "label": "Aggregation", "options": ["mean", "sum"], "default": "mean"},
             "cluster_rows": {"type": "boolean", "label": "Cluster Rows", "default": False},
+            "palette": {"type": "dropdown", "label": "Color Palette", "options": list(SEQUENTIAL_PALETTES.keys()), "default": "blue_progression"}
         }
     },
     "hierarchy_treemap": {
         "min_columns": 2,
         "description": "Requires at least 2 columns (hierarchy + value)",
         "example_columns": ["region", "country", "city", "population"],
+        "column_types": {"numeric_columns": 1},
         "config_options": {
             "threshold_filter": {"type": "float", "label": "Value Threshold", "default": 0.0},
+            "palette": {"type": "dropdown", "label": "Color Palette", "options": list(SEQUENTIAL_PALETTES.keys()), "default": "green_growth"}
         }
     },
     "segmentation_parallel_sets": {
         "min_columns": 2,
         "description": "Requires at least 2 categorical columns for flow analysis",
         "example_columns": ["channel", "plan", "status", "count"],
+        "column_types": {},
         "config_options": {
             "conversion_analysis": {"type": "boolean", "label": "Analyze Conversion", "default": False},
+            "color_scheme": {"type": "dropdown", "label": "Color Scheme", "options": ["plotly3", "viridis", "cividis", "plasma"], "default": "plotly3"}
         }
     }
 }

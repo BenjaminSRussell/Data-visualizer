@@ -116,8 +116,11 @@ class ViolinPlot(Visualization):
 
         # Smart color selection for statistical visualization
         n_categories = df[category_col].nunique()
-        palette_style = self.config.get("palette_style", "vibrant_accessible")
-        colors = get_palette_for_categories(n_categories, palette_style)
+        if self.config.get("colors"):
+            colors = self.config.get("colors")
+        else:
+            palette = self.config.get("palette", "vibrant_accessible")
+            colors = get_palette_for_categories(n_categories, palette)
 
         inner = self.config.get("inner", "box")
         split = self.config.get("split", False)

@@ -106,8 +106,11 @@ class GroupedBarChart(Visualization):
 
         # Smart palette selection based on data complexity
         n_categories = df[df.columns[1]].nunique()
-        palette_style = self.config.get("palette_style", "corporate_safe")
-        colors = get_palette_for_categories(n_categories, palette_style)
+        if self.config.get("colors"):
+            colors = self.config.get("colors")
+        else:
+            palette = self.config.get("palette", "corporate_safe")
+            colors = get_palette_for_categories(n_categories, palette)
 
         aggregation = self.config.get("aggregation", "sum")
         sort_by = self.config.get("sort_by", None)
@@ -118,11 +121,6 @@ class GroupedBarChart(Visualization):
         show_error_bars = self.config.get("show_error_bars", False)
         outlier_detection = self.config.get("outlier_detection", False)
         export_summary = self.config.get("export_summary", False)
-        custom_palette = self.config.get("custom_palette", None)
-
-        # Apply custom palette if provided
-        if custom_palette:
-            colors = custom_palette[:n_categories]
 
         # Outlier detection and handling
         outliers_removed = 0
