@@ -41,13 +41,13 @@ class MasterPipeline:
 
     def __init__(self, input_file: str, output_dir: str = None):
         self.input_file = input_file
-        self.output_dir = output_dir or 'results'
+        self.output_dir = output_dir or 'data/output/basic'
         self.data = []
         self.results = {}
         self.execution_times = {}
 
         # create output directory
-        Path(self.output_dir).mkdir(exist_ok=True)
+        Path(self.output_dir).mkdir(parents=True, exist_ok=True)
 
     def load_data(self) -> bool:
         """Load JSONL data."""

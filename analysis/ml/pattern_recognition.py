@@ -86,7 +86,7 @@ class PatternRecognizer:
             'year_distribution': dict(Counter(years)),
             'month_distribution': dict(Counter(months)),
             'year_month_patterns': len(year_month_combos),
-            'most_common_months': Counter(months).most_common(5) if months else []
+            'most_common_months': dict(Counter(months).most_common(5)) if months else {}
         }
 
     def _find_id_patterns(self, url_data: List[Dict]) -> Dict:
@@ -145,7 +145,7 @@ class PatternRecognizer:
 
         return {
             'unique_structures': len(path_structures),
-            'most_common_structures': path_structures.most_common(20),
+            'most_common_structures': dict(path_structures.most_common(20)),
             'depth_structure_variety': {
                 depth: len(structures)
                 for depth, structures in depth_structures.items()
@@ -170,7 +170,7 @@ class PatternRecognizer:
             separators['.'] += path.count('.')
 
         return {
-            'common_prefixes': prefixes.most_common(10),
+            'common_prefixes': dict(prefixes.most_common(10)),
             'separator_usage': dict(separators),
             'kebab_case_urls': sum(1 for item in url_data if '-' in urlparse(item['url']).path),
             'snake_case_urls': sum(1 for item in url_data if '_' in urlparse(item['url']).path)

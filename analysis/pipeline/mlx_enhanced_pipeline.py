@@ -41,7 +41,7 @@ class MLXEnhancedPipeline:
 
     def __init__(self, input_file: str, output_dir: str = None, use_db=False, database_url=None):
         self.input_file = input_file
-        self.output_dir = output_dir or 'enhanced_results'
+        self.output_dir = output_dir or 'data/output/mlx'
         self.use_db = use_db
         self.database_url = database_url
 
@@ -257,7 +257,11 @@ class MLXEnhancedPipeline:
                 parent_depth = parent_item.get('depth', 0)
                 depth_transitions[(parent_depth, child_depth)] += 1
 
-        relationship_analysis['depth_transitions'] = dict(depth_transitions.most_common(10))
+        # convert tuple keys to strings for JSON serialization
+        relationship_analysis['depth_transitions'] = {
+            f"{parent_depth}->{child_depth}": count
+            for (parent_depth, child_depth), count in depth_transitions.most_common(10)
+        }
 
         self.results['parent_child_relationships'] = relationship_analysis
 

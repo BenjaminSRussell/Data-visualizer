@@ -20,7 +20,7 @@ cd "$SCRIPT_DIR"
 
 VENV_DIR="venv"
 DEFAULT_INPUT="Site.jsonl"
-DEFAULT_OUTPUT="analysis/output"
+DEFAULT_OUTPUT="data/output"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
 # section: helpers
@@ -52,30 +52,72 @@ Usage: ./run.sh [COMMAND] [OPTIONS]
 COMMANDS:
   analyze       Run complete analysis pipeline (default)
   validate      Validate data quality before analysis
-  flush         Remove all analysis results and cached data
+  flush         Remove all analysis results and cached data (uses flush_outputs.sh)
+  organize      Move outputs to organized data/output structure
   help          Show this help message
 
 OPTIONS:
   -i, --input FILE       Input JSONL file (default: Site.jsonl)
-  -o, --output DIR       Output directory (default: analysis/output)
+  -o, --output DIR       Output directory (default: data/output)
   -t, --type TYPE        Analysis type: basic|enhanced|all (default: all)
   --skip-validation      Skip data quality validation
   --recursive            Run analysis recursively on generated insights
+  --archive              Archive outputs before flushing
+  --clean                Complete clean: archive, flush, organize
 
 EXAMPLES:
   ./run.sh analyze                           # Run all analyses on Site.jsonl
   ./run.sh analyze -i data.jsonl             # Analyze custom input file
   ./run.sh analyze -t basic                  # Run only basic analysis
   ./run.sh validate -i data.jsonl            # Validate data quality
-  ./run.sh flush                             # Clear all results
+  ./run.sh flush                             # Clear all results (with prompt)
+  ./run.sh flush --archive                   # Archive before flushing
+  ./run.sh organize                          # Reorganize outputs to data folder
+  ./run.sh flush --clean                     # Complete clean state
 
 EOF
 }
 
 # section: environment setup
 
+check_system_dependencies() {
+    print_info "Checking system dependencies..."
+
+    # check for homebrew
+    if ! command -v brew &> /dev/null; then
+        print_error "Homebrew not found. Please install from https://brew.sh"
+        exit 1
+    fi
+
+    # check for PostgreSQL (needed for psycopg2)
+    if ! command -v pg_config &> /dev/null; then
+        print_info "PostgreSQL not found. Installing via Homebrew..."
+        brew install postgresql@16
+
+        # add postgresql to path for current session
+        export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+
+        # add to zshrc if not already there
+        if ! grep -q 'postgresql@16/bin' ~/.zshrc 2>/dev/null; then
+            echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
+        fi
+
+        print_success "PostgreSQL installed"
+    else
+        print_success "PostgreSQL already installed"
+    fi
+
+    # ensure pg_config is in PATH (for keg-only postgresql)
+    if [ -f "/opt/homebrew/opt/postgresql@16/bin/pg_config" ]; then
+        export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+    fi
+}
+
 setup_environment() {
     print_info "Setting up environment..."
+
+    # check and install system dependencies first
+    check_system_dependencies
 
     # check if virtual environment exists
     if [ ! -d "$VENV_DIR" ]; then
@@ -208,27 +250,78 @@ generate_summary() {
     fi
 }
 
-# section: cleanup
+# section: cleanup and organization
 
 flush_results() {
+    local do_archive=false
+    local do_clean=false
+
+    # parse flush options
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --archive)
+                do_archive=true
+                shift
+                ;;
+            --clean)
+                do_clean=true
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+
     print_header "FLUSHING ANALYSIS RESULTS"
 
+    # if clean mode, use flush_outputs.sh --all
+    if [ "$do_clean" = true ]; then
+        print_info "Running complete clean workflow (archive + flush + organize)..."
+        bash flush_outputs.sh --all
+        return $?
+    fi
+
+    # if archive mode, use flush_outputs.sh with archive
+    if [ "$do_archive" = true ]; then
+        print_info "Archiving outputs before flushing..."
+        bash flush_outputs.sh --archive --flush
+        return $?
+    fi
+
+    # interactive mode - ask user
     read -p "Are you sure you want to delete all analysis results? (y/N) " -n 1 -r
     echo
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Removing analysis output directories..."
-        rm -rf analysis/output
-        rm -rf analysis/results
-        rm -rf analysis/enhanced_results
+        print_info "Do you want to archive outputs first? (y/N) "
+        read -p "" -n 1 -r
+        echo
 
-        print_info "Removing cached data..."
-        find . -name "*.pkl" -type f -delete
-        find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            bash flush_outputs.sh --archive --flush
+        else
+            bash flush_outputs.sh --flush
+        fi
 
-        print_success "All results and cache cleared"
+        print_success "Flush complete"
     else
         print_info "Flush cancelled"
+    fi
+}
+
+organize_outputs() {
+    print_header "ORGANIZING OUTPUTS"
+
+    print_info "Moving outputs to data/output structure..."
+    bash flush_outputs.sh --organize
+
+    if [ $? -eq 0 ]; then
+        print_success "Outputs organized successfully"
+        return 0
+    else
+        print_error "Output organization failed"
+        return 1
     fi
 }
 
@@ -244,6 +337,8 @@ main() {
     local analysis_type="all"
     local skip_validation=false
     local recursive=false
+    local do_archive=false
+    local do_clean=false
 
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -265,6 +360,14 @@ main() {
                 ;;
             --recursive)
                 recursive=true
+                shift
+                ;;
+            --archive)
+                do_archive=true
+                shift
+                ;;
+            --clean)
+                do_clean=true
                 shift
                 ;;
             *)
@@ -340,7 +443,17 @@ main() {
             ;;
 
         flush)
-            flush_results
+            if [ "$do_clean" = true ]; then
+                flush_results --clean
+            elif [ "$do_archive" = true ]; then
+                flush_results --archive
+            else
+                flush_results
+            fi
+            ;;
+
+        organize)
+            organize_outputs
             ;;
 
         help|--help|-h)

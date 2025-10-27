@@ -45,7 +45,7 @@ class EnhancedPipeline:
 
     def __init__(self, input_file: str, output_dir: str = None):
         self.input_file = input_file
-        self.output_dir = output_dir or 'analysis/enhanced_results'
+        self.output_dir = output_dir or 'data/output/enhanced'
         self.data = []
         self.results = {}
         self.execution_times = {}
