@@ -62,7 +62,7 @@ async def execute(
     from server.models import CrawlSession
     import asyncio
 
-    # Extract URLs
+    # extract urls
     urls = [
         item.get('url') if isinstance(item, dict) else item
         for item in sitemap_data
@@ -77,7 +77,7 @@ async def execute(
     }
 
     try:
-        # Get session
+        # get session
         session = db.query(CrawlSession).filter(
             CrawlSession.session_id == session_id
         ).first()
@@ -86,7 +86,7 @@ async def execute(
             logger.error(f"Session {session_id} not found")
             return summary
 
-        # Process URLs with concurrency control
+        # process urls with concurrency control
         semaphore = asyncio.Semaphore(max_concurrent)
 
         async def process_with_semaphore(url):
@@ -98,14 +98,14 @@ async def execute(
                     categories=categories
                 )
 
-        # Process all URLs
+        # process all urls
         logger.info(f"Processing {len(urls)} URLs with max {max_concurrent} concurrent")
         results = await asyncio.gather(
             *[process_with_semaphore(url) for url in urls],
             return_exceptions=True
         )
 
-        # Count successes and failures
+        # count successes and failures
         for result in results:
             if isinstance(result, Exception):
                 summary['failed'] += 1
@@ -115,20 +115,20 @@ async def execute(
             else:
                 summary['failed'] += 1
 
-        # Update session counts
+        # update session counts
         session.processed_urls = summary['processed']
         session.failed_urls = summary['failed']
         db.commit()
 
-        # Detect patterns across all URLs
+        # detect patterns across all urls
         logger.info("Detecting patterns across all URLs")
         patterns = detect_patterns.execute(urls)
         summary['patterns'] = detect_patterns.summarize(patterns)
 
-        # Save patterns to database
+        # save patterns to database
         _save_patterns_to_db(db, session_id, patterns)
 
-        # Mark session as completed
+        # mark session as completed
         session.status = "completed"
         session.completed_at = datetime.utcnow()
         db.commit()
@@ -141,7 +141,7 @@ async def execute(
     except Exception as e:
         logger.error(f"Error processing sitemap: {e}")
 
-        # Mark session as failed
+        # mark session as failed
         try:
             session = db.query(CrawlSession).filter(
                 CrawlSession.session_id == session_id
@@ -164,7 +164,7 @@ def _save_patterns_to_db(
     from server.models import Pattern
 
     try:
-        # Save file type patterns
+        # save file type patterns
         for file_type, count in patterns['file_types'].items():
             pattern = Pattern(
                 pattern_type='file_type',
@@ -175,7 +175,7 @@ def _save_patterns_to_db(
             )
             db.add(pattern)
 
-        # Save URL structure patterns
+        # save url structure patterns
         for structure_type, urls in patterns['url_structures'].items():
             if urls:
                 pattern = Pattern(
@@ -188,8 +188,8 @@ def _save_patterns_to_db(
                 )
                 db.add(pattern)
 
-        # Save common prefixes
-        for prefix in patterns['common_prefixes'][:10]:  # Top 10
+        # save common prefixes
+        for prefix in patterns['common_prefixes'][:10]:  # top 10
             pattern = Pattern(
                 pattern_type='common_prefix',
                 pattern_value=prefix,

@@ -1,6 +1,4 @@
-"""
-Background tasks for URL processing.
-"""
+"""Celery background tasks for URL processing."""
 
 from celery import Task
 import logging
@@ -30,16 +28,7 @@ class DatabaseTask(Task):
 
 @celery_app.task(bind=True)
 async def process_sitemap_task(self, session_id: str, urls_data: List[Dict]) -> Dict[str, Any]:
-    """
-    Process a sitemap in the background using Celery.
-
-    Args:
-        session_id: Crawl session ID
-        urls_data: List of URL dictionaries
-
-    Returns:
-        Processing summary
-    """
+    """Process sitemap in background. Returns processing summary."""
     try:
         db = get_session()
 
@@ -61,7 +50,7 @@ async def process_sitemap_task(self, session_id: str, urls_data: List[Dict]) -> 
     except Exception as e:
         logger.error(f"Error in sitemap processing task: {e}")
 
-        # Mark session as failed
+        # mark session as failed
         try:
             db = get_session()
             session = db.query(CrawlSession).filter(
@@ -93,7 +82,7 @@ def cleanup_old_sessions_task(self, days: int = 30) -> Dict[str, Any]:
     try:
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
-        # Find old sessions
+        # find old sessions
         old_sessions = self.db.query(CrawlSession).filter(
             CrawlSession.completed_at < cutoff_date,
             CrawlSession.status == 'completed'

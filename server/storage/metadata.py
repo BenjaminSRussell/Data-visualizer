@@ -1,11 +1,4 @@
-"""
-Operation: Save Metadata
-
-Purpose: Save page metadata to database
-Input: URL ID, metadata dictionary, database session
-Output: Metadata record ID
-Dependencies: SQLAlchemy, models
-"""
+"""Save page metadata to database."""
 
 from sqlalchemy.orm import Session
 import logging
@@ -19,30 +12,13 @@ def execute(
     url_id: int,
     metadata: Dict[str, any]
 ) -> Optional[int]:
-    """
-    Save page metadata.
-
-    Args:
-        db: Database session
-        url_id: URL record ID
-        metadata: Metadata dictionary from extract_metadata
-
-    Returns:
-        PageMetadata record ID, or None if failed
-
-    Example:
-        metadata_id = execute(db, url_id, metadata)
-    """
+    """Save page metadata to database. Returns record ID or None."""
     from server.models import PageMetadata
 
     try:
-        # Check if metadata already exists
-        page_meta = db.query(PageMetadata).filter(
-            PageMetadata.url_id == url_id
-        ).first()
-
+        page_meta = db.query(PageMetadata).filter(PageMetadata.url_id == url_id).first()
         if page_meta:
-            # Update existing metadata
+            # update existing metadata
             page_meta.title = metadata.get('title')
             page_meta.description = metadata.get('description')
             page_meta.keywords = metadata.get('keywords', [])
@@ -50,7 +26,7 @@ def execute(
             page_meta.author = metadata.get('author')
 
         else:
-            # Create new metadata
+            # create new metadata
             page_meta = PageMetadata(
                 url_id=url_id,
                 title=metadata.get('title'),

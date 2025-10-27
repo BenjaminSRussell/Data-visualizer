@@ -1,0 +1,484 @@
+{
+  "summary_stats": {
+    "total_urls": 6163,
+    "depth_count": 6163,
+    "depth_mean": 3.2440369949699823,
+    "depth_median": 3.0,
+    "depth_std": 1.0489378941360286,
+    "depth_min": 0.0,
+    "depth_max": 7.0,
+    "depth_q25": 3.0,
+    "depth_q75": 4.0,
+    "path_length_count": 6163,
+    "path_length_mean": 64.3694629239007,
+    "path_length_median": 57.0,
+    "path_length_std": 33.46757855542442,
+    "path_length_min": 1.0,
+    "path_length_max": 1546.0,
+    "path_length_q25": 44.0,
+    "path_length_q75": 78.0,
+    "query_params_count": 6163,
+    "query_params_mean": 0.011195846178809022,
+    "query_params_median": 0.0,
+    "query_params_std": 0.12233031747564353,
+    "query_params_min": 0.0,
+    "query_params_max": 3.0,
+    "query_params_q25": 0.0,
+    "query_params_q75": 0.0,
+    "outbound_links_count": 6163,
+    "outbound_links_mean": 112.25669316891124,
+    "outbound_links_median": 0.0,
+    "outbound_links_std": 115.91799256959237,
+    "outbound_links_min": 0.0,
+    "outbound_links_max": 472.0,
+    "outbound_links_q25": 0.0,
+    "outbound_links_q75": 219.5
+  },
+  "distributions": {
+    "depth_distribution": {
+      "0": 1,
+      "1": 177,
+      "2": 1317,
+      "3": 2283,
+      "4": 1765,
+      "5": 449,
+      "6": 169,
+      "7": 2
+    },
+    "depth_histogram": {
+      "bins": [
+        0.0,
+        0.7,
+        1.4,
+        2.0999999999999996,
+        2.8,
+        3.5,
+        4.199999999999999,
+        4.8999999999999995,
+        5.6,
+        6.3,
+        7.0
+      ],
+      "counts": [
+        1,
+        177,
+        1317,
+        0,
+        2283,
+        1765,
+        0,
+        449,
+        169,
+        2
+      ],
+      "name": "Depth"
+    },
+    "path_length_histogram": {
+      "bins": [
+        1.0,
+        78.25,
+        155.5,
+        232.75,
+        310.0,
+        387.25,
+        464.5,
+        541.75,
+        619.0,
+        696.25,
+        773.5,
+        850.75,
+        928.0,
+        1005.25,
+        1082.5,
+        1159.75,
+        1237.0,
+        1314.25,
+        1391.5,
+        1468.75,
+        1546.0
+      ],
+      "counts": [
+        4633,
+        1529,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "name": "Path Length"
+    },
+    "link_count_histogram": {
+      "bins": [
+        0.0,
+        23.6,
+        47.2,
+        70.80000000000001,
+        94.4,
+        118.0,
+        141.60000000000002,
+        165.20000000000002,
+        188.8,
+        212.4,
+        236.0,
+        259.6,
+        283.20000000000005,
+        306.8,
+        330.40000000000003,
+        354.0,
+        377.6,
+        401.20000000000005,
+        424.8,
+        448.40000000000003,
+        472.0
+      ],
+      "counts": [
+        3151,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2131,
+        638,
+        179,
+        29,
+        6,
+        13,
+        4,
+        3,
+        5,
+        1,
+        3
+      ],
+      "name": "Link Count"
+    },
+    "depth_normality_test": {
+      "is_normal": false,
+      "p_value": 7.942646247482317e-47
+    }
+  },
+  "correlations": {
+    "depth_vs_link_count": {
+      "correlation": -0.1842430065954137,
+      "p_value": 3.44554314712278e-48,
+      "significant": true,
+      "interpretation": "weak negative correlation"
+    },
+    "depth_vs_path_length": {
+      "correlation": -0.1449456815296562,
+      "p_value": 2.729659315949183e-30,
+      "significant": true,
+      "interpretation": "weak negative correlation"
+    },
+    "path_length_vs_link_count": {
+      "correlation": 0.0013791066879380006,
+      "p_value": 0.9138017040905041,
+      "significant": false,
+      "interpretation": "negligible positive correlation"
+    }
+  },
+  "anomalies": {
+    "depth_outliers": {
+      "count": 349,
+      "percentage": 5.662826545513549,
+      "lower_bound": 1.5,
+      "upper_bound": 5.5,
+      "examples": [
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/hartt/academics/music/music-production-and-technology.aspx",
+          "value": 1.0,
+          "z_score": -2.1393420978639663
+        },
+        {
+          "url": "https://www.hartford.edu/news/press-releases/2020/04/ns-ceta-barney-has-fsae-team.aspx#main-content",
+          "value": 6.0,
+          "z_score": 2.627384347955131
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-nursing/bsn-in-nursing.aspx",
+          "value": 1.0,
+          "z_score": -2.1393420978639663
+        },
+        {
+          "url": "https://www.hartford.edu/directory/hillyer/casiano-noel.aspx#main-content",
+          "value": 6.0,
+          "z_score": 2.627384347955131
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-health-sciences/certificate-in-diagnostic-medical-sonography.aspx",
+          "value": 1.0,
+          "z_score": -2.1393420978639663
+        },
+        {
+          "url": "https://www.hartford.edu/news/press-releases/2025/10/ns-scholars-of-excellence-breakfast.aspx",
+          "value": 1.0,
+          "z_score": -2.1393420978639663
+        },
+        {
+          "url": "https://www.hartford.edu/giving/giving-opportunities/schools-colleges/barney.aspx#main-content",
+          "value": 6.0,
+          "z_score": 2.627384347955131
+        },
+        {
+          "url": "https://www.hartford.edu/giving/planned-giving/pg-donor-stories/default.aspx#main-content",
+          "value": 6.0,
+          "z_score": 2.627384347955131
+        },
+        {
+          "url": "https://www.hartford.edu/academics/library/default.aspx",
+          "value": 1.0,
+          "z_score": -2.1393420978639663
+        },
+        {
+          "url": "https://www.hartford.edu/academics/library/allen-library/dma-submit-recordings.aspx#zip",
+          "value": 6.0,
+          "z_score": 2.627384347955131
+        }
+      ]
+    },
+    "path_length_outliers": {
+      "count": 241,
+      "percentage": 3.910433230569528,
+      "lower_bound": -7.0,
+      "upper_bound": 129.0,
+      "examples": [
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-education/montessori-education/med-in-education-montessori-concentration.aspx#curriculum",
+          "value": 134.0,
+          "z_score": 2.080537047542497
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-education/montessori-education/ba-in-education-montessori-concentration.aspx#housing",
+          "value": 133.0,
+          "z_score": 2.0506573836061315
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-rehabilitation-sciences/bs-ms-in-health-sciences-prosthetics-and-orthotics.aspx#the-hursey-center",
+          "value": 136.0,
+          "z_score": 2.1402963754152284
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-mechanical-aerospace-and-acoustical-engineering/bs-in-aerospace-engineering.aspx#degree-requirements",
+          "value": 137.0,
+          "z_score": 2.170176039351594
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-civil-environmental-and-biomedical-engineering/ms-in-civil-engineering.aspx#overview",
+          "value": 132.0,
+          "z_score": 2.0207777196697654
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-education/montessori-education/ba-in-education-montessori-concentration.aspx#apply",
+          "value": 133.0,
+          "z_score": 2.0506573836061315
+        },
+        {
+          "url": "https://www.hartford.edu/about/offices-divisions/finance-administration/information-technology-services/media-technology-services/classroom-technology.aspx#topMobile",
+          "value": 131.0,
+          "z_score": 1.9908980557334
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-education/montessori-education/ba-in-education-montessori-concentration.aspx#center-for-montessori-studies",
+          "value": 133.0,
+          "z_score": 2.0506573836061315
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-rehabilitation-sciences/bs-ms-in-health-sciences-prosthetics-and-orthotics.aspx#about-the-program",
+          "value": 136.0,
+          "z_score": 2.1402963754152284
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/arts-sciences/academics/departments-and-centers/politics-economics-and-international-studies/ba-in-economics.aspx#topMobile",
+          "value": 141.0,
+          "z_score": 2.2896946950970567
+        }
+      ]
+    },
+    "link_count_outliers": {
+      "count": 0,
+      "percentage": 0.0,
+      "lower_bound": -329.25,
+      "upper_bound": 548.75,
+      "examples": []
+    }
+  },
+  "depth_analysis": {
+    "3": {
+      "count": 2283,
+      "avg_links": 115.33333333333333,
+      "avg_path_length": 63.52825229960578,
+      "has_fragment": 1068,
+      "has_query": 24,
+      "fragment_percentage": 46.78055190538765,
+      "query_percentage": 1.0512483574244416
+    },
+    "4": {
+      "count": 1765,
+      "avg_links": 93.52804532577903,
+      "avg_path_length": 58.529178470254955,
+      "has_fragment": 1459,
+      "has_query": 2,
+      "fragment_percentage": 82.66288951841359,
+      "query_percentage": 0.11331444759206798
+    },
+    "2": {
+      "count": 1317,
+      "avg_links": 137.92255125284737,
+      "avg_path_length": 74.74335611237662,
+      "has_fragment": 673,
+      "has_query": 22,
+      "fragment_percentage": 51.100987091875474,
+      "query_percentage": 1.6704631738800304
+    },
+    "1": {
+      "count": 177,
+      "avg_links": 178.97175141242937,
+      "avg_path_length": 72.27118644067797,
+      "has_fragment": 0,
+      "has_query": 3,
+      "fragment_percentage": 0.0,
+      "query_percentage": 1.694915254237288
+    },
+    "5": {
+      "count": 449,
+      "avg_links": 82.62138084632517,
+      "avg_path_length": 56.494432071269486,
+      "has_fragment": 300,
+      "has_query": 8,
+      "fragment_percentage": 66.815144766147,
+      "query_percentage": 1.7817371937639197
+    },
+    "6": {
+      "count": 169,
+      "avg_links": 73.02958579881657,
+      "avg_path_length": 68.97041420118343,
+      "has_fragment": 150,
+      "has_query": 2,
+      "fragment_percentage": 88.75739644970415,
+      "query_percentage": 1.183431952662722
+    },
+    "7": {
+      "count": 2,
+      "avg_links": 111.0,
+      "avg_path_length": 59.0,
+      "has_fragment": 2,
+      "has_query": 0,
+      "fragment_percentage": 100.0,
+      "query_percentage": 0.0
+    },
+    "0": {
+      "count": 1,
+      "avg_links": 472.0,
+      "avg_path_length": 1.0,
+      "has_fragment": 0,
+      "has_query": 0,
+      "fragment_percentage": 0.0,
+      "query_percentage": 0.0
+    }
+  },
+  "link_analysis": {
+    "dead_end_pages": {
+      "count": 3149,
+      "percentage": 51.09524582184002
+    },
+    "hub_pages": {
+      "count": 328,
+      "threshold": 253.0,
+      "examples": [
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-education/montessori-education/ba-in-education-montessori-concentration.aspx#housing",
+          "link_count": 267
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-nursing/bsn-in-nursing.aspx",
+          "link_count": 260
+        },
+        {
+          "url": "https://www.hartford.edu/academics/library/get-help/faq-covid.aspx#main-content",
+          "link_count": 258
+        },
+        {
+          "url": "https://www.hartford.edu/unotes/campus-news.aspx",
+          "link_count": 429
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-mechanical-aerospace-and-acoustical-engineering/bs-in-aerospace-engineering.aspx#degree-requirements",
+          "link_count": 261
+        },
+        {
+          "url": "https://www.hartford.edu/barney/academics/business-insights/supply-chain-management.aspx#topMobile",
+          "link_count": 254
+        },
+        {
+          "url": "https://www.hartford.edu/faculty-staff/faculty/faculty-senate/default.aspx#main-content",
+          "link_count": 270
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-electrical-and-computer-engineering/bs-in-computer-engineering.aspx#accreditation",
+          "link_count": 266
+        },
+        {
+          "url": "https://www.hartford.edu/directory/main-numbers.aspx#topMobile",
+          "link_count": 281
+        },
+        {
+          "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-health-sciences/default.aspx#topMobile",
+          "link_count": 266
+        }
+      ]
+    }
+  },
+  "url_health": {
+    "url_length_score": 64.93590783709232,
+    "depth_score": 87.05176050624695,
+    "fragment_score": 40.743144572448486,
+    "overall_health": 66.52441992536102,
+    "health_grade": "D"
+  },
+  "temporal_patterns": {
+    "available": true,
+    "first_discovered": 1761321355,
+    "last_discovered": 1761322622,
+    "time_span_seconds": 1267,
+    "discovery_rate": 4.864246250986582,
+    "discovery_timeline": {
+      "9": 297,
+      "0": 2060,
+      "2": 509,
+      "5": 666,
+      "1": 712,
+      "7": 426,
+      "4": 467,
+      "3": 498,
+      "6": 301,
+      "8": 223,
+      "10": 4
+    }
+  },
+  "content_analysis": {
+    "content_types": {
+      "text/html": 3014
+    },
+    "status_codes": {
+      "200": 3014
+    },
+    "success_rate": 100.0
+  }
+}

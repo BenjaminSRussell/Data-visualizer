@@ -1,11 +1,4 @@
-"""
-Operation: Save Classification
-
-Purpose: Save classification results to database
-Input: URL ID, classification results, database session
-Output: List of classification record IDs
-Dependencies: SQLAlchemy, models
-"""
+"""Save classification results to database."""
 
 from sqlalchemy.orm import Session
 import logging
@@ -22,21 +15,7 @@ def execute(
     classifications: Dict[str, Dict[str, any]],
     model_version: str = MODEL_VERSION
 ) -> List[int]:
-    """
-    Save classification results.
-
-    Args:
-        db: Database session
-        url_id: URL record ID
-        classifications: Classification results from classify_content
-        model_version: Model version string
-
-    Returns:
-        List of created classification record IDs
-
-    Example:
-        classification_ids = execute(db, url_id, results)
-    """
+    """Save classification results to database. Returns list of created record IDs."""
     from server.models import Classification
 
     created_ids = []
@@ -45,8 +24,6 @@ def execute(
         for category_type, result in classifications.items():
             label = result.get('label')
             score = result.get('score', 0.0)
-
-            # Only save if there's a label
             if label and score > 0:
                 classification = Classification(
                     url_id=url_id,

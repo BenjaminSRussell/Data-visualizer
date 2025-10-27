@@ -1,7 +1,4 @@
-"""
-Classify content using zero-shot learning.
-Returns classification results with confidence scores.
-"""
+"""Classify content using zero-shot learning."""
 
 from transformers import pipeline
 import logging
@@ -26,35 +23,7 @@ def execute(
     categories: Dict[str, List[str]],
     threshold: float = 0.3
 ) -> Dict[str, Dict[str, any]]:
-    """
-    Classify text content using zero-shot learning.
-
-    Args:
-        text: Text content to classify
-        categories: Dictionary mapping category types to label lists
-                   Example: {"intent": ["informational", "transactional"],
-                            "content_type": ["article", "product", "service"]}
-        threshold: Minimum confidence threshold (0.0 to 1.0)
-
-    Returns:
-        Dictionary mapping category types to classification results:
-        {
-            "intent": {
-                "label": "informational",
-                "score": 0.85,
-                "all_scores": {"informational": 0.85, "transactional": 0.15}
-            },
-            ...
-        }
-
-    Example:
-        categories = {
-            "intent": ["informational", "transactional"],
-            "content_type": ["article", "product"]
-        }
-        results = execute(text, categories, threshold=0.5)
-        print(f"Intent: {results['intent']['label']}")
-    """
+    """Classify text using zero-shot model. Returns dict with label, score, and all_scores per category."""
     results = {}
 
     if not text or not categories:
@@ -68,21 +37,14 @@ def execute(
                 continue
 
             try:
-                # Run classification
                 output = classifier(
-                    text[:512],  # Truncate to avoid token limits
+                    text[:512],
                     candidate_labels=labels,
                     multi_label=False
                 )
-
-                # Get top result
                 top_label = output['labels'][0]
                 top_score = output['scores'][0]
-
-                # Build all scores dict
                 all_scores = dict(zip(output['labels'], output['scores']))
-
-                # Only include if above threshold
                 if top_score >= threshold:
                     results[category_type] = {
                         'label': top_label,
@@ -95,7 +57,6 @@ def execute(
                         'score': float(top_score),
                         'all_scores': {k: float(v) for k, v in all_scores.items()}
                     }
-
             except Exception as e:
                 logger.error(f"Error classifying {category_type}: {e}")
                 results[category_type] = {
@@ -104,7 +65,6 @@ def execute(
                     'all_scores': {},
                     'error': str(e)
                 }
-
     except Exception as e:
         logger.error(f"Error in classification: {e}")
 
@@ -116,25 +76,11 @@ def execute_batch(
     categories: Dict[str, List[str]],
     threshold: float = 0.3
 ) -> List[Dict[str, Dict[str, any]]]:
-    """
-    Classify multiple texts in batch.
-
-    Args:
-        texts: List of text strings to classify
-        categories: Category configuration
-        threshold: Minimum confidence threshold
-
-    Returns:
-        List of classification results, one per input text
-
-    Example:
-        texts = ["Article about technology", "Buy our product now"]
-        results = execute_batch(texts, categories)
-    """
+    """Classify multiple texts. Returns list of results."""
     return [execute(text, categories, threshold) for text in texts]
 
 
 def cleanup():
-    """Clean up classifier resources."""
+    """Release classifier model from memory."""
     global _classifier
     _classifier = None

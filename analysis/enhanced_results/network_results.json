@@ -1,0 +1,848 @@
+{
+  "network_metrics": {
+    "nodes": 6163,
+    "edges": 249107,
+    "density": 0.0065595201399521585,
+    "average_degree": 36.240223916923576,
+    "average_in_degree": 32.06068473146195,
+    "average_out_degree": 40.419763102385204,
+    "max_in_degree": 3014,
+    "max_out_degree": 282,
+    "reciprocity": 0.0200235240278274
+  },
+  "centrality": {
+    "top_by_degree": [
+      {
+        "url": "https://www.hartford.edu/programs-of-study/default.aspx",
+        "degree": 3290
+      },
+      {
+        "url": "https://www.hartford.edu/default.aspx",
+        "degree": 3251
+      },
+      {
+        "url": "https://www.hartford.edu/news/default.aspx",
+        "degree": 3192
+      },
+      {
+        "url": "https://www.hartford.edu/current-students/default.aspx",
+        "degree": 3129
+      },
+      {
+        "url": "https://www.hartford.edu/faculty-staff/default.aspx",
+        "degree": 3122
+      },
+      {
+        "url": "https://www.hartford.edu/academics/library/default.aspx",
+        "degree": 3120
+      },
+      {
+        "url": "https://www.hartford.edu/directory/default.aspx",
+        "degree": 3109
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/housing/default.aspx",
+        "degree": 3106
+      },
+      {
+        "url": "https://www.hartford.edu/admission/undergraduate/contact/default.aspx",
+        "degree": 3105
+      },
+      {
+        "url": "https://www.hartford.edu/admission/scholarships/default.aspx",
+        "degree": 3103
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/public-safety/default.aspx",
+        "degree": 3103
+      },
+      {
+        "url": "https://www.hartford.edu/alumni/default.aspx",
+        "degree": 3102
+      },
+      {
+        "url": "https://www.hartford.edu/about/offices-divisions/default.aspx",
+        "degree": 3101
+      },
+      {
+        "url": "https://www.hartford.edu/academics/honors-program/default.aspx",
+        "degree": 3099
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/clubs-activities/clubs-organizations-index/default.aspx",
+        "degree": 3099
+      },
+      {
+        "url": "https://www.hartford.edu/community/default.aspx",
+        "degree": 3099
+      },
+      {
+        "url": "https://www.hartford.edu/admission/undergraduate/first-year/undergraduate-application-process.aspx",
+        "degree": 3099
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/default.aspx",
+        "degree": 3098
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/healthy-hawks/default.aspx",
+        "degree": 3097
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/transportation/campus-shuttle.aspx",
+        "degree": 3096
+      }
+    ],
+    "top_by_in_degree": [
+      {
+        "url": "https://www.hartford.edu/default.aspx",
+        "in_degree": 3014
+      },
+      {
+        "url": "https://www.hartford.edu/academics/library/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/about/accreditation/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/admission/undergraduate/contact/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/calendar/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/programs-of-study/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/clubs-activities/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/about/mission-vision/strategic-vision/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/about/offices-divisions/finance-administration/facilities/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/admission/visit/open-houses.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/transportation/campus-shuttle.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/healthy-hawks/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/admission/tuition-fees/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/admission/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/admission/visit/virtual/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/news/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/admission/undergraduate/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/academics/honors-program/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/career-services/default.aspx",
+        "in_degree": 3012
+      },
+      {
+        "url": "https://www.hartford.edu/about/why-uhart/location.aspx",
+        "in_degree": 3012
+      }
+    ],
+    "top_by_out_degree": [
+      {
+        "url": "https://www.hartford.edu/unotes/campus-news.aspx",
+        "out_degree": 282
+      },
+      {
+        "url": "https://www.hartford.edu/programs-of-study/default.aspx",
+        "out_degree": 278
+      },
+      {
+        "url": "https://www.hartford.edu/programs-of-study/default.aspx#topMobile",
+        "out_degree": 278
+      },
+      {
+        "url": "https://www.hartford.edu/programs-of-study/default.aspx#main-content",
+        "out_degree": 278
+      },
+      {
+        "url": "https://www.hartford.edu/unotes/faculty-staff-news.aspx",
+        "out_degree": 243
+      },
+      {
+        "url": "https://www.hartford.edu/default.aspx#",
+        "out_degree": 237
+      },
+      {
+        "url": "https://www.hartford.edu/",
+        "out_degree": 237
+      },
+      {
+        "url": "https://www.hartford.edu/default.aspx",
+        "out_degree": 237
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/career-ready/success-stories.aspx",
+        "out_degree": 235
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/hartt/about/faculty-and-staff/default.aspx#topMobile",
+        "out_degree": 230
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/hartt/about/faculty-and-staff/default.aspx#main-content",
+        "out_degree": 230
+      },
+      {
+        "url": "https://www.hartford.edu/barney/career-ready/success-stories.aspx#topMobile",
+        "out_degree": 228
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/arts-sciences/career-ready/success-stories.aspx",
+        "out_degree": 193
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/about/news-and-events/default.aspx",
+        "out_degree": 185
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/about/news-and-events/default.aspx#main-content",
+        "out_degree": 185
+      },
+      {
+        "url": "https://www.hartford.edu/barney/about/new-and-events/default.aspx#main-content",
+        "out_degree": 184
+      },
+      {
+        "url": "https://www.hartford.edu/news/default.aspx#topMobile",
+        "out_degree": 180
+      },
+      {
+        "url": "https://www.hartford.edu/news/default.aspx#main-content",
+        "out_degree": 180
+      },
+      {
+        "url": "https://www.hartford.edu/news/default.aspx",
+        "out_degree": 180
+      },
+      {
+        "url": "https://www.hartford.edu/unotes/student-news.aspx",
+        "out_degree": 167
+      }
+    ],
+    "top_by_betweenness": [
+      {
+        "url": "https://www.hartford.edu/news/press-releases/2024/12/ns-nasa-space-grant-recipients.aspx#main-content",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/2020/ss-ceta-andrew-petersen-20-m-21.aspx",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/unotes/2024/03/barney-hosts-annual-norgaard-networking-night.aspx",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/hillyer/academics/degree-requirements.aspx#topMobile",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/academics/honors-program/colloquium/default.aspx",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/directory/ceta/granstrand-laurie.aspx#main-content",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-health-sciences/bs-in-health-sciences-pre-pharmacy.aspx#admission-requirements",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/unotes/2023/12/barney-business-plan-competition-congratulates-four-winners.aspx#topMobile",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/academics/interdisciplinary-studies-uis/course-override-request-form.aspx",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/unotes/2025/09/wellness-fair-wednesday-924.aspx",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/unotes/2025/07/hrd-to-offer-two-part-training-on-hiring-and-epafs.aspx",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/unotes/2025/05/leave-report-lockdown-for-new-fiscal-year.aspx",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/2023/ss-barney-anthony-senseman-23.aspx",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/academics/center-for-student-success/accessibility-services/default.aspx#topMobile",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/admission/partnerships/stanley-partnership.aspx",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/enhp/academics/department-of-education/montessori-education/ba-in-education-montessori-concentration.aspx#housing",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/unotes/2023/04/barney-secures-accreditation-for-project-management-program.aspx#main-content",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/directory/arts-science/hogg-anna.aspx#main-content",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/admission/partnerships/sesi-partnership.aspx",
+        "betweenness": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/about/history/traditions.aspx#topMobile",
+        "betweenness": 1.0
+      }
+    ]
+  },
+  "clustering": {
+    "global_clustering_coefficient": 0.2682175285848172,
+    "highly_clustered_pages": [
+      {
+        "url": "https://www.hartford.edu/directory/ceta/granstrand-laurie.aspx#main-content",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/staff/adams-christine.aspx",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/arts-science/kennen-kristine.aspx#topMobile",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/staff/kenyon-william.aspx",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/staff/smith-keshawn.aspx#topMobile",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/enhp/psillas-sarah.aspx#topMobile",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/arts-science/owens-katharine.aspx#topMobile",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/enhp/yang-jinghui.aspx#main-content",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/enhp/yang-jinghui.aspx#topMobile",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/staff/farrell-tamyra.aspx",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/staff/sponauer-amelia.aspx#topMobile",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/staff/degree-robert.aspx#main-content",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/barney/stec-david.aspx#topMobile",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/arts-science/md-tayeen-abu-saleh.aspx",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/staff/sepe-kevin.aspx#topMobile",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/arts-science/costello-matthew.aspx",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/barney/ranucci-rebecca.aspx#main-content",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/staff/parke-sean.aspx",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/hillyer/ashuntantang-joyce.aspx",
+        "clustering_coefficient": 0.6003603603603603
+      },
+      {
+        "url": "https://www.hartford.edu/directory/arts-science/kennedy-sharmon.aspx#main-content",
+        "clustering_coefficient": 0.6003603603603603
+      }
+    ]
+  },
+  "link_patterns": {
+    "self_links": 10194,
+    "fragment_links": 10190,
+    "external_links": 101975,
+    "sibling_links": 26357,
+    "cross_depth_distribution": {
+      "-3": 107903,
+      "-2": 172800,
+      "-1": 117507,
+      "1": 3544,
+      "-4": 24325,
+      "2": 410,
+      "-5": 8174,
+      "3": 70,
+      "-6": 151,
+      "4": 3
+    }
+  },
+  "domain_analysis": {
+    "unique_domains_linked": 983,
+    "top_linked_domains": {
+      "hartford.presence.io": 12220,
+      "www.hartfordhawks.com": 12071,
+      "experience.elluciancloud.com": 12048,
+      "www.hartford.edu": 10225,
+      "www.youtube.com": 9179,
+      "engage.hartford.edu": 6229,
+      "www.bkstr.com": 6042,
+      "blackboard.hartford.edu": 6037,
+      "hartford.starfishsolutions.com": 6037,
+      "hawkmail.hartford.edu": 6033,
+      "www.instagram.com": 3071,
+      "www.facebook.com": 3064,
+      "www.linkedin.com": 3059,
+      "x.com": 3032,
+      "www.tiktok.com": 3024,
+      "hartford.meritpages.com": 3020,
+      "catalog.hartford.edu": 1432,
+      "go.hartford.edu": 821,
+      "hartford.bibliovation.com": 381,
+      "mediaspace.hartford.edu": 247
+    },
+    "domain_diversity_score": 0.1595002433879604
+  },
+  "authority_hub_analysis": {
+    "top_authorities": [
+      {
+        "url": "https://www.hartford.edu/default.aspx",
+        "authority_score": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/academics/library/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/about/accreditation/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/admission/undergraduate/contact/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/calendar/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/programs-of-study/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/clubs-activities/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/about/mission-vision/strategic-vision/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/about/offices-divisions/finance-administration/facilities/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/admission/visit/open-houses.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/transportation/campus-shuttle.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/healthy-hawks/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/admission/tuition-fees/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/admission/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/admission/visit/virtual/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/news/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/admission/undergraduate/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/academics/honors-program/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/student-life/career-services/default.aspx",
+        "authority_score": 0.9993364299933643
+      },
+      {
+        "url": "https://www.hartford.edu/about/why-uhart/location.aspx",
+        "authority_score": 0.9993364299933643
+      }
+    ],
+    "top_hubs": [
+      {
+        "url": "https://www.hartford.edu/default.aspx#",
+        "hub_score": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/",
+        "hub_score": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/default.aspx",
+        "hub_score": 1.0
+      },
+      {
+        "url": "https://www.hartford.edu/programs-of-study/default.aspx",
+        "hub_score": 0.996020100940258
+      },
+      {
+        "url": "https://www.hartford.edu/programs-of-study/default.aspx#topMobile",
+        "hub_score": 0.996020100940258
+      },
+      {
+        "url": "https://www.hartford.edu/programs-of-study/default.aspx#main-content",
+        "hub_score": 0.996020100940258
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/faculty-profiles.aspx#topMobile",
+        "hub_score": 0.9912943110854617
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/faculty-profiles.aspx",
+        "hub_score": 0.9912943110854617
+      },
+      {
+        "url": "https://www.hartford.edu/directory/main-numbers.aspx#topMobile",
+        "hub_score": 0.9907117540411493
+      },
+      {
+        "url": "https://www.hartford.edu/directory/main-numbers.aspx",
+        "hub_score": 0.9907117540411493
+      },
+      {
+        "url": "https://www.hartford.edu/faculty-staff/faculty/faculty-senate/default.aspx#main-content",
+        "hub_score": 0.9902761973725044
+      },
+      {
+        "url": "https://www.hartford.edu/faculty-staff/faculty/faculty-senate/default.aspx#",
+        "hub_score": 0.9902761973725044
+      },
+      {
+        "url": "https://www.hartford.edu/faculty-staff/faculty/faculty-senate/default.aspx",
+        "hub_score": 0.9902761973725044
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-electrical-and-computer-engineering/bs-in-robotics-engineering.aspx",
+        "hub_score": 0.9898678629956499
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-electrical-and-computer-engineering/bs-in-robotics-engineering.aspx#degree-requirements",
+        "hub_score": 0.9898678629956499
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-electrical-and-computer-engineering/bs-in-robotics-engineering.aspx#additional-opportunities",
+        "hub_score": 0.9898678629956499
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-electrical-and-computer-engineering/bs-in-robotics-engineering.aspx#accreditation",
+        "hub_score": 0.9898678629956499
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-electrical-and-computer-engineering/bs-in-robotics-engineering.aspx#about-the-major",
+        "hub_score": 0.9898678629956499
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-electrical-and-computer-engineering/meng-in-electrical-and-computer-engineering.aspx#about-the-program",
+        "hub_score": 0.9892689725762632
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/ceta/academics/department-of-electrical-and-computer-engineering/meng-in-electrical-and-computer-engineering.aspx",
+        "hub_score": 0.9892689725762632
+      }
+    ]
+  },
+  "community_detection": {
+    "total_communities": 34,
+    "top_communities": [
+      {
+        "community": "academics",
+        "size": 1676,
+        "percentage": 27.19454810968684
+      },
+      {
+        "community": "directory",
+        "size": 1081,
+        "percentage": 17.54015901346747
+      },
+      {
+        "community": "unotes",
+        "size": 960,
+        "percentage": 15.576829466169073
+      },
+      {
+        "community": "success-stories",
+        "size": 859,
+        "percentage": 13.938017199415869
+      },
+      {
+        "community": "news",
+        "size": 416,
+        "percentage": 6.749959435339932
+      },
+      {
+        "community": "about",
+        "size": 330,
+        "percentage": 5.354535128995619
+      },
+      {
+        "community": "student-life",
+        "size": 198,
+        "percentage": 3.2127210773973713
+      },
+      {
+        "community": "barney",
+        "size": 183,
+        "percentage": 2.9693331169884796
+      },
+      {
+        "community": "admission",
+        "size": 134,
+        "percentage": 2.1742657796527665
+      },
+      {
+        "community": "faculty-staff",
+        "size": 92,
+        "percentage": 1.4927794905078695
+      },
+      {
+        "community": "alumni",
+        "size": 79,
+        "percentage": 1.2818432581534966
+      },
+      {
+        "community": "giving",
+        "size": 62,
+        "percentage": 1.006003569690086
+      },
+      {
+        "community": "calendar",
+        "size": 20,
+        "percentage": 0.324517280545189
+      },
+      {
+        "community": "current-students",
+        "size": 19,
+        "percentage": 0.3082914165179296
+      },
+      {
+        "community": "parents",
+        "size": 8,
+        "percentage": 0.1298069122180756
+      },
+      {
+        "community": "_forms",
+        "size": 6,
+        "percentage": 0.09735518416355671
+      },
+      {
+        "community": "programs-of-study",
+        "size": 6,
+        "percentage": 0.09735518416355671
+      },
+      {
+        "community": "default.aspx",
+        "size": 5,
+        "percentage": 0.08112932013629726
+      },
+      {
+        "community": "community",
+        "size": 4,
+        "percentage": 0.0649034561090378
+      },
+      {
+        "community": "hartt-community-division",
+        "size": 3,
+        "percentage": 0.048677592081778354
+      }
+    ]
+  },
+  "bottlenecks": {
+    "count": 369,
+    "examples": [
+      {
+        "url": "https://www.hartford.edu/about/offices-divisions/office-registrar/graduation/graduation-prep.aspx#accordion-group-1-section-1-label",
+        "in_degree": 1,
+        "out_degree": 93
+      },
+      {
+        "url": "https://www.hartford.edu/news/press-releases/2022/05/ns-barney-cvs-learning-project-spring.aspx",
+        "in_degree": 1,
+        "out_degree": 90
+      },
+      {
+        "url": "https://www.hartford.edu/about/offices-divisions/student-affairs/",
+        "in_degree": 1,
+        "out_degree": 90
+      },
+      {
+        "url": "https://www.hartford.edu/about/buildings-locations/campus-improvements/academic-building/about.aspx#memorial",
+        "in_degree": 1,
+        "out_degree": 87
+      },
+      {
+        "url": "https://www.hartford.edu/about/buildings-locations/campus-improvements/academic-building/about.aspx#features",
+        "in_degree": 1,
+        "out_degree": 87
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/2020/ss-ceta-andrew-petersen-20-m-21.aspx",
+        "in_degree": 1,
+        "out_degree": 86
+      },
+      {
+        "url": "https://www.hartford.edu/news/press-releases/2021/04/ns-barney-win-1st-place-spencer-RIMS.aspx",
+        "in_degree": 1,
+        "out_degree": 85
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/2022/ss-barney-sean-cooney-22.aspx",
+        "in_degree": 1,
+        "out_degree": 85
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/2019/05/ss-barney-Kyra-Smolkis-19.aspx",
+        "in_degree": 1,
+        "out_degree": 84
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/2022/ss-barney-Kellen-Bassett-22.aspx",
+        "in_degree": 1,
+        "out_degree": 84
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/ss-barney-Philip-Dipinto-mba-22.aspx",
+        "in_degree": 1,
+        "out_degree": 83
+      },
+      {
+        "url": "https://www.hartford.edu/about/offices-divisions/finance-administration/financial-affairs/bursar-office/tuition-fees/default.aspx#fulltime",
+        "in_degree": 1,
+        "out_degree": 83
+      },
+      {
+        "url": "https://www.hartford.edu/about/offices-divisions/office-registrar/registration/degree-works.aspx",
+        "in_degree": 1,
+        "out_degree": 83
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/2020/ss-barney-Craig-Kazemekas-19-MSAT20.aspx",
+        "in_degree": 1,
+        "out_degree": 83
+      },
+      {
+        "url": "https://www.hartford.edu/news/press-releases/2022/06/ns-barney-kycia-farm.aspx",
+        "in_degree": 1,
+        "out_degree": 83
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/ss-barney-makaia-almeida-24.aspx",
+        "in_degree": 1,
+        "out_degree": 83
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/2022/ss-barney-Kate-Smith-22.aspx",
+        "in_degree": 1,
+        "out_degree": 83
+      },
+      {
+        "url": "https://www.hartford.edu/academics/schools-colleges/hartt/performances/default.aspx#accordion-group-1-section-3-label",
+        "in_degree": 1,
+        "out_degree": 83
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/2020/ss-as-onikuyide-20.aspx",
+        "in_degree": 1,
+        "out_degree": 83
+      },
+      {
+        "url": "https://www.hartford.edu/success-stories/2026/ss-barney-elijah-faust-25-m26.aspx",
+        "in_degree": 1,
+        "out_degree": 82
+      }
+    ]
+  }
+}

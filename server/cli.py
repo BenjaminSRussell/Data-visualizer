@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""
-Command-line tool to process JSONL files containing URLs.
-
-Usage: python cli.py urls.jsonl [--name "Session Name"]
-
-Loads URLs, fetches content, extracts metadata, classifies content,
-detects patterns, and saves results to database.
-"""
+"""Process JSONL files containing URLs via CLI."""
 
 import asyncio
 import sys
@@ -28,12 +21,8 @@ async def main():
 
     jsonl_file = sys.argv[1]
     session_name = None
-
-    # Parse optional --name argument
     if len(sys.argv) > 2 and sys.argv[2] == '--name' and len(sys.argv) > 3:
         session_name = sys.argv[3]
-
-    # Check file exists
     if not Path(jsonl_file).exists():
         print(f"Error: File not found: {jsonl_file}")
         sys.exit(1)
@@ -43,15 +32,13 @@ async def main():
     if session_name:
         print(f"Session name: {session_name}")
     print(f"{'='*60}\n")
-
-    # Initialize database
     print("Initializing database...")
     init_db()
 
-    # Get database session
+    # open database session
     db = get_session()
 
-    # Define categories for classification
+    # define classification categories
     categories = {
         "content_type": [
             "homepage",
@@ -70,7 +57,7 @@ async def main():
         ]
     }
 
-    # Validate file first
+    # validate file before processing
     print("Validating JSONL file...")
     validation = batch_processor.validate_file(jsonl_file)
 
@@ -82,7 +69,7 @@ async def main():
 
     print(f"Found {validation['valid_urls']} valid URLs\n")
 
-    # Process the file
+    # process the jsonl file
     print("Starting URL processing...")
     print("(This may take a while for large files)\n")
 
@@ -93,7 +80,7 @@ async def main():
         session_name=session_name
     )
 
-    # Display results
+    # display summary results
     print(f"\n{'='*60}")
     print("PROCESSING COMPLETE")
     print(f"{'='*60}\n")
@@ -107,7 +94,7 @@ async def main():
     print(f"Successfully processed: {result['processed']}")
     print(f"Failed: {result['failed']}")
 
-    # Display patterns
+    # display pattern details
     patterns = result.get('patterns', {})
     if patterns:
         print(f"\n{'='*60}")
@@ -133,7 +120,7 @@ async def main():
         if 'unique_domains' in patterns:
             print(f"Unique domains: {patterns['unique_domains']}")
 
-    # Dashboard instructions
+    # share dashboard instructions
     print(f"\n{'='*60}")
     print("VIEW RESULTS")
     print(f"{'='*60}\n")

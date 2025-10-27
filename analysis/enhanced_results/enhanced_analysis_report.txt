@@ -1,0 +1,38 @@
+================================================================================
+ENHANCED URL ANALYSIS REPORT
+Maximum Data Extraction
+================================================================================
+
+Input File: Site.jsonl
+Total URLs Analyzed: 6,163
+Analysis Date: 2025-10-27T01:42:49.555363
+Total Execution Time: 11.19s
+Analyzers Run: statistical, network, semantic_path, pathway, subdomain, url_components
+
+DATA EXTRACTION COMPLETENESS
+--------------------------------------------------------------------------------
+Coverage Score: 100.0%
+Total Data Points Extracted: 16,407
+Data Points per URL: 2.7
+
+DOMAIN INTELLIGENCE
+--------------------------------------------------------------------------------
+Total Domains: 1
+Total Subdomains: 2
+
+URL STRUCTURE ANALYSIS
+--------------------------------------------------------------------------------
+Unique Extensions: 3
+Unique Parameters: 9
+Unique Keywords: 3706
+
+KEY FINDINGS
+--------------------------------------------------------------------------------
+  • Analyzed 1 domains with 2 subdomains
+  • HTTPS adoption rate: 99.9%
+  • Most common file extension: .aspx
+
+ALERTS
+--------------------------------------------------------------------------------
+  Found 10 critical external dependencies
+

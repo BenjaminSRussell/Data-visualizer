@@ -1,11 +1,4 @@
-"""
-Operation: Detect Patterns
-
-Purpose: Detect patterns in a collection of URLs
-Input: List of URLs
-Output: Dictionary of detected patterns
-Dependencies: collections, re
-"""
+"""Detect patterns in URL collections: file types, structures, depth, domains."""
 
 from collections import Counter
 import re
@@ -17,24 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def execute(urls: List[str]) -> Dict[str, any]:
-    """
-    Detect patterns across a collection of URLs.
-
-    Args:
-        urls: List of URL strings to analyze
-
-    Returns:
-        Dictionary with:
-            - file_types: Counter of file extensions
-            - url_structures: Dict of structural patterns
-            - common_prefixes: List of common path prefixes
-            - depth_distribution: Counter of URL depths
-            - domain_distribution: Counter of domains
-
-    Example:
-        patterns = execute(url_list)
-        print(f"Most common file type: {patterns['file_types'].most_common(1)}")
-    """
+    """Analyze URL list for file types, structures, prefixes, depth, and domains."""
     result = {
         'file_types': Counter(),
         'url_structures': {
@@ -57,54 +33,33 @@ def execute(urls: List[str]) -> Dict[str, any]:
         for url in urls:
             try:
                 parsed = urlparse(url)
-
-                # Domain distribution
                 result['domain_distribution'][parsed.netloc] += 1
-
-                # File type detection
                 path = parsed.path
                 if '.' in path:
                     extension = path.split('.')[-1].lower()
-                    # Only count common web extensions
                     if extension in ['html', 'htm', 'php', 'asp', 'jsp', 'pdf',
                                     'jpg', 'png', 'gif', 'css', 'js', 'xml']:
                         result['file_types'][extension] += 1
-
-                # Depth
                 if path and path != '/':
                     depth = len([p for p in path.split('/') if p])
                     result['depth_distribution'][depth] += 1
                 else:
                     result['depth_distribution'][0] += 1
-
-                # URL structure patterns
                 if path:
                     paths.append(path)
-
-                    # Date pattern (YYYY, YYYY/MM, YYYY/MM/DD)
                     if re.search(r'/\d{4}(/\d{2})?(/\d{2})?/', path):
                         result['url_structures']['has_date'].append(url)
-
-                    # ID pattern (numbers in path)
                     if re.search(r'/\d+/', path) or re.search(r'id=\d+', url):
                         result['url_structures']['has_id'].append(url)
-
-                    # Slug pattern (hyphenated lowercase)
                     if re.search(r'/[a-z]+-[a-z-]+', path):
                         result['url_structures']['has_slug'].append(url)
-
-                    # Hierarchical (3+ levels)
                     if path.count('/') >= 3:
                         result['url_structures']['hierarchical'].append(url)
-
             except Exception as e:
                 logger.warning(f"Error analyzing URL {url}: {e}")
                 continue
-
-        # Find common prefixes
         if paths:
             result['common_prefixes'] = _find_common_prefixes(paths)
-
     except Exception as e:
         logger.error(f"Error detecting patterns: {e}")
 
@@ -112,27 +67,14 @@ def execute(urls: List[str]) -> Dict[str, any]:
 
 
 def _find_common_prefixes(paths: List[str], min_count: int = 3) -> List[str]:
-    """
-    Find common path prefixes.
-
-    Args:
-        paths: List of URL paths
-        min_count: Minimum occurrence count to be considered common
-
-    Returns:
-        List of common prefix strings
-    """
+    """Find path prefixes occurring at least min_count times."""
     prefix_counter = Counter()
 
     for path in paths:
         parts = [p for p in path.split('/') if p]
-
-        # Check all possible prefixes
         for i in range(1, len(parts)):
             prefix = '/' + '/'.join(parts[:i])
             prefix_counter[prefix] += 1
-
-    # Return prefixes that appear at least min_count times
     common = [prefix for prefix, count in prefix_counter.items()
               if count >= min_count]
 
@@ -140,20 +82,7 @@ def _find_common_prefixes(paths: List[str], min_count: int = 3) -> List[str]:
 
 
 def summarize(patterns: Dict[str, any]) -> Dict[str, any]:
-    """
-    Create a summary of detected patterns.
-
-    Args:
-        patterns: Output from execute()
-
-    Returns:
-        Dictionary with pattern summary statistics
-
-    Example:
-        patterns = execute(urls)
-        summary = summarize(patterns)
-        print(f"Total file types: {summary['file_types_count']}")
-    """
+    """Generate summary statistics from pattern detection results."""
     return {
         'file_types_count': len(patterns['file_types']),
         'most_common_file_type': patterns['file_types'].most_common(1)[0]

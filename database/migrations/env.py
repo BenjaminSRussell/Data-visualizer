@@ -9,17 +9,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from server.models import Base, Category, Classification, URL
 
-# this is the Alembic Config object
+# alembic config object
 config = context.config
 
-# Interpret the config file for Python logging.
+# interpret config for python logging
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Set target metadata for autogenerate support
+# set target metadata for autogenerate support
 target_metadata = Base.metadata
 
-# Override sqlalchemy.url from environment variable if present
+# override sqlalchemy.url from environment variable if present
 db_url = os.getenv("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
 config.set_main_option("sqlalchemy.url", db_url)
 

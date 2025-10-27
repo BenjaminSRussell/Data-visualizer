@@ -1,0 +1,498 @@
+{
+  "vocabulary": {
+    "total_tokens": 41755,
+    "unique_tokens": 3706,
+    "type_token_ratio": 0.08875583762423662,
+    "top_tokens": {
+      "academics": 2842,
+      "schools": 1257,
+      "colleges": 1256,
+      "directory": 1083,
+      "unotes": 964,
+      "stories": 898,
+      "success": 896,
+      "ss": 844,
+      "ceta": 782,
+      "barney": 618,
+      "hartt": 552,
+      "sciences": 512,
+      "enhp": 510,
+      "arts": 507,
+      "about": 464,
+      "department": 459,
+      "news": 454,
+      "staff": 410,
+      "press": 381,
+      "releases": 381,
+      "student": 366,
+      "ns": 358,
+      "engineering": 321,
+      "music": 305,
+      "library": 300,
+      "faculty": 298,
+      "science": 290,
+      "bs": 287,
+      "education": 245,
+      "centers": 243,
+      "departments": 241,
+      "life": 230,
+      "studies": 216,
+      "offices": 212,
+      "divisions": 212,
+      "services": 201,
+      "admission": 197,
+      "health": 184,
+      "graduate": 182,
+      "art": 164,
+      "computer": 159,
+      "office": 158,
+      "finance": 143,
+      "programs": 143,
+      "management": 142,
+      "administration": 141,
+      "students": 135,
+      "technology": 134,
+      "hillyer": 119,
+      "performance": 117
+    },
+    "vocabulary_diversity": "low"
+  },
+  "semantic_categories": {
+    "content": {
+      "count": 504,
+      "percentage": 8.177835469738763
+    },
+    "educational": {
+      "count": 2832,
+      "percentage": 45.951646925198766
+    },
+    "information": {
+      "count": 562,
+      "percentage": 9.118935583319812
+    },
+    "commerce": {
+      "count": 35,
+      "percentage": 0.5679052409540808
+    },
+    "administrative": {
+      "count": 238,
+      "percentage": 3.8617556384877494
+    },
+    "search": {
+      "count": 84,
+      "percentage": 1.362972578289794
+    },
+    "community": {
+      "count": 58,
+      "percentage": 0.9411001135810482
+    },
+    "events": {
+      "count": 236,
+      "percentage": 3.829303910433231
+    },
+    "media": {
+      "count": 88,
+      "percentage": 1.4278760343988317
+    },
+    "user": {
+      "count": 45,
+      "percentage": 0.7301638812266753
+    },
+    "dominant_category": {
+      "name": "educational",
+      "count": 2832
+    }
+  },
+  "action_analysis": {
+    "create": {
+      "count": 534,
+      "percentage": 63.12056737588653
+    },
+    "update": {
+      "count": 54,
+      "percentage": 6.382978723404255
+    },
+    "read": {
+      "count": 174,
+      "percentage": 20.56737588652482
+    },
+    "search": {
+      "count": 81,
+      "percentage": 9.574468085106384
+    },
+    "delete": {
+      "count": 1,
+      "percentage": 0.1182033096926714
+    },
+    "auth": {
+      "count": 2,
+      "percentage": 0.2364066193853428
+    },
+    "crud_distribution": {
+      "create": 534,
+      "read": 174,
+      "update": 54,
+      "delete": 1
+    }
+  },
+  "ngram_analysis": {
+    "top_bigrams": [
+      {
+        "schools colleges": 1256
+      },
+      {
+        "academics schools": 1242
+      },
+      {
+        "success stories": 868
+      },
+      {
+        "stories ss": 841
+      },
+      {
+        "academics department": 452
+      },
+      {
+        "news press": 381
+      },
+      {
+        "press releases": 381
+      },
+      {
+        "releases ns": 358
+      },
+      {
+        "colleges arts": 286
+      },
+      {
+        "arts sciences": 286
+      },
+      {
+        "colleges enhp": 282
+      },
+      {
+        "ss ceta": 276
+      },
+      {
+        "directory staff": 273
+      },
+      {
+        "sciences academics": 266
+      },
+      {
+        "colleges hartt": 260
+      },
+      {
+        "colleges ceta": 258
+      },
+      {
+        "enhp academics": 253
+      },
+      {
+        "academics library": 247
+      },
+      {
+        "academics departments": 241
+      },
+      {
+        "departments centers": 233
+      }
+    ],
+    "top_trigrams": [
+      {
+        "academics schools colleges": 1242
+      },
+      {
+        "success stories ss": 841
+      },
+      {
+        "news press releases": 381
+      },
+      {
+        "press releases ns": 358
+      },
+      {
+        "schools colleges arts": 286
+      },
+      {
+        "colleges arts sciences": 286
+      },
+      {
+        "schools colleges enhp": 282
+      },
+      {
+        "stories ss ceta": 273
+      },
+      {
+        "arts sciences academics": 266
+      },
+      {
+        "schools colleges hartt": 260
+      },
+      {
+        "schools colleges ceta": 258
+      },
+      {
+        "colleges enhp academics": 253
+      },
+      {
+        "enhp academics department": 247
+      },
+      {
+        "sciences academics departments": 233
+      },
+      {
+        "academics departments centers": 233
+      }
+    ],
+    "bigram_diversity": 7305,
+    "trigram_diversity": 7451
+  },
+  "template_extraction": {
+    "top_templates": [
+      {
+        "template": "/academics/library/hours/default.aspx",
+        "count": 21,
+        "percentage": 0.3407431445724485
+      },
+      {
+        "template": "/academics/library/get-help/faq-covid.aspx",
+        "count": 18,
+        "percentage": 0.2920655524906701
+      },
+      {
+        "template": "/alumni/spotlights/class-notes/{num}s-class-notes/{num}-class-notes.aspx",
+        "count": 14,
+        "percentage": 0.22716209638163234
+      },
+      {
+        "template": "/academics/schools-colleges/enhp/academics/department-of-education/montessori-education/ba-in-education-montessori-concentration.aspx",
+        "count": 13,
+        "percentage": 0.21093623235437287
+      },
+      {
+        "template": "/academics/library/get-help/faqs.aspx",
+        "count": 13,
+        "percentage": 0.21093623235437287
+      },
+      {
+        "template": "/academics/schools-colleges/art/academics/graduate/photography.aspx",
+        "count": 12,
+        "percentage": 0.19471036832711341
+      },
+      {
+        "template": "/academics/schools-colleges/ceta/academics/department-of-architecture/master-of-architecture.aspx",
+        "count": 12,
+        "percentage": 0.19471036832711341
+      },
+      {
+        "template": "/barney/academics/business-insights/msba.aspx",
+        "count": 12,
+        "percentage": 0.19471036832711341
+      },
+      {
+        "template": "/academics/library/presidents-college/course-listing.aspx",
+        "count": 11,
+        "percentage": 0.17848450429985396
+      },
+      {
+        "template": "/academics/schools-colleges/arts-sciences/academics/departments-and-centers/communication/ma-in-integrated-communication.aspx",
+        "count": 11,
+        "percentage": 0.17848450429985396
+      },
+      {
+        "template": "/unotes/calendar/featured-events.aspx",
+        "count": 11,
+        "percentage": 0.17848450429985396
+      },
+      {
+        "template": "/barney/academics/strategic-management/mba.aspx",
+        "count": 11,
+        "percentage": 0.17848450429985396
+      },
+      {
+        "template": "/academics/schools-colleges/enhp/academics/department-of-education/montessori-education/med-in-education-montessori-concentration.aspx",
+        "count": 10,
+        "percentage": 0.1622586402725945
+      },
+      {
+        "template": "/academics/library/about-us/suggest-purchase/default.aspx",
+        "count": 10,
+        "percentage": 0.1622586402725945
+      },
+      {
+        "template": "/academics/schools-colleges/enhp/academics/department-of-rehabilitation-sciences/doctor-of-physical-therapy.aspx",
+        "count": 10,
+        "percentage": 0.1622586402725945
+      },
+      {
+        "template": "/academics/schools-colleges/hartt/calendar/default.aspx",
+        "count": 10,
+        "percentage": 0.1622586402725945
+      },
+      {
+        "template": "/academics/schools-colleges/enhp/academics/department-of-education/med-in-special-education.aspx",
+        "count": 10,
+        "percentage": 0.1622586402725945
+      },
+      {
+        "template": "/academics/schools-colleges/enhp/academics/department-of-health-sciences/bs-exercise-science.aspx",
+        "count": 10,
+        "percentage": 0.1622586402725945
+      },
+      {
+        "template": "/academics/schools-colleges/art/academics/graduate/illustration.aspx",
+        "count": 10,
+        "percentage": 0.1622586402725945
+      },
+      {
+        "template": "/academics/schools-colleges/enhp/academics/department-of-rehabilitation-sciences/ms-in-occupational-therapy.aspx",
+        "count": 10,
+        "percentage": 0.1622586402725945
+      },
+      {
+        "template": "/academics/schools-colleges/art/academics/undergraduate/painting-and-drawing.aspx",
+        "count": 10,
+        "percentage": 0.1622586402725945
+      },
+      {
+        "template": "/academics/schools-colleges/enhp/academics/department-of-nursing/bsn-in-nursing.aspx",
+        "count": 9,
+        "percentage": 0.14603277624533506
+      },
+      {
+        "template": "/student-life/calendar/default.aspx",
+        "count": 9,
+        "percentage": 0.14603277624533506
+      },
+      {
+        "template": "/academics/schools-colleges/arts-sciences/academics/departments-and-centers/biology/neuroscience.aspx",
+        "count": 9,
+        "percentage": 0.14603277624533506
+      },
+      {
+        "template": "/academics/schools-colleges/enhp/academics/department-of-rehabilitation-sciences/bs-dpt-in-exercise-science-physical-therapy-program.aspx",
+        "count": 9,
+        "percentage": 0.14603277624533506
+      },
+      {
+        "template": "/barney/academics/strategic-management/business-administration/dual-msat-mba.aspx",
+        "count": 9,
+        "percentage": 0.14603277624533506
+      },
+      {
+        "template": "/academics/schools-colleges/ceta/academics/department-of-electrical-and-computer-engineering/bs-in-electrical-engineering.aspx",
+        "count": 9,
+        "percentage": 0.14603277624533506
+      },
+      {
+        "template": "/academics/schools-colleges/enhp/academics/department-of-education/bs-in-elementary-education.aspx",
+        "count": 9,
+        "percentage": 0.14603277624533506
+      },
+      {
+        "template": "/news/press-releases/{num}/{num}/ns-ceta-design-expo-fall-{num}.aspx",
+        "count": 9,
+        "percentage": 0.14603277624533506
+      },
+      {
+        "template": "/admission/scholarships/default.aspx",
+        "count": 9,
+        "percentage": 0.14603277624533506
+      }
+    ],
+    "total_unique_templates": 2888,
+    "template_diversity": 0.468602953107253,
+    "diversity_level": "medium"
+  },
+  "parameter_analysis": {
+    "total_parameterized_urls": 59,
+    "top_parameter_names": {
+      "trumbaEmbed": 50,
+      "fbclid": 5,
+      "type": 3,
+      "id": 3,
+      "confId": 3,
+      "cx": 1,
+      "ie": 1
+    },
+    "common_parameters": {
+      "trumbaEmbed": {
+        "view=event&eventid=1304010407": 3,
+        "view=event&eventid=1267962569": 3,
+        "view=event&eventid=1302987945": 3,
+        "view=event&eventid=1290827974": 3,
+        "view=event&eventid=1328303005": 3,
+        "view=event&eventid=1305822722": 3,
+        "view=event&eventid=1325597878": 2,
+        "view=event&eventid=1302966336": 2,
+        "view=event&eventid=1305821782": 2,
+        "view=event&eventid=1313456838": 2
+      },
+      "fbclid": {
+        "IwZXh0bgNhZW0CMTAAAR1S9yk5v_Tl3nJvh9CEfG39u88oV65Dc233hTZckqLcZ24JMEROmXU0hJU_aem_UPq0_no_Lob0d1z1pc": 3,
+        "IwAR2Pl7RmqKwwsYZ2oFeI39GI9sKrX_of2CoJMlOmQ7gcvLdtPwPMVti1slQ": 1,
+        "IwAR0aAFNvIP2pZcsoJfCJIyvbbf5GN8OIFhUfseZVkgAc-QicV65psw8qzIo": 1
+      },
+      "cx": {
+        "011351308810148088677:29vjvxno7x4": 1
+      },
+      "ie": {
+        "UTF-8": 1
+      },
+      "type": {
+        "page": 3
+      },
+      "id": {
+        "ddb290f3ac1e009c39e87fa1120a66d5": 1,
+        "75a9f5c2ac1e009c7c403d2003c9dba8": 1,
+        "590443a7ac1e009c4c480098e61166c3": 1
+      },
+      "confId": {
+        "f561aefaac1e009c4b1fba7f499692f4": 2,
+        "dd9c41c3ac1e009c39e87fa1f8e8cb67": 1
+      }
+    }
+  },
+  "content_type_prediction": {
+    "Blog/Article": {
+      "count": 416,
+      "percentage": 6.749959435339932
+    },
+    "General Content": {
+      "count": 5237,
+      "percentage": 84.97484991075774
+    },
+    "Information Page": {
+      "count": 498,
+      "percentage": 8.080480285575208
+    },
+    "Search Results": {
+      "count": 12,
+      "percentage": 0.19471036832711341
+    }
+  },
+  "url_quality": {
+    "metrics": {
+      "too_long": 2124,
+      "too_short": 0,
+      "optimal_length": 4039,
+      "has_numbers": 2277,
+      "has_underscores": 21,
+      "has_uppercase": 82,
+      "too_deep": 1115,
+      "optimal_depth": 4167,
+      "keyword_rich": 6118
+    },
+    "quality_score": 79.65276650981664,
+    "quality_grade": "C"
+  },
+  "seo_insights": {
+    "recommendations": [],
+    "issues": [],
+    "strengths": [
+      "Top keyword: 'academics' appears 2842 times",
+      "Good URL diversity"
+    ]
+  }
+}

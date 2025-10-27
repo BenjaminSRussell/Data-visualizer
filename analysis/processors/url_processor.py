@@ -17,7 +17,7 @@ import logging
 from typing import Dict, Optional
 from sqlalchemy.orm import Session
 
-# Import all required operations
+# import all required operations
 from analysis import fetch_url
 from analysis.extractors import (
     extract_features,
@@ -82,7 +82,7 @@ async def execute(
     }
 
     try:
-        # Step 1: Fetch URL content
+        # step 1: fetch url content
         logger.info(f"Fetching {url}")
         fetch_result = await fetch_url.execute(url)
 
@@ -95,12 +95,12 @@ async def execute(
         status_code = fetch_result['status_code']
         content_type = fetch_result['content_type']
 
-        # Step 2: Extract URL features
+        # step 2: extract url features
         logger.info(f"Extracting features from {url}")
         features = extract_features.execute(url)
         result['features'] = features
 
-        # Step 3: Save URL record
+        # step 3: save url record
         logger.info(f"Saving URL record for {url}")
         url_id = save_url.execute(
             db=db,
@@ -112,7 +112,7 @@ async def execute(
         )
         result['url_id'] = url_id
 
-        # Step 4: Extract and save metadata (if HTML content)
+        # step 4: extract and save metadata (if html content)
         if content and 'html' in content_type.lower():
             logger.info(f"Extracting metadata from {url}")
             metadata = extract_metadata.execute(content, url)
@@ -121,15 +121,15 @@ async def execute(
             if metadata:
                 save_metadata.execute(db, url_id, metadata)
 
-            # Step 5: Extract text for classification
+            # step 5: extract text for classification
             logger.info(f"Extracting text from {url}")
             text_content = extract_text.execute(content, max_length=1000)
 
-            # Step 6: Classify content (if categories provided)
+            # step 6: classify content (if categories provided)
             if categories and text_content:
                 logger.info(f"Classifying {url}")
 
-                # Combine URL and text for better classification
+                # combine url and text for better classification
                 combined_text = f"{url} {text_content[:500]}"
 
                 classifications = classify_content.execute(
@@ -139,7 +139,7 @@ async def execute(
                 )
                 result['classifications'] = classifications
 
-                # Save classifications
+                # save classifications
                 if classifications:
                     save_classification.execute(db, url_id, classifications)
 

@@ -1,11 +1,4 @@
-"""
-Operation: Save URL
-
-Purpose: Save or update a URL record in the database
-Input: URL data dictionary, database session
-Output: URL record ID
-Dependencies: SQLAlchemy, models
-"""
+"""Save or update URL records in database."""
 
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -23,31 +16,15 @@ def execute(
     status_code: Optional[int] = None,
     content_type: Optional[str] = None
 ) -> int:
-    """
-    Save or update a URL record.
-
-    Args:
-        db: Database session
-        url: URL string
-        session_id: Crawl session ID
-        features: Optional URL features from extract_features
-        status_code: HTTP status code
-        content_type: Content-Type header value
-
-    Returns:
-        URL record ID
-
-    Example:
-        url_id = execute(db, "https://example.com", session_id, features)
-    """
+    """Save or update URL record. Returns record ID."""
     from server.models import URL
 
     try:
-        # Check if URL already exists
+        # check if url already exists
         url_record = db.query(URL).filter(URL.url == url).first()
 
         if url_record:
-            # Update existing record
+            # update existing record
             url_record.session_id = session_id
             url_record.last_crawled = datetime.utcnow()
 
@@ -62,7 +39,7 @@ def execute(
                 url_record.file_extension = features.get('file_extension')
 
         else:
-            # Create new record
+            # create new record
             url_record = URL(
                 url=url,
                 session_id=session_id,

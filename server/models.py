@@ -1,6 +1,4 @@
-"""
-Database models and configuration.
-"""
+"""Database models and configuration."""
 
 import os
 import logging
@@ -28,8 +26,6 @@ from sqlalchemy.orm import Session, relationship, sessionmaker
 
 logger = logging.getLogger(__name__)
 load_dotenv()
-
-# Database Configuration
 
 DEFAULT_DB_URL = "sqlite:///./url_analyzer.db"
 DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DB_URL)
@@ -75,7 +71,7 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
 
 
-# Database Models
+# database models
 
 
 class Category(Base):
@@ -127,7 +123,7 @@ class URL(Base):
     file_extension = Column(String(50))
     last_crawled = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
+    # configure relationships
     metadata = relationship("PageMetadata", back_populates="url", uselist=False, cascade="all, delete-orphan")
     classifications = relationship("Classification", back_populates="url", cascade="all, delete-orphan")
 
@@ -167,7 +163,7 @@ class PageMetadata(Base):
     has_videos = Column(Boolean, default=False)
     has_forms = Column(Boolean, default=False)
 
-    # Relationship
+    # configure relationship
     url = relationship("URL", back_populates="metadata")
 
     __table_args__ = (Index("idx_metadata_url", "url_id"),)
@@ -200,7 +196,7 @@ class Classification(Base):
     model_version = Column(String(100))
     classified_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationship
+    # configure relationship
     url = relationship("URL", back_populates="classifications")
 
     __table_args__ = (Index("idx_classification_url", "url_id"),)
@@ -259,7 +255,7 @@ class CrawlSession(Base):
     total_urls = Column(Integer, default=0)
     processed_urls = Column(Integer, default=0)
     failed_urls = Column(Integer, default=0)
-    status = Column(String(50), default="pending")  # pending, processing, completed, failed
+    status = Column(String(50), default="pending")  # allowed status values: pending, processing, completed, failed
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime)
 
