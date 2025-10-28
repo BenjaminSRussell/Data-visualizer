@@ -11,10 +11,15 @@ import sys
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
-from jsonschema import Draft7Validator
+try:
+    from jsonschema import Draft7Validator
+except ImportError:  # pragma: no cover - optional dependency
+    Draft7Validator = None  # type: ignore[assignment]
+
+from config import get_settings
 
 try:
     import pandera as pa
@@ -27,6 +32,7 @@ except ImportError:  # pragma: no cover - optional dependency
     SchemaErrors = Exception  # type: ignore[assignment]
 
 HAS_PANDERA = pa is not None
+SETTINGS = get_settings()
 
 
 # validation schemas
@@ -115,19 +121,36 @@ def iterate_records(path: Path) -> Iterable[Dict[str, Any]]:
                 raise ValueError(f"Line {line_number}: invalid JSON ({exc})") from exc
 
 
+def _schema_errors(record: Dict[str, Any], validator: Optional[Draft7Validator]) -> List[Tuple[str, str]]:
+    if validator is None:
+        errors: List[Tuple[str, str]] = []
+        required_fields = ["url", "depth", "status_code", "content_type", "links"]
+        for field in required_fields:
+            if field not in record:
+                errors.append(("<root>", f"{field}: field is required"))
+        return errors
+
+    return [
+        (
+            " -> ".join(str(loc) for loc in error.path) or "<root>",
+            error.message,
+        )
+        for error in validator.iter_errors(record)
+    ]
+
+
 def validate_records(path: Path) -> ValidationResult:
     """validate jsonl records against schema and basic rules."""
     result = ValidationResult()
-    validator = Draft7Validator(JSON_RECORD_SCHEMA)
+    validator = Draft7Validator(JSON_RECORD_SCHEMA) if Draft7Validator is not None else None
     records: List[Dict[str, Any]] = []
 
     try:
         for record in iterate_records(path):
-            errors = list(validator.iter_errors(record))
+            errors = _schema_errors(record, validator)
             if errors:
-                for err in errors:
-                    location = " -> ".join(str(loc) for loc in err.path) or "<root>"
-                    result.errors.append(f"{location}: {err.message}")
+                for location, message in errors:
+                    result.errors.append(f"{location}: {message}")
                 result.valid = False
                 continue
 
@@ -182,15 +205,25 @@ def validate_records(path: Path) -> ValidationResult:
 
     # warnings
     if duplicate_urls:
-        result.warnings.append(f"Detected {len(duplicate_urls)} duplicate URL(s).")
+        duplicate_percent = (len(duplicate_urls) / len(df) * 100) if len(df) else 0.0
+        message = f"Detected {len(duplicate_urls)} duplicate URL(s)."
+        if duplicate_percent > SETTINGS.thresholds.duplicate_percent:
+            result.errors.append(
+                f"{message} Exceeds threshold of {SETTINGS.thresholds.duplicate_percent:.1f}%."
+            )
+            result.valid = False
+        else:
+            result.warnings.append(message)
 
     missing_titles = df["title"].isna().sum() if "title" in df.columns else 0
     if missing_titles:
         result.warnings.append(f"{missing_titles} record(s) missing title.")
 
     slow_responses = df["response_time_ms"].fillna(0)
-    if slow_responses.mean() > 2_000:
-        result.warnings.append("Average response time exceeds 2 seconds.")
+    if slow_responses.mean() > SETTINGS.thresholds.response_time_warning_ms:
+        result.warnings.append(
+            f"Average response time exceeds {SETTINGS.thresholds.response_time_warning_ms:.0f} ms."
+        )
 
     return result
 

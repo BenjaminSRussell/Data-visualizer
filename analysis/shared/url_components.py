@@ -152,7 +152,7 @@ class URLComponentCache:
             }
 
         except Exception as e:
-            # Return minimal components on error
+            # Provide minimal component structure when parsing fails.
             return {
                 'url': url,
                 'scheme': '',
@@ -210,7 +210,7 @@ class URLComponentCache:
         # Remove query and fragment
         path = path.split('?')[0].split('#')[0]
 
-        # Get last part after /
+        # Use the last path segment to isolate the extension candidate.
         filename = path.split('/')[-1]
 
         if '.' in filename:

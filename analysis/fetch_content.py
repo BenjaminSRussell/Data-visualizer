@@ -1,24 +1,25 @@
-"""
-Fetch URL content using HTTP requests.
-Returns HTML content, status code, and content type.
-"""
+"""Fetch URL content with retry and timeout controls."""
+
+import logging
+from typing import Any, Dict, Optional
 
 import httpx
-import logging
-from typing import Dict, Optional
+
+from config import get_settings
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_TIMEOUT = 30.0
-DEFAULT_MAX_RETRIES = 3
+_SETTINGS = get_settings()
+DEFAULT_TIMEOUT = _SETTINGS.performance.request_timeout_seconds
+DEFAULT_MAX_RETRIES = _SETTINGS.retries.max_retries
 
 
 async def execute(
     url: str,
     timeout: float = DEFAULT_TIMEOUT,
     max_retries: int = DEFAULT_MAX_RETRIES,
-    headers: Optional[Dict[str, str]] = None
-) -> Dict[str, any]:
+    headers: Optional[Dict[str, str]] = None,
+) -> Dict[str, Any]:
     """
     Fetch content from a URL.
 
@@ -76,18 +77,13 @@ async def execute(
                 else:
                     return result
 
-        except httpx.TimeoutException as e:
+        except httpx.TimeoutException:
             result['error'] = f"Timeout after {timeout}s"
             logger.warning(f"Timeout fetching {url} (attempt {attempt + 1}/{max_retries})")
 
-        except httpx.RequestError as e:
-            result['error'] = f"Request error: {str(e)}"
-            logger.warning(f"Request error for {url}: {e} (attempt {attempt + 1}/{max_retries})")
-
-        except Exception as e:
-            result['error'] = f"Unexpected error: {str(e)}"
-            logger.error(f"Unexpected error fetching {url}: {e}")
-            break
+        except httpx.RequestError as exc:
+            result['error'] = f"Request error: {exc}"
+            logger.warning(f"Request error for {url}: {exc} (attempt {attempt + 1}/{max_retries})")
 
     return result
 
@@ -96,8 +92,8 @@ def execute_sync(
     url: str,
     timeout: float = DEFAULT_TIMEOUT,
     max_retries: int = DEFAULT_MAX_RETRIES,
-    headers: Optional[Dict[str, str]] = None
-) -> Dict[str, any]:
+    headers: Optional[Dict[str, str]] = None,
+) -> Dict[str, Any]:
     """
     Synchronous version of execute().
 

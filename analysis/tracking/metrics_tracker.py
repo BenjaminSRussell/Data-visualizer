@@ -48,7 +48,7 @@ class MetricsTracker:
             "metrics": metrics
         }
 
-        # Save snapshot
+        # Persist the snapshot for later comparisons.
         filename = f"{snapshot_id}.json"
         filepath = self.snapshots_dir / filename
 

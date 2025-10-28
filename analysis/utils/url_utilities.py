@@ -44,7 +44,7 @@ def parse_url_components(url: str) -> Dict:
             'has_query': bool(parsed.query),
             'has_fragment': bool(parsed.fragment)
         }
-    except Exception:
+    except (ValueError, AttributeError, TypeError):
         return {
             'scheme': '',
             'netloc': '',
@@ -110,12 +110,16 @@ def is_same_domain(url1: str, url2: str) -> bool:
     Returns:
         True if both URLs have the same netloc
     """
+    if not url1 or not url2:
+        return False
+
     try:
         domain1 = urlparse(url1).netloc
         domain2 = urlparse(url2).netloc
-        return domain1 == domain2
-    except Exception:
+    except (ValueError, AttributeError, TypeError):
         return False
+
+    return domain1 == domain2
 
 
 def is_internal_link(source_url: str, target_url: str) -> bool:
@@ -246,7 +250,7 @@ def extract_file_extension(url_or_path: str) -> Optional[str]:
     Returns:
         Lowercase file extension (without dot), or None if no extension
     """
-    # Get path component if it's a full URL
+    # Extract the path from absolute URLs before checking for extensions.
     if '://' in url_or_path:
         parsed = urlparse(url_or_path)
         path = parsed.path

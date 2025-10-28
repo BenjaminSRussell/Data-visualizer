@@ -96,7 +96,7 @@ setup_environment() {
         :
     fi
 
-    source "$VENV_DIR/bin/activate"
+    source ".venv/bin/activate"
     pip install -q --upgrade pip
     pip install -q -r requirements.txt
     say "Environment ready."

@@ -75,7 +75,7 @@ def analyze_depth_patterns(data: List[Dict]) -> Dict:
         if not url:
             continue
 
-        # Get depth from item or calculate it
+        # Prefer stored crawl depth; fallback avoids re-parsing when missing.
         depth = item.get('depth')
         if depth is None:
             depth = get_path_depth(url)

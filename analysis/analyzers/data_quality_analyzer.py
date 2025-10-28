@@ -133,7 +133,7 @@ class DataQualityAnalyzer:
         tracking_only_waste = 0
 
         for path, urls in variations.items():
-            # Get normalized versions (removes tracking params)
+            # Normalize paths to drop tracking params before comparing duplicates.
             normalized = defaultdict(list)
             for url in urls:
                 norm = get_normalized_url(url, remove_fragment=True, remove_tracking=True)
