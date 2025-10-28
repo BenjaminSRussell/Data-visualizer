@@ -3,9 +3,8 @@ URL Embeddings using MLX - Create vector representations of URLs for similarity 
 """
 
 import mlx.core as mx
-import mlx.nn as nn
 import numpy as np
-from typing import List, Dict, Tuple
+from typing import List, Tuple
 from collections import Counter
 import re
 
@@ -86,7 +85,7 @@ class URLEmbedder:
             self.vocab[token] = idx
             self.reverse_vocab[idx] = token
 
-        print(f"✓ Vocabulary built: {len(self.vocab):,} tokens")
+        print(f"Vocabulary built: {len(self.vocab):,} tokens")
 
     def url_to_ids(self, url: str, max_length=50) -> List[int]:
         """
@@ -122,7 +121,7 @@ class URLEmbedder:
             scale=0.1
         )
 
-        print(f"✓ Initialized embeddings: {vocab_size} x {self.embedding_dim}")
+        print(f"Initialized embeddings: {vocab_size} x {self.embedding_dim}")
 
     def train_embeddings(self, urls: List[str], epochs=5, window_size=3):
         """
@@ -180,7 +179,7 @@ class URLEmbedder:
         self.embedding_matrix = mx.array(embeddings_np.astype(np.float32))
 
         self.is_trained = True
-        print(f"✓ Embeddings trained")
+        print(f"Embeddings trained")
 
     def embed_url(self, url: str) -> mx.array:
         """
@@ -291,7 +290,7 @@ class URLEmbedder:
         with open(filepath, 'wb') as f:
             pickle.dump(data, f)
 
-        print(f"✓ Embeddings saved to {filepath}")
+        print(f"Embeddings saved to {filepath}")
 
     def load_embeddings(self, filepath: str):
         """Load embeddings from file"""
@@ -306,4 +305,4 @@ class URLEmbedder:
         self.embedding_dim = data['embedding_dim']
         self.is_trained = data['is_trained']
 
-        print(f"✓ Embeddings loaded from {filepath}")
+        print(f"Embeddings loaded from {filepath}")

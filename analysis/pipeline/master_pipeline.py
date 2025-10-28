@@ -1,30 +1,30 @@
 """
-Master Analysis Pipeline - Orchestrate All URL Analysis
+Master Analysis Pipeline - Unified URL Analysis System
 
-Purpose: Run all analysis modules in parallel, combine results,
-         generate comprehensive insights, and produce reports
+Runs all analysis types (basic, enhanced, MLX) based on global configuration
 """
 
 import json
+import logging
 import sys
 import time
+import yaml
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
-# add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-# import all analyzers
-from analyzers import statistical_analyzer
-from analyzers import network_analyzer
-from analyzers import semantic_path_analyzer
-from mappers import pathway_mapper
+from analysis.analyzers import statistical_analyzer, network_analyzer, semantic_path_analyzer
+from analysis.analyzers import subdomain_analyzer, url_component_parser
+from analysis.mappers import pathway_mapper
+
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 class NumpyEncoder(json.JSONEncoder):
-    """Custom JSON encoder for numpy types."""
     def default(self, obj):
         import numpy as np
         if isinstance(obj, (np.integer, np.floating)):
@@ -33,68 +33,100 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         elif isinstance(obj, (np.bool_, bool)):
             return bool(obj)
+        elif isinstance(obj, set):
+            return list(obj)
         return super().default(obj)
 
 
 class MasterPipeline:
-    """Orchestrate comprehensive URL analysis."""
-
-    def __init__(self, input_file: str, output_dir: str = None):
+    def __init__(self, input_file: str, output_dir: str = None, config_path: str = None):
+        self.config = self._load_config(config_path or 'global.yml')
         self.input_file = input_file
-        self.output_dir = output_dir or 'data/output/basic'
+        self.output_dir = output_dir or self.config['data']['output_dir']
         self.data = []
+        self.normalized_data = []
         self.results = {}
         self.execution_times = {}
+        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
-        # create output directory
         Path(self.output_dir).mkdir(parents=True, exist_ok=True)
+        self._setup_logging()
+
+    def _setup_logging(self) -> None:
+        """Configure a file-based logger for pipeline messages."""
+        log_dir = Path(self.output_dir) / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+
+        log_file = log_dir / "master_pipeline.log"
+
+        exists = any(
+            isinstance(handler, logging.FileHandler) and Path(handler.baseFilename) == log_file
+            for handler in self.logger.handlers
+        )
+
+        if not exists:
+            handler = logging.FileHandler(log_file, encoding="utf-8")
+            handler.setLevel(logging.INFO)
+            handler.setFormatter(
+                logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+            )
+            self.logger.addHandler(handler)
+
+        self.logger.setLevel(logging.INFO)
+        self.logger.propagate = False
+
+    def _load_config(self, config_path: str) -> Dict:
+        try:
+            with open(config_path, 'r') as f:
+                return yaml.safe_load(f)
+        except FileNotFoundError:
+            self.logger.warning("Config file not found: %s. Using defaults.", config_path)
+            return self._default_config()
+
+    def _default_config(self) -> Dict:
+        return {
+            'data': {'output_dir': 'data/output'},
+            'analysis': {
+                'types': {
+                    'basic': {'enabled': True, 'analyzers': ['statistical', 'network', 'semantic_path', 'pathway']},
+                    'enhanced': {'enabled': True, 'analyzers': ['subdomain', 'url_components']},
+                    'mlx': {'enabled': False}
+                }
+            },
+            'performance': {'max_workers': 6}
+        }
 
     def load_data(self) -> bool:
-        """Load JSONL data."""
-        print(f"Loading data from {self.input_file}...")
-
+        self.logger.info("Loading data from %s", self.input_file)
         try:
             with open(self.input_file, 'r', encoding='utf-8') as f:
                 for line in f:
                     if line.strip():
                         self.data.append(json.loads(line))
-
-            print(f"✓ Loaded {len(self.data):,} URLs")
+            self.logger.info("Loaded %s URLs", f"{len(self.data):,}")
             return True
-
         except Exception as e:
-            print(f"✗ Error loading data: {e}")
+            self.logger.exception("Error loading data")
             return False
 
-    def run_analysis(self, analyzer_name: str, analyzer_func, data: List[Dict]) -> Tuple[str, Dict, float]:
-        """Run single analyzer with timing."""
-        print(f"  Running {analyzer_name}...")
-
+    def run_analyzer(self, name: str, func, data: List[Dict]) -> Tuple[str, Dict, float]:
+        self.logger.info("Running analyzer: %s", name)
         start_time = time.time()
-
         try:
-            result = analyzer_func(data)
+            result = func(data)
             elapsed = time.time() - start_time
-
-            print(f"  ✓ {analyzer_name} completed in {elapsed:.2f}s")
-            return analyzer_name, result, elapsed
-
+            self.logger.info("Analyzer %s completed in %.2fs", name, elapsed)
+            return name, result, elapsed
         except Exception as e:
-            print(f"  ✗ {analyzer_name} failed: {e}")
-            return analyzer_name, {'error': str(e)}, 0
+            self.logger.exception("Analyzer %s failed", name)
+            return name, {'error': str(e)}, 0
 
-    def execute(self) -> Dict:
-        """Execute full analysis pipeline."""
+    def run_basic_analysis(self):
+        if not self.config['analysis']['types']['basic']['enabled']:
+            return
 
-        print("\n" + "="*80)
-        print("MASTER ANALYSIS PIPELINE")
-        print("="*80)
+        self.logger.info("Starting basic analysis")
 
-        # load data
-        if not self.load_data():
-            return None
-
-        # define all analyzers
         analyzers = {
             'statistical': statistical_analyzer.execute,
             'network': network_analyzer.execute,
@@ -102,377 +134,279 @@ class MasterPipeline:
             'pathway': pathway_mapper.execute
         }
 
-        # run all analyzers in parallel
-        print(f"\nRunning {len(analyzers)} analyzers in parallel...")
+        self._run_analyzers(analyzers, 'basic')
 
-        total_start = time.time()
+    def run_enhanced_analysis(self):
+        if not self.config['analysis']['types']['enhanced']['enabled']:
+            return
 
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        self.logger.info("Starting enhanced analysis")
+
+        analyzers = {
+            'subdomain': subdomain_analyzer.execute,
+            'url_components': url_component_parser.execute
+        }
+
+        self._run_analyzers(analyzers, 'enhanced')
+
+    def run_mlx_analysis(self):
+        if not self.config['analysis']['types']['mlx']['enabled']:
+            return
+
+        self.logger.info("Starting MLX analysis")
+
+        try:
+            from analysis.processors.url_normalizer import URLNormalizer
+            from analysis.ml.url_embeddings import URLEmbedder
+            from analysis.ml.batch_detector import BatchDetector
+            from analysis.ml.pattern_recognition import PatternRecognizer
+
+            mlx_config = self.config.get('mlx', {})
+
+            normalizer = URLNormalizer()
+            self.logger.info("Normalizing URLs")
+            self.normalized_data = normalizer.normalize_batch(
+                self.data,
+                remove_fragments=self.config['normalization']['remove_fragments'],
+                merge_metadata=self.config['normalization']['merge_metadata']
+            )
+            self.results['mlx_normalization'] = normalizer.get_stats()
+
+            embedder = URLEmbedder(embedding_dim=mlx_config.get('embedding_dim', 128))
+            urls = [item['url'] for item in self.normalized_data]
+            self.logger.info("Training embeddings")
+            start_time = time.time()
+            embedder.train_embeddings(
+                urls,
+                epochs=mlx_config.get('training_epochs', 3),
+                window_size=mlx_config.get('window_size', 3)
+            )
+            self.execution_times['embeddings'] = time.time() - start_time
+
+            self.logger.info("Detecting batches")
+            batch_detector = BatchDetector(embedder)
+            batches = batch_detector.detect_all_batches(self.normalized_data)
+            self.results['batch_analysis'] = {
+                'batches': batches,
+                'summary': batch_detector.get_batch_summary()
+            }
+
+            self.logger.info("Analyzing patterns")
+            pattern_recognizer = PatternRecognizer()
+            self.results['patterns'] = pattern_recognizer.analyze_patterns(self.normalized_data)
+
+            self._analyze_temporal_clusters()
+            self._analyze_parent_child_relationships()
+
+        except ImportError as e:
+            self.logger.warning("MLX dependencies not available: %s", e)
+            self.results['mlx'] = {'error': 'MLX dependencies not installed'}
+
+    def _run_analyzers(self, analyzers: Dict, analysis_type: str):
+        max_workers = self.config['performance']['max_workers']
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {
-                executor.submit(self.run_analysis, name, func, self.data): name
+                executor.submit(self.run_analyzer, name, func, self.data): name
                 for name, func in analyzers.items()
             }
 
             for future in as_completed(futures):
-                analyzer_name, result, elapsed = future.result()
-                self.results[analyzer_name] = result
-                self.execution_times[analyzer_name] = elapsed
+                name, result, elapsed = future.result()
+                self.results[f'{analysis_type}_{name}'] = result
+                self.execution_times[f'{analysis_type}_{name}'] = elapsed
+
+    def _analyze_temporal_clusters(self):
+        from collections import defaultdict
+
+        temporal_clusters = defaultdict(list)
+        data_to_analyze = self.normalized_data if self.normalized_data else self.data
+
+        for item in data_to_analyze:
+            discovered_at = item.get('discovered_at')
+            if discovered_at:
+                dt = datetime.fromtimestamp(discovered_at)
+                window = dt.replace(second=0, microsecond=0)
+                window_5min = window.replace(minute=(window.minute // 5) * 5)
+                temporal_clusters[window_5min].append(item)
+
+        cluster_analysis = []
+        for window, urls in temporal_clusters.items():
+            if len(urls) >= 10:
+                cluster_analysis.append({
+                    'window': window.isoformat(),
+                    'url_count': len(urls),
+                    'avg_depth': sum(u.get('depth', 0) for u in urls) / len(urls),
+                    'unique_parents': len(set(u.get('parent_url') for u in urls if u.get('parent_url')))
+                })
+
+        cluster_analysis.sort(key=lambda x: x['url_count'], reverse=True)
+
+        self.results['temporal_clusters'] = {
+            'total_clusters': len(temporal_clusters),
+            'significant_clusters': len(cluster_analysis),
+            'clusters': cluster_analysis[:20]
+        }
+
+    def _analyze_parent_child_relationships(self):
+        from collections import defaultdict
+
+        parent_children = defaultdict(list)
+        child_parent = {}
+        data_to_analyze = self.normalized_data if self.normalized_data else self.data
+
+        for item in data_to_analyze:
+            url = item['url']
+            parent = item.get('parent_url')
+
+            if parent:
+                parent_children[parent].append(url)
+                child_parent[url] = parent
+
+        relationship_analysis = {
+            'total_urls': len(data_to_analyze),
+            'urls_with_parents': len(child_parent),
+            'unique_parents': len(parent_children),
+            'orphan_urls': len(data_to_analyze) - len(child_parent),
+            'avg_children_per_parent': len(child_parent) / len(parent_children) if parent_children else 0,
+            'max_children': max((len(children) for children in parent_children.values()), default=0)
+        }
+
+        parent_counts = [(parent, len(children)) for parent, children in parent_children.items()]
+        parent_counts.sort(key=lambda x: x[1], reverse=True)
+
+        relationship_analysis['top_parents'] = [
+            {'url': parent, 'children_count': count}
+            for parent, count in parent_counts[:20]
+        ]
+
+        self.results['parent_child_relationships'] = relationship_analysis
+
+    def execute(self) -> Dict:
+        self.logger.info("Starting master analysis pipeline")
+        self.logger.info("Input file: %s", self.input_file)
+        self.logger.info("Output directory: %s", self.output_dir)
+        self.logger.info("Data configuration: %s", self.config.get('data', {}))
+
+        if not self.load_data():
+            return None
+
+        total_start = time.time()
+
+        self.run_basic_analysis()
+        self.run_enhanced_analysis()
+        self.run_mlx_analysis()
 
         total_elapsed = time.time() - total_start
 
-        print(f"\n✓ All analyses completed in {total_elapsed:.2f}s")
-
-        # generate combined insights
-        print("\nGenerating combined insights...")
-        self.results['insights'] = self._generate_insights()
-
-        # generate metadata
         self.results['metadata'] = {
             'input_file': self.input_file,
             'total_urls': len(self.data),
             'analysis_timestamp': datetime.now().isoformat(),
             'total_execution_time': total_elapsed,
-            'execution_times': self.execution_times
+            'execution_times': self.execution_times,
+            'config': self.config
         }
 
         return self.results
 
-    def _generate_insights(self) -> Dict:
-        """Generate high-level insights by combining all analysis results."""
+    def save_results(self, subdir: str = ''):
+        output_path = Path(self.output_dir) / subdir if subdir else Path(self.output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
 
-        insights = {
-            'overview': {},
-            'key_findings': [],
-            'recommendations': [],
-            'alerts': [],
-            'scores': {}
-        }
+        self.logger.info("Saving results to %s", output_path)
 
-        # overview from metadata
-        insights['overview'] = {
-            'total_urls_analyzed': len(self.data),
-            'analysis_modules_run': len(self.results),
-            'data_quality': 'Good' if len(self.data) > 100 else 'Limited'
-        }
-
-        # extract key findings from each analyzer
-        if 'statistical' in self.results and 'error' not in self.results['statistical']:
-            stats = self.results['statistical']
-
-            # health score
-            if 'url_health' in stats:
-                health = stats['url_health']
-                insights['scores']['url_health'] = health.get('overall_health', 0)
-                insights['key_findings'].append(
-                    f"URL Health Score: {health.get('overall_health', 0):.1f}/100 (Grade: {health.get('health_grade', 'N/A')})"
-                )
-
-            # depth analysis
-            if 'summary_stats' in stats:
-                summary = stats['summary_stats']
-                insights['key_findings'].append(
-                    f"Average URL depth: {summary.get('depth_mean', 0):.2f} levels"
-                )
-
-                if summary.get('depth_mean', 0) > 5:
-                    insights['alerts'].append("URLs are too deep on average (>5 levels)")
-                    insights['recommendations'].append("Consider flattening URL hierarchy")
-
-            # anomalies
-            if 'anomalies' in stats:
-                for anomaly_type, anomaly_data in stats['anomalies'].items():
-                    if anomaly_data.get('count', 0) > 0:
-                        insights['alerts'].append(
-                            f"{anomaly_type}: {anomaly_data['count']} outliers detected"
-                        )
-
-        # network insights
-        if 'network' in self.results and 'error' not in self.results['network']:
-            network = self.results['network']
-
-            if 'network_metrics' in network:
-                metrics = network['network_metrics']
-                insights['key_findings'].append(
-                    f"Network density: {metrics.get('density', 0):.6f}"
-                )
-
-                if metrics.get('density', 0) < 0.01:
-                    insights['alerts'].append("Low network density - pages are poorly connected")
-                    insights['recommendations'].append("Add more internal links between pages")
-
-            if 'link_patterns' in network:
-                patterns = network['link_patterns']
-
-                dead_ends = patterns.get('self_links', 0)
-                if dead_ends > len(self.data) * 0.3:
-                    insights['alerts'].append(f"High number of self-links ({dead_ends})")
-
-        # semantic insights
-        if 'semantic_path' in self.results and 'error' not in self.results['semantic_path']:
-            semantic = self.results['semantic_path']
-
-            if 'url_quality' in semantic:
-                quality = semantic['url_quality']
-                insights['scores']['url_quality'] = quality.get('quality_score', 0)
-
-            if 'semantic_categories' in semantic:
-                categories = semantic['semantic_categories']
-
-                if 'dominant_category' in categories:
-                    dom = categories['dominant_category']
-                    insights['key_findings'].append(
-                        f"Dominant content category: {dom.get('name', 'Unknown')}"
-                    )
-
-            if 'seo_insights' in semantic:
-                seo = semantic['seo_insights']
-                insights['recommendations'].extend(seo.get('recommendations', []))
-
-        # pathway insights
-        if 'pathway' in self.results and 'error' not in self.results['pathway']:
-            pathway = self.results['pathway']
-
-            if 'architecture' in pathway:
-                arch = pathway['architecture']
-                insights['key_findings'].append(
-                    f"Site architecture type: {arch.get('architecture_type', 'Unknown')}"
-                )
-
-            if 'dead_ends' in pathway:
-                dead = pathway['dead_ends']
-                if dead.get('percentage', 0) > 20:
-                    insights['alerts'].append(
-                        f"High percentage of dead-end pages ({dead.get('percentage', 0):.1f}%)"
-                    )
-                    insights['recommendations'].append("Add navigation links to dead-end pages")
-
-            if 'connectivity' in pathway:
-                conn = pathway['connectivity']
-                if not conn.get('is_fully_connected', False):
-                    insights['alerts'].append(
-                        f"Site is not fully connected ({conn.get('total_components', 0)} separate components)"
-                    )
-
-        # calculate overall score
-        scores = insights['scores']
-        if scores:
-            insights['scores']['overall'] = sum(scores.values()) / len(scores)
-
-        return insights
-
-    def save_results(self):
-        """Save all results to files."""
-
-        print("\nSaving results...")
-
-        # save complete results as json
-        output_file = Path(self.output_dir) / 'analysis_results.json'
-        with open(output_file, 'w', encoding='utf-8') as f:
+        results_file = output_path / 'analysis_results.json'
+        with open(results_file, 'w', encoding='utf-8') as f:
             json.dump(self.results, f, indent=2, cls=NumpyEncoder)
-        print(f"  ✓ Saved complete results to {output_file}")
+        self.logger.info("Full results written to %s", results_file)
 
-        # save individual analyzer results
-        for analyzer_name, result in self.results.items():
-            if analyzer_name not in ['metadata', 'insights']:
-                analyzer_file = Path(self.output_dir) / f'{analyzer_name}_results.json'
-                with open(analyzer_file, 'w', encoding='utf-8') as f:
-                    json.dump(result, f, indent=2, cls=NumpyEncoder)
-                print(f"  ✓ Saved {analyzer_name} results to {analyzer_file}")
+        if self.config['output']['save_individual_results']:
+            for key, result in self.results.items():
+                if key not in ['metadata', 'insights']:
+                    result_file = output_path / f'{key}_results.json'
+                    with open(result_file, 'w', encoding='utf-8') as f:
+                        json.dump(result, f, indent=2, cls=NumpyEncoder)
 
-        # save summary report
-        self._save_summary_report()
+        self._save_summary_report(output_path)
 
-    def _save_summary_report(self):
-        """Generate and save human-readable summary report."""
-
-        report_file = Path(self.output_dir) / 'analysis_report.txt'
+    def _save_summary_report(self, output_path: Path):
+        report_file = output_path / 'analysis_report.txt'
 
         with open(report_file, 'w', encoding='utf-8') as f:
             f.write("="*80 + "\n")
-            f.write("COMPREHENSIVE URL ANALYSIS REPORT\n")
+            f.write("URL ANALYSIS REPORT\n")
             f.write("="*80 + "\n\n")
 
-            # metadata
             meta = self.results.get('metadata', {})
             f.write(f"Input File: {meta.get('input_file', 'N/A')}\n")
-            f.write(f"Total URLs Analyzed: {meta.get('total_urls', 0):,}\n")
+            f.write(f"Total URLs: {meta.get('total_urls', 0):,}\n")
             f.write(f"Analysis Date: {meta.get('analysis_timestamp', 'N/A')}\n")
-            f.write(f"Total Execution Time: {meta.get('total_execution_time', 0):.2f}s\n")
+            f.write(f"Execution Time: {meta.get('total_execution_time', 0):.2f}s\n")
             f.write("\n")
 
-            # insights
-            insights = self.results.get('insights', {})
+            for key, value in self.results.items():
+                if key not in ['metadata', 'insights'] and isinstance(value, dict):
+                    if 'error' not in value:
+                        f.write(f"\n{key.upper()}\n")
+                        f.write("-" * 80 + "\n")
+                        f.write(f"Analysis completed successfully\n")
 
-            # scores
-            if 'scores' in insights:
-                f.write("OVERALL SCORES\n")
-                f.write("-" * 80 + "\n")
-                for score_name, score_value in insights['scores'].items():
-                    f.write(f"  {score_name.replace('_', ' ').title()}: {score_value:.1f}/100\n")
-                f.write("\n")
+        self.logger.info("Summary report written to %s", report_file)
 
-            # key findings
-            if insights.get('key_findings'):
-                f.write("KEY FINDINGS\n")
-                f.write("-" * 80 + "\n")
-                for finding in insights['key_findings']:
-                    f.write(f"  • {finding}\n")
-                f.write("\n")
+    def format_summary(self) -> str:
+        """Create a plain-text summary of completed analyses."""
+        meta = self.results.get('metadata', {})
+        lines = [
+            "Analysis Summary",
+            f"Input File: {meta.get('input_file', 'N/A')}",
+            f"Total URLs Analyzed: {meta.get('total_urls', 0):,}",
+            f"Total Execution Time: {meta.get('total_execution_time', 0):.2f}s",
+            "",
+            "Completed Analyses:"
+        ]
 
-            # alerts
-            if insights.get('alerts'):
-                f.write("ALERTS\n")
-                f.write("-" * 80 + "\n")
-                for alert in insights['alerts']:
-                    f.write(f"  ⚠ {alert}\n")
-                f.write("\n")
+        for key, value in self.results.items():
+            if key in {'metadata', 'insights'}:
+                continue
+            status = "ERROR"
+            if isinstance(value, dict):
+                status = "ERROR" if value.get('error') else "OK"
+            else:
+                status = "OK"
+            lines.append(f"- {key}: {status}")
 
-            # recommendations
-            if insights.get('recommendations'):
-                f.write("RECOMMENDATIONS\n")
-                f.write("-" * 80 + "\n")
-                for rec in insights['recommendations']:
-                    f.write(f"  → {rec}\n")
-                f.write("\n")
+        return "\n".join(lines).strip()
 
-            # individual analyzer summaries
-            f.write("\n" + "="*80 + "\n")
-            f.write("DETAILED ANALYSIS RESULTS\n")
-            f.write("="*80 + "\n\n")
-
-            # statistical
-            if 'statistical' in self.results:
-                self._write_statistical_summary(f, self.results['statistical'])
-
-            # network
-            if 'network' in self.results:
-                self._write_network_summary(f, self.results['network'])
-
-            # semantic
-            if 'semantic_path' in self.results:
-                self._write_semantic_summary(f, self.results['semantic_path'])
-
-            # pathway
-            if 'pathway' in self.results:
-                self._write_pathway_summary(f, self.results['pathway'])
-
-        print(f"  ✓ Saved summary report to {report_file}")
-
-    def _write_statistical_summary(self, f, results: Dict):
-        """Write statistical analysis summary."""
-        f.write("STATISTICAL ANALYSIS\n")
-        f.write("-" * 80 + "\n")
-
-        if 'summary_stats' in results:
-            stats = results['summary_stats']
-            f.write(f"  Depth: {stats.get('depth_mean', 0):.2f} ± {stats.get('depth_std', 0):.2f}\n")
-            f.write(f"  Path Length: {stats.get('path_length_mean', 0):.2f} ± {stats.get('path_length_std', 0):.2f}\n")
-            f.write(f"  Avg Links per Page: {stats.get('outbound_links_mean', 0):.2f}\n")
-
-        if 'url_health' in results:
-            health = results['url_health']
-            f.write(f"  Overall Health: {health.get('overall_health', 0):.1f}/100 ({health.get('health_grade', 'N/A')})\n")
-
-        f.write("\n")
-
-    def _write_network_summary(self, f, results: Dict):
-        """Write network analysis summary."""
-        f.write("NETWORK ANALYSIS\n")
-        f.write("-" * 80 + "\n")
-
-        if 'network_metrics' in results:
-            metrics = results['network_metrics']
-            f.write(f"  Nodes: {metrics.get('nodes', 0):,}\n")
-            f.write(f"  Edges: {metrics.get('edges', 0):,}\n")
-            f.write(f"  Density: {metrics.get('density', 0):.6f}\n")
-            f.write(f"  Avg Degree: {metrics.get('average_degree', 0):.2f}\n")
-
-        f.write("\n")
-
-    def _write_semantic_summary(self, f, results: Dict):
-        """Write semantic analysis summary."""
-        f.write("SEMANTIC ANALYSIS\n")
-        f.write("-" * 80 + "\n")
-
-        if 'vocabulary' in results:
-            vocab = results['vocabulary']
-            f.write(f"  Unique Tokens: {vocab.get('unique_tokens', 0):,}\n")
-            f.write(f"  Vocabulary Diversity: {vocab.get('vocabulary_diversity', 'N/A')}\n")
-
-        if 'url_quality' in results:
-            quality = results['url_quality']
-            f.write(f"  URL Quality Score: {quality.get('quality_score', 0):.1f}/100\n")
-
-        f.write("\n")
-
-    def _write_pathway_summary(self, f, results: Dict):
-        """Write pathway analysis summary."""
-        f.write("PATHWAY ANALYSIS\n")
-        f.write("-" * 80 + "\n")
-
-        if 'architecture' in results:
-            arch = results['architecture']
-            f.write(f"  Architecture Type: {arch.get('architecture_type', 'N/A')}\n")
-            f.write(f"  Max Depth: {arch.get('max_depth', 0)}\n")
-
-        if 'dead_ends' in results:
-            dead = results['dead_ends']
-            f.write(f"  Dead-End Pages: {dead.get('count', 0)} ({dead.get('percentage', 0):.1f}%)\n")
-
-        f.write("\n")
-
-    def print_summary(self):
-        """Print summary to console."""
-
-        print("\n" + "="*80)
-        print("ANALYSIS SUMMARY")
-        print("="*80)
-
-        insights = self.results.get('insights', {})
-
-        # scores
-        if 'scores' in insights and insights['scores']:
-            print("\nOverall Scores:")
-            for score_name, score_value in insights['scores'].items():
-                print(f"  {score_name.replace('_', ' ').title()}: {score_value:.1f}/100")
-
-        # key findings
-        if insights.get('key_findings'):
-            print("\nKey Findings:")
-            for finding in insights['key_findings'][:5]:
-                print(f"  • {finding}")
-
-        # alerts
-        if insights.get('alerts'):
-            print(f"\n⚠ {len(insights['alerts'])} Alert(s):")
-            for alert in insights['alerts'][:3]:
-                print(f"  ⚠ {alert}")
-
-        print("\n" + "="*80)
+    def write_summary(self, destination: Optional[Path] = None) -> Path:
+        """Persist the human-readable summary to disk."""
+        summary_text = self.format_summary()
+        dest_path = Path(destination) if destination else Path(self.output_dir) / "SUMMARY" / "pipeline_summary.txt"
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        dest_path.write_text(summary_text + "\n", encoding='utf-8')
+        self.logger.info("Pipeline summary saved to %s", dest_path)
+        return dest_path
 
 
 def main():
-    """Main execution function."""
-
     if len(sys.argv) < 2:
-        print("Usage: python master_pipeline.py <input_jsonl_file> [output_dir]")
+        sys.stderr.write("Usage: python master_pipeline.py <input_jsonl_file> [output_dir] [config_path]\n")
         sys.exit(1)
 
     input_file = sys.argv[1]
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else 'results'
+    output_dir = sys.argv[2] if len(sys.argv) > 2 else None
+    config_path = sys.argv[3] if len(sys.argv) > 3 else 'global.yml'
 
-    # create and run pipeline
-    pipeline = MasterPipeline(input_file, output_dir)
-
+    pipeline = MasterPipeline(input_file, output_dir, config_path)
     results = pipeline.execute()
 
     if results:
         pipeline.save_results()
-        pipeline.print_summary()
-
-        print(f"\n✓ Analysis complete! Results saved to {output_dir}/")
+        summary_path = pipeline.write_summary()
+        pipeline.logger.info("Analysis complete. Results saved to %s", pipeline.output_dir)
+        pipeline.logger.info("Summary available at %s", summary_path)
     else:
-        print("\n✗ Analysis failed!")
+        pipeline.logger.error("Analysis failed.")
         sys.exit(1)
 
 

@@ -5,11 +5,18 @@ Purpose: Map user navigation flows, identify entry points, analyze site
          architecture, and discover navigation patterns
 """
 
-import json
 from collections import defaultdict, deque
-from typing import Dict, List, Set, Tuple
-from urllib.parse import urlparse, urljoin
-import re
+from typing import Dict, List, Set
+
+from analysis.utils.general_metrics import analyze_depth_flow, get_max_depth
+
+# Use shared utilities to eliminate redundancy
+from analysis.utils.url_utilities import (
+    get_base_url,
+    is_same_domain,
+    parse_url_components,
+    resolve_link,
+)
 
 
 class PathwayMapper:
@@ -65,44 +72,26 @@ class PathwayMapper:
 
             # populate link graph
             links = item.get('links', [])
-            base_url = self._get_base_url(url)
+            base_url = get_base_url(url)  # Use shared utility
 
             for link in links:
-                # resolve relative links
-                if link.startswith('/'):
-                    link = urljoin(base_url, link)
-                elif link.startswith('#'):
-                    continue  # skip fragments
-                elif link.startswith('http'):
-                    # include only same-domain links
-                    if self._same_domain(url, link):
-                        self.url_graph[url].add(link)
-                else:
-                    link = urljoin(url, link)
-                    if self._same_domain(url, link):
-                        self.url_graph[url].add(link)
+                # resolve relative links using shared utility
+                resolved_link = resolve_link(link, url, base_url)
 
-    def _get_base_url(self, url: str) -> str:
-        """Get base URL."""
-        parsed = urlparse(url)
-        return f"{parsed.scheme}://{parsed.netloc}"
-
-    def _same_domain(self, url1: str, url2: str) -> bool:
-        """Check if two URLs are from the same domain."""
-        try:
-            domain1 = urlparse(url1).netloc
-            domain2 = urlparse(url2).netloc
-            return domain1 == domain2
-        except:
-            return False
+                if resolved_link and is_same_domain(url, resolved_link):
+                    self.url_graph[url].add(resolved_link)
 
     def _analyze_architecture(self) -> Dict:
         """Analyze overall site architecture."""
 
+        # Use shared utility for max_depth calculation
+        data_list = list(self.url_to_data.values())
+        max_depth_value = get_max_depth(data_list)
+
         architecture = {
             'total_pages': len(self.url_to_data),
             'total_relationships': sum(len(children) for children in self.parent_child_map.values()),
-            'max_depth': max((item.get('depth', 0) for item in self.url_to_data.values()), default=0),
+            'max_depth': max_depth_value,
             'avg_children_per_parent': 0,
             'orphan_pages': 0,
             'architecture_type': 'unknown'
@@ -265,8 +254,9 @@ class PathwayMapper:
 
         simplified = []
         for url in urls:
-            parsed = urlparse(url)
-            path = parsed.path.strip('/')
+            # Use shared utility for parsing
+            components = parse_url_components(url)
+            path = components['path'].strip('/')
 
             # use last segment or fallback to root
             if path:
@@ -283,35 +273,32 @@ class PathwayMapper:
 
     def _analyze_depth_flow(self) -> Dict:
         """Analyze how content flows across depth levels."""
+        # Use shared utility for depth flow analysis (eliminates redundancy)
+        data_list = list(self.url_to_data.values())
+        depth_flow_metrics = analyze_depth_flow(data_list)
 
-        depth_flow = defaultdict(lambda: {
-            'count': 0,
-            'avg_children': 0,
-            'avg_links': 0,
-            'children_list': []
-        })
-
+        # Add link count information which is specific to pathway mapper
         for url, item in self.url_to_data.items():
             depth = item.get('depth', 0)
+            if depth in depth_flow_metrics:
+                # Add average links if not already present
+                if 'avg_links' not in depth_flow_metrics[depth]:
+                    depth_flow_metrics[depth]['avg_links'] = 0
+                    depth_flow_metrics[depth]['total_links'] = 0
 
-            flow = depth_flow[depth]
-            flow['count'] += 1
-
-            children_count = len(self.parent_child_map.get(url, []))
-            flow['children_list'].append(children_count)
-
+        # Calculate link metrics per depth
+        link_counts = defaultdict(list)
+        for url, item in self.url_to_data.items():
+            depth = item.get('depth', 0)
             links_count = len(self.url_graph.get(url, set()))
-            flow['avg_links'] += links_count
+            link_counts[depth].append(links_count)
 
-        # calculate aggregate metrics
-        for depth, flow in depth_flow.items():
-            count = flow['count']
-            flow['avg_children'] = sum(flow['children_list']) / count if count > 0 else 0
-            flow['avg_links'] = flow['avg_links'] / count if count > 0 else 0
-            flow['max_children'] = max(flow['children_list']) if flow['children_list'] else 0
-            del flow['children_list']  # drop raw list data
+        # Add link averages to metrics
+        for depth, links in link_counts.items():
+            if depth in depth_flow_metrics:
+                depth_flow_metrics[depth]['avg_links'] = sum(links) / len(links) if links else 0
 
-        return dict(depth_flow)
+        return depth_flow_metrics
 
     def _analyze_connectivity(self) -> Dict:
         """Analyze overall connectivity of the site."""
@@ -466,41 +453,37 @@ def execute(data: List[Dict]) -> Dict:
 def print_summary(results: Dict):
     """Print human-readable summary of pathway analysis."""
 
-    print("\n" + "="*80)
-    print("PATHWAY MAPPING SUMMARY")
-    print("="*80)
+    print("Pathway mapping summary")
 
     # report architecture metrics
     arch = results['architecture']
-    print(f"\nSite Architecture:")
-    print(f"  Total Pages: {arch['total_pages']:,}")
-    print(f"  Architecture Type: {arch['architecture_type'].upper()}")
-    print(f"  Max Depth: {arch['max_depth']}")
-    print(f"  Avg Children per Parent: {arch['avg_children_per_parent']:.2f}")
-    print(f"  Orphan Pages: {arch['orphan_pages']}")
+    print("Site architecture:")
+    print(f"Total pages: {arch['total_pages']:,}")
+    print(f"Architecture type: {arch['architecture_type'].upper()}")
+    print(f"Max depth: {arch['max_depth']}")
+    print(f"Average children per parent: {arch['avg_children_per_parent']:.2f}")
+    print(f"Orphan pages: {arch['orphan_pages']}")
 
     # report entry point highlights
     entry = results['entry_points']
-    print(f"\nEntry Points: {entry['count']}")
+    print(f"Entry points: {entry['count']}")
     if entry['top_entry_points']:
-        print(f"  Top Entry Point: {entry['top_entry_points'][0]['url']}")
+        print(f"Top entry point: {entry['top_entry_points'][0]['url']}")
 
     # report hub statistics
     hubs = results['navigation_hubs']
-    print(f"\nNavigation Hubs: {hubs['count']}")
+    print(f"Navigation hubs: {hubs['count']}")
     if hubs['top_hubs']:
         top_hub = hubs['top_hubs'][0]
-        print(f"  Top Hub: {top_hub['url']} ({top_hub['total_connectivity']} connections)")
+        print(f"Top hub: {top_hub['url']} ({top_hub['total_connectivity']} connections)")
 
     # report dead-end metrics
     dead = results['dead_ends']
-    print(f"\nDead Ends: {dead['count']} ({dead['percentage']:.1f}%)")
+    print(f"Dead ends: {dead['count']} ({dead['percentage']:.1f}%)")
 
     # report connectivity status
     conn = results['connectivity']
-    print(f"\nConnectivity:")
-    print(f"  Components: {conn['total_components']}")
-    print(f"  Largest Component: {conn['largest_component_percentage']:.1f}%")
-    print(f"  Isolated Pages: {conn['isolated_pages']}")
-
-    print("\n" + "="*80)
+    print("Connectivity:")
+    print(f"Components: {conn['total_components']}")
+    print(f"Largest component: {conn['largest_component_percentage']:.1f}%")
+    print(f"Isolated pages: {conn['isolated_pages']}")

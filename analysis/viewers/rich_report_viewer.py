@@ -2,19 +2,17 @@
 Rich Terminal Report Viewer - Beautiful, colorful, interactive reports
 """
 
+import json
+from typing import Dict, List
+
+import plotext as plt
+from rich import box
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich.layout import Layout
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-from rich import box
-from rich.syntax import Syntax
-from rich.markdown import Markdown
-import plotext as plt
-from typing import Dict, List
-import json
 
 
 class RichReportViewer:
@@ -51,10 +49,7 @@ class RichReportViewer:
                 value_str = str(value)
 
             # add status indicator
-            if isinstance(value, (int, float)) and value > 0:
-                status = "✓"
-            else:
-                status = "○"
+            status = "" if isinstance(value, (int, float)) and value > 0 else "-"
 
             table.add_row(
                 key.replace('_', ' ').title(),
@@ -85,7 +80,7 @@ class RichReportViewer:
 
             # build progress bar
             bar_length = int(score / 2)  # scale to 50 chars
-            bar = "█" * bar_length + "░" * (50 - bar_length)
+            bar = "#" * bar_length + "." * (50 - bar_length)
 
             self.console.print(
                 f"  [{color}]{name.replace('_', ' ').title():25s}[/{color}] "
@@ -106,7 +101,7 @@ class RichReportViewer:
 
         panel = Panel(
             alert_text,
-            title="⚠️  Alerts",
+            title="Alerts",
             border_style="red",
             box=box.ROUNDED
         )
@@ -119,12 +114,12 @@ class RichReportViewer:
 
         rec_text = Text()
         for i, rec in enumerate(recommendations, 1):
-            rec_text.append(f"→ ", style="bold green")
+            rec_text.append("- ", style="bold green")
             rec_text.append(f"{rec}\n", style="white")
 
         panel = Panel(
             rec_text,
-            title="💡 Recommendations",
+            title=" Recommendations",
             border_style="green",
             box=box.ROUNDED
         )
@@ -333,7 +328,7 @@ class RichReportViewer:
         self.console.print()
         self.console.print(
             Panel(
-                "[green]✓ Analysis Complete![/green]\n"
+                "[green] Analysis Complete![/green]\n"
                 "[dim]Results saved to output directory[/dim]",
                 border_style="green"
             )

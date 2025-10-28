@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from server.models import Base, Category, Classification, URL
+from server.models import Base
 
 # alembic config object
 config = context.config

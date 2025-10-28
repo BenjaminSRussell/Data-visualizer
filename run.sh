@@ -1,48 +1,21 @@
 #!/bin/bash
 
-# combined url analysis runner
-# bundles pipelines, validation, outputs, and summary
+set -e
 
-set -e  # exit on error
-
-# color output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # no color
-
-# get script directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# section: configuration
-
 VENV_DIR="venv"
-DEFAULT_INPUT="Site.jsonl"
+DEFAULT_INPUT="data/input/site_02.jsonl"
 DEFAULT_OUTPUT="data/output"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
-# section: helpers
-
-print_header() {
-    echo ""
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  $1${NC}"
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════════════════════════${NC}"
-    echo ""
+say() {
+    printf "%s\n" "$1"
 }
 
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-}
-
-print_info() {
-    echo -e "${YELLOW}➜ $1${NC}"
+tell_err() {
+    printf "%s\n" "$1" >&2
 }
 
 show_usage() {
@@ -78,185 +51,124 @@ EXAMPLES:
 EOF
 }
 
-# section: environment setup
-
 check_system_dependencies() {
-    print_info "Checking system dependencies..."
+    say "Checking dependencies..."
 
-    # check for homebrew
-    if ! command -v brew &> /dev/null; then
-        print_error "Homebrew not found. Please install from https://brew.sh"
+    if command -v brew >/dev/null 2>&1; then
+        say "Homebrew available."
+    else
+        tell_err "Homebrew missing. Install it from https://brew.sh."
         exit 1
     fi
 
-    # check for PostgreSQL (needed for psycopg2)
-    if ! command -v pg_config &> /dev/null; then
-        print_info "PostgreSQL not found. Installing via Homebrew..."
-        brew install postgresql@16
-
-        # add postgresql to path for current session
-        export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
-
-        # add to zshrc if not already there
-        if ! grep -q 'postgresql@16/bin' ~/.zshrc 2>/dev/null; then
-            echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
-        fi
-
-        print_success "PostgreSQL installed"
+    if command -v pg_config >/dev/null 2>&1; then
+        say "PostgreSQL client available."
     else
-        print_success "PostgreSQL already installed"
+        say "Installing postgresql@16 with Homebrew..."
+        if brew install postgresql@16; then
+            say "PostgreSQL installed."
+        else
+            tell_err "PostgreSQL install failed."
+            exit 1
+        fi
     fi
 
-    # ensure pg_config is in PATH (for keg-only postgresql)
-    if [ -f "/opt/homebrew/opt/postgresql@16/bin/pg_config" ]; then
+    if [ -d "/opt/homebrew/opt/postgresql@16/bin" ]; then
         export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+        if ! grep -q 'postgresql@16/bin' ~/.zshrc 2>/dev/null; then
+            echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
+        else
+            :
+        fi
+    else
+        tell_err "Expected PostgreSQL binaries at /opt/homebrew/opt/postgresql@16/bin."
     fi
 }
 
 setup_environment() {
-    print_info "Setting up environment..."
-
-    # check and install system dependencies first
+    say "Setting up environment..."
     check_system_dependencies
 
-    # check if virtual environment exists
     if [ ! -d "$VENV_DIR" ]; then
-        print_info "Creating virtual environment..."
+        say "Creating virtual environment..."
         python3 -m venv "$VENV_DIR"
+    else
+        :
     fi
 
-    # activate virtual environment
     source "$VENV_DIR/bin/activate"
-
-    # install or upgrade dependencies
-    print_info "Installing dependencies..."
     pip install -q --upgrade pip
     pip install -q -r requirements.txt
-
-    print_success "Environment ready"
+    say "Environment ready."
 }
 
 prepare_output_structure() {
     local root_dir="$1"
-
     mkdir -p "$root_dir"/{basic,enhanced,mlx,SUMMARY,logs,cache}
     touch "$root_dir"/{basic,enhanced,mlx,SUMMARY,logs,cache}/.gitkeep 2>/dev/null || true
 }
 
-# section: data validation
-
 validate_data() {
     local input_file="$1"
 
-    print_header "DATA QUALITY VALIDATION"
-
     if [ ! -f "$input_file" ]; then
-        print_error "Input file not found: $input_file"
+        tell_err "Input file not found: $input_file"
         exit 1
+    else
+        if python3 analysis/data_validator.py "$input_file"; then
+            say "Validation finished for $input_file."
+        else
+            tell_err "Validation failed for $input_file."
+            return 1
+        fi
     fi
+    return 0
+}
 
-    print_info "Validating: $input_file"
+run_analysis() {
+    local input_file="$1"
+    local output_dir="$2"
+    local analysis_type="$3"
 
-    # run data validator
-    python3 analysis/data_validator.py "$input_file"
-
-    if [ $? -eq 0 ]; then
-        print_success "Data validation passed"
+    mkdir -p "$output_dir"
+    say "Running pipeline: $analysis_type"
+    if python3 analysis/pipeline/master_pipeline.py "$input_file" "$output_dir" "global.yml"; then
+        say "Analysis complete: $output_dir/"
         return 0
     else
-        print_error "Data validation failed"
+        tell_err "Analysis failed."
         return 1
     fi
 }
 
-# section: analysis execution
-
 run_basic_analysis() {
-    local input_file="$1"
-    local output_dir="$2/basic"
-
-    print_header "BASIC ANALYSIS"
-
-    mkdir -p "$output_dir"
-
-    print_info "Running basic statistical and network analysis..."
-    python3 analysis/pipeline/master_pipeline.py "$input_file" "$output_dir"
-
-    if [ $? -eq 0 ]; then
-        print_success "Basic analysis completed: $output_dir/"
-        return 0
-    else
-        print_error "Basic analysis failed"
-        return 1
-    fi
+    run_analysis "$1" "$2/basic" "basic"
 }
 
 run_enhanced_analysis() {
-    local input_file="$1"
-    local output_dir="$2/enhanced"
-
-    print_header "ENHANCED ANALYSIS"
-
-    mkdir -p "$output_dir"
-
-    print_info "Running enhanced analysis with URL parsing and subdomain detection..."
-    python3 analysis/pipeline/enhanced_pipeline.py "$input_file" "$output_dir"
-
-    if [ $? -eq 0 ]; then
-        print_success "Enhanced analysis completed: $output_dir/"
-        return 0
-    else
-        print_error "Enhanced analysis failed"
-        return 1
-    fi
+    run_analysis "$1" "$2/enhanced" "enhanced"
 }
 
 run_mlx_analysis() {
-    local input_file="$1"
-    local output_dir="$2/mlx"
-
-    print_header "MLX-POWERED ANALYSIS"
-
-    mkdir -p "$output_dir"
-
-    print_info "Running MLX analysis with embeddings, batching, and ML pattern detection..."
-    python3 analysis/pipeline/mlx_enhanced_pipeline.py "$input_file" "$output_dir"
-
-    if [ $? -eq 0 ]; then
-        print_success "MLX analysis completed: $output_dir/"
-        return 0
-    else
-        print_error "MLX analysis failed"
-        return 1
-    fi
+    run_analysis "$1" "$2/mlx" "mlx"
 }
-
-# section: summary generation
 
 generate_summary() {
     local output_dir="$1"
-
-    print_header "GENERATING COMPREHENSIVE SUMMARY"
-
-    print_info "Aggregating results from all analysis types..."
-    python3 analysis/summary_aggregator.py "$output_dir" --print
-
-    if [ $? -eq 0 ]; then
-        print_success "Summary report generated: $output_dir/SUMMARY/"
+    say "Generating summary..."
+    if python3 analysis/summary_aggregator.py "$output_dir"; then
+        say "Summary saved to $output_dir/SUMMARY/"
         return 0
     else
-        print_error "Summary generation failed"
+        tell_err "Summary generation failed."
         return 1
     fi
 }
-
-# section: cleanup and organization
 
 flush_results() {
     local do_archive=false
     local do_clean=false
 
-    # parse flush options
     while [[ $# -gt 0 ]]; do
         case $1 in
             --archive)
@@ -273,65 +185,62 @@ flush_results() {
         esac
     done
 
-    print_header "FLUSHING ANALYSIS RESULTS"
-
-    # if clean mode, use flush_outputs.sh --all
     if [ "$do_clean" = true ]; then
-        print_info "Running complete clean workflow (archive + flush + organize)..."
-        bash flush_outputs.sh --all
-        return $?
-    fi
-
-    # if archive mode, use flush_outputs.sh with archive
-    if [ "$do_archive" = true ]; then
-        print_info "Archiving outputs before flushing..."
-        bash flush_outputs.sh --archive --flush
-        return $?
-    fi
-
-    # interactive mode - ask user
-    read -p "Are you sure you want to delete all analysis results? (y/N) " -n 1 -r
-    echo
-
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Do you want to archive outputs first? (y/N) "
-        read -p "" -n 1 -r
-        echo
-
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            bash flush_outputs.sh --archive --flush
+        if bash flush_outputs.sh --all; then
+            say "Flush complete."
+            return 0
         else
-            bash flush_outputs.sh --flush
+            tell_err "Flush failed."
+            return 1
         fi
-
-        print_success "Flush complete"
+    elif [ "$do_archive" = true ]; then
+        if bash flush_outputs.sh --archive --flush; then
+            say "Flush complete."
+            return 0
+        else
+            tell_err "Flush failed."
+            return 1
+        fi
     else
-        print_info "Flush cancelled"
+        read -p "Delete all analysis results? (y/N) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            read -p "Archive first? (y/N) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                if bash flush_outputs.sh --archive --flush; then
+                    say "Flush complete."
+                else
+                    tell_err "Flush failed."
+                fi
+            else
+                if bash flush_outputs.sh --flush; then
+                    say "Flush complete."
+                else
+                    tell_err "Flush failed."
+                fi
+            fi
+        else
+            say "Cancelled."
+        fi
     fi
 }
 
 organize_outputs() {
-    print_header "ORGANIZING OUTPUTS"
-
-    print_info "Moving outputs to data/output structure..."
-    bash flush_outputs.sh --organize
-
-    if [ $? -eq 0 ]; then
-        print_success "Outputs organized successfully"
+    say "Organizing outputs..."
+    if bash flush_outputs.sh --organize; then
+        say "Outputs organized."
         return 0
     else
-        print_error "Output organization failed"
+        tell_err "Organization failed."
         return 1
     fi
 }
-
-# section: main execution
 
 main() {
     local command="${1:-analyze}"
     shift || true
 
-    # parse arguments
     local input_file="$DEFAULT_INPUT"
     local output_dir="$DEFAULT_OUTPUT"
     local analysis_type="all"
@@ -378,27 +287,18 @@ main() {
         esac
     done
 
-    # execute command
     case $command in
         analyze)
-            print_header "URL ANALYSIS SYSTEM"
-            echo "Input: $input_file"
-            echo "Output: $output_dir"
-            echo "Type: $analysis_type"
-            echo ""
-
-            # setup environment
+            say "Input: $input_file | Output: $output_dir | Type: $analysis_type"
             setup_environment
-
-            # ensure output layout is ready
             prepare_output_structure "$output_dir"
 
-            # validate data unless skipped
             if [ "$skip_validation" = false ]; then
                 validate_data "$input_file" || exit 1
+            else
+                say "Skipping validation."
             fi
 
-            # run analyses based on type
             case $analysis_type in
                 basic)
                     run_basic_analysis "$input_file" "$output_dir"
@@ -415,26 +315,39 @@ main() {
                     run_mlx_analysis "$input_file" "$output_dir"
                     ;;
                 *)
-                    print_error "Unknown analysis type: $analysis_type"
+                    tell_err "Unknown type: $analysis_type"
                     exit 1
                     ;;
             esac
 
-            # generate summary if running all analyses
             if [ "$analysis_type" = "all" ]; then
                 generate_summary "$output_dir"
+            else
+                :
             fi
 
-            # show results location
-            print_header "ANALYSIS COMPLETE"
-            echo "Results saved to: $output_dir/"
-            echo ""
-            echo "Generated directories:"
-            [ -d "$output_dir/basic" ] && echo "  • basic/     - Statistical and network analysis"
-            [ -d "$output_dir/enhanced" ] && echo "  • enhanced/  - URL parsing and subdomain analysis"
-            [ -d "$output_dir/mlx" ] && echo "  • mlx/       - ML-powered pattern detection"
-            [ -d "$output_dir/SUMMARY" ] && echo "  • SUMMARY/   - Comprehensive cross-analysis report"
-            echo ""
+            say "Analysis complete."
+            echo "Results: $output_dir/"
+            if [ -d "$output_dir/basic" ]; then
+                echo "  basic/"
+            else
+                :
+            fi
+            if [ -d "$output_dir/enhanced" ]; then
+                echo "  enhanced/"
+            else
+                :
+            fi
+            if [ -d "$output_dir/mlx" ]; then
+                echo "  mlx/"
+            else
+                :
+            fi
+            if [ -d "$output_dir/SUMMARY" ]; then
+                echo "  SUMMARY/"
+            else
+                :
+            fi
             ;;
 
         validate)
@@ -461,12 +374,11 @@ main() {
             ;;
 
         *)
-            print_error "Unknown command: $command"
+            tell_err "Unknown command: $command"
             show_usage
             exit 1
             ;;
     esac
 }
 
-# run main function with all arguments
 main "$@"

@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-management cli helpers for analysis workflows.
-"""
 
 from __future__ import annotations
 
@@ -11,110 +8,90 @@ from pathlib import Path
 from typing import List, Optional
 
 import typer
-from rich import print
-from rich.console import Console
 
-APP = typer.Typer(help="Utility commands for the data visualizer stack.")
-CONSOLE = Console()
+APP = typer.Typer(help="Data visualizer management CLI")
 ROOT = Path(__file__).parent.resolve()
 RUN_SCRIPT = ROOT / "run.sh"
-SERVER_SCRIPT = ROOT / "server.sh"
-OUTPUT_ROOT = ROOT / "analysis" / "output"
+OUTPUT_ROOT = ROOT / "data" / "output"
 LEGACY_DIRS = [ROOT / "analysis" / "results", ROOT / "analysis" / "enhanced_results"]
 DATABASE_FILE = ROOT / "url_analyzer.db"
 
 
 def run_command(command: List[str], cwd: Optional[Path] = None) -> int:
-    """run subprocess and stream output."""
     return subprocess.call(command, cwd=str(cwd or ROOT))
 
 
 @APP.command()
 def analyze(
-    input_path: Path = typer.Option(Path("Site.jsonl"), "--input", "-i", exists=True, file_okay=True),
+    input_path: Path = typer.Option(Path("data/input/site_02.jsonl"), "--input", "-i", exists=True, file_okay=True),
     output_dir: Path = typer.Option(OUTPUT_ROOT, "--output", "-o"),
     analysis_type: str = typer.Option("all", "--type", "-t", help="basic|enhanced|mlx|all"),
-    skip_validation: bool = typer.Option(False, "--skip-validation", help="Skip data quality checks"),
+    skip_validation: bool = typer.Option(False, "--skip-validation"),
 ) -> None:
-    """wrap run.sh analyze command."""
-    command = [
-        str(RUN_SCRIPT),
-        "analyze",
-        "--input",
-        str(input_path),
-        "--output",
-        str(output_dir),
-        "--type",
-        analysis_type,
-    ]
+    """Run analysis pipeline"""
+    command = [str(RUN_SCRIPT), "analyze", "--input", str(input_path), "--output", str(output_dir), "--type", analysis_type]
     if skip_validation:
         command.append("--skip-validation")
-
-    CONSOLE.log("Executing analysis pipeline...")
-    code = run_command(command)
-    raise typer.Exit(code)
+    raise typer.Exit(run_command(command))
 
 
 @APP.command()
-def validate(input_path: Path = typer.Argument(..., exists=True, file_okay=True), strict: bool = typer.Option(False, "--strict")) -> None:
-    """trigger jsonl data validation."""
+def validate(
+    input_path: Path = typer.Argument(..., exists=True, file_okay=True),
+    strict: bool = typer.Option(False, "--strict")
+) -> None:
+    """Validate JSONL data"""
     command = ["python3", "analysis/data_validator.py", str(input_path)]
     if strict:
         command.append("--strict")
-
-    code = run_command(command)
-    raise typer.Exit(code)
+    raise typer.Exit(run_command(command))
 
 
 @APP.command()
 def flush(
-    outputs: bool = typer.Option(True, help="Remove analysis output directories."),
-    database: bool = typer.Option(False, help="Delete local SQLite database file."),
-    yes: bool = typer.Option(False, "--yes", "-y", help="Do not prompt for confirmation."),
+    outputs: bool = typer.Option(True, help="Remove output directories"),
+    database: bool = typer.Option(False, help="Delete database file"),
+    yes: bool = typer.Option(False, "--yes", "-y"),
 ) -> None:
-    """clear analysis artifacts and optional database."""
-    if not yes:
-        confirmed = typer.confirm("This will remove generated data. Continue?")
-        if not confirmed:
-            print("[yellow]Operation cancelled.[/yellow]")
-            raise typer.Exit(code=0)
+    """Clear analysis artifacts"""
+    if not yes and not typer.confirm("Remove generated data?"):
+        typer.echo("Cancelled")
+        raise typer.Exit(0)
 
     if outputs:
         if OUTPUT_ROOT.exists():
             shutil.rmtree(OUTPUT_ROOT)
-            print(f"[green]Removed output directory[/green] {OUTPUT_ROOT}")
+            typer.echo(f"Removed {OUTPUT_ROOT}")
+        else:
+            typer.echo(f"{OUTPUT_ROOT} not found")
+
         OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
         for sub in ["basic", "enhanced", "mlx", "SUMMARY", "logs", "cache"]:
             (OUTPUT_ROOT / sub).mkdir(parents=True, exist_ok=True)
             (OUTPUT_ROOT / sub / ".gitkeep").touch()
+
         for legacy in LEGACY_DIRS:
             if legacy.exists():
                 shutil.rmtree(legacy)
-                print(f"[green]Removed legacy directory[/green] {legacy}")
+                typer.echo(f"Removed {legacy}")
+            else:
+                typer.echo(f"{legacy} not found")
 
-    if database and DATABASE_FILE.exists():
-        DATABASE_FILE.unlink()
-        print(f"[green]Deleted database file[/green] {DATABASE_FILE}")
+    if database:
+        if DATABASE_FILE.exists():
+            DATABASE_FILE.unlink()
+            typer.echo(f"Deleted {DATABASE_FILE}")
+        else:
+            typer.echo(f"{DATABASE_FILE} not found")
 
-    print("[bold green]Flush complete.[/bold green]")
+    typer.echo("Flush complete")
 
 
 @APP.command()
 def summary(output_dir: Path = typer.Option(OUTPUT_ROOT, "--output", "-o")) -> None:
-    """build and print aggregated summary."""
+    """Generate aggregated summary"""
     command = ["python3", "analysis/summary_aggregator.py", str(output_dir), "--print"]
-    code = run_command(command)
-    raise typer.Exit(code)
-
-
-@APP.command()
-def server(component: str = typer.Argument("api"), args: List[str] = typer.Argument(None)) -> None:
-    """wrap server.sh for runtime control."""
-    command = [str(SERVER_SCRIPT), component]
-    if args:
-        command.extend(args)
-    code = run_command(command)
-    raise typer.Exit(code)
+    raise typer.Exit(run_command(command))
 
 
 if __name__ == "__main__":

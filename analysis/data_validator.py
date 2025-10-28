@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
-import jsonschema
 import pandas as pd
 from jsonschema import Draft7Validator
 
@@ -80,14 +79,14 @@ class ValidationResult:
 
     def report(self) -> None:
         """print validation summary."""
-        print("\n── Data Quality Validation Report ──")
-        status = "PASSED ✅" if self.valid else "FAILED ❌"
+        print("\nData Quality Validation Report")
+        status = "PASSED" if self.valid else "FAILED"
         print(f"Status: {status}")
 
         if self.summary:
             print("\nSummary:")
             for key, value in self.summary.items():
-                print(f"  • {key}: {value}")
+                print(f"  - {key}: {value}")
 
         if self.errors:
             print("\nErrors:")

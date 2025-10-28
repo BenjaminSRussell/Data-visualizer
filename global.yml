@@ -1,0 +1,99 @@
+# Global Configuration for URL Analysis System
+
+# Data Sources
+data:
+  baseline: "data/input/site_01.jsonl"
+  current: "data/input/site_02.jsonl"
+  input_dir: "data/input"
+  output_dir: "data/output"
+
+# Analysis Configuration
+analysis:
+  # Analysis types to run (basic, enhanced, mlx)
+  types:
+    basic:
+      enabled: true
+      output_subdir: "basic"
+      analyzers:
+        - statistical
+        - network
+        - semantic_path
+        - pathway
+
+    enhanced:
+      enabled: true
+      output_subdir: "enhanced"
+      analyzers:
+        - statistical
+        - network
+        - semantic_path
+        - pathway
+        - subdomain
+        - url_components
+
+    mlx:
+      enabled: true
+      output_subdir: "mlx"
+      features:
+        - embeddings
+        - batch_detection
+        - pattern_recognition
+        - temporal_clustering
+        - parent_child_relationships
+
+# Statistical Analysis Parameters
+statistical:
+  outlier_threshold: 3.0
+  confidence_level: 0.95
+  min_sample_size: 30
+
+# Network Analysis Parameters
+network:
+  max_centrality_results: 20
+  clustering_threshold: 0.5
+  min_cluster_size: 5
+
+# Semantic Analysis Parameters
+semantic:
+  min_token_frequency: 2
+  max_vocabulary_size: 10000
+  similarity_threshold: 0.7
+
+# MLX Parameters
+mlx:
+  embedding_dim: 128
+  training_epochs: 3
+  window_size: 3
+  batch_threshold: 10
+  temporal_window_minutes: 5
+
+# URL Normalization
+normalization:
+  remove_fragments: true
+  merge_metadata: true
+  case_sensitive: false
+
+# Output Configuration
+output:
+  formats:
+    - json
+    - txt
+  save_individual_results: true
+  generate_summary: true
+  summary_dir: "SUMMARY"
+
+# Validation Parameters
+validation:
+  max_duplicates_percent: 60
+  required_fields:
+    - url
+    - status_code
+  warn_missing_fields:
+    - title
+    - links
+
+# Performance
+performance:
+  max_workers: 6
+  batch_size: 1000
+  timeout_seconds: 120

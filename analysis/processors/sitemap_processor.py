@@ -17,9 +17,7 @@ from typing import Dict, List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from analysis.processors import process_single_url
 from analysis.classifiers import detect_patterns
-from server.storage import save_url
 
 logger = logging.getLogger(__name__)
 

@@ -8,9 +8,8 @@ Detects:
 - File type patterns
 """
 
-import mlx.core as mx
 import re
-from typing import List, Dict, Tuple
+from typing import List, Dict
 from collections import Counter, defaultdict
 from urllib.parse import urlparse
 
@@ -48,7 +47,7 @@ class PatternRecognizer:
             'file_patterns': self._find_file_patterns(url_data)
         }
 
-        print(f"✓ Pattern analysis complete")
+        print(f"Pattern analysis done")
 
         return results
 

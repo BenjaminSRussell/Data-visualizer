@@ -2,11 +2,10 @@
 Batch Detector - Identify groups of URLs with similar characteristics using MLX
 """
 
-import mlx.core as mx
 import numpy as np
-from typing import List, Dict, Tuple, Set
+from typing import List, Dict
 from collections import defaultdict, Counter
-from sklearn.cluster import DBSCAN, AgglomerativeClustering
+from sklearn.cluster import DBSCAN
 from .url_embeddings import URLEmbedder
 
 
@@ -47,40 +46,40 @@ class BatchDetector:
         # strategy 1: domain-based batches
         domain_batches = self._detect_domain_batches(url_data)
         all_batches.extend(domain_batches)
-        print(f"  ✓ Found {len(domain_batches)} domain-based batches")
+        print(f"  Found {len(domain_batches)} domain-based batches")
 
         # strategy 2: subdomain-based batches
         subdomain_batches = self._detect_subdomain_batches(url_data)
         all_batches.extend(subdomain_batches)
-        print(f"  ✓ Found {len(subdomain_batches)} subdomain-based batches")
+        print(f"  Found {len(subdomain_batches)} subdomain-based batches")
 
         # strategy 3: path pattern batches
         path_batches = self._detect_path_pattern_batches(url_data)
         all_batches.extend(path_batches)
-        print(f"  ✓ Found {len(path_batches)} path-pattern batches")
+        print(f"  Found {len(path_batches)} path-pattern batches")
 
         # strategy 4: depth-based batches
         depth_batches = self._detect_depth_batches(url_data)
         all_batches.extend(depth_batches)
-        print(f"  ✓ Found {len(depth_batches)} depth-based batches")
+        print(f"  Found {len(depth_batches)} depth-based batches")
 
         # strategy 5: temporal batches
         temporal_batches = self._detect_temporal_batches(url_data)
         all_batches.extend(temporal_batches)
-        print(f"  ✓ Found {len(temporal_batches)} temporal batches")
+        print(f"  Found {len(temporal_batches)} temporal batches")
 
         # strategy 6: embedding-based clustering (if embedder available)
         if self.embedder and self.embedder.is_trained:
             embedding_batches = self._detect_embedding_batches(url_data)
             all_batches.extend(embedding_batches)
-            print(f"  ✓ Found {len(embedding_batches)} embedding-based batches")
+            print(f"  Found {len(embedding_batches)} embedding-based batches")
 
         # strategy 7: content type batches
         content_batches = self._detect_content_type_batches(url_data)
         all_batches.extend(content_batches)
-        print(f"  ✓ Found {len(content_batches)} content-type batches")
+        print(f"  Found {len(content_batches)} content-type batches")
 
-        print(f"\n✓ Total batches detected: {len(all_batches)}")
+        print(f"\nTotal batches detected: {len(all_batches)}")
 
         self.batches = all_batches
         return all_batches
@@ -119,7 +118,6 @@ class BatchDetector:
 
     def _detect_subdomain_batches(self, url_data: List[Dict]) -> List[Dict]:
         """Group URLs by subdomain"""
-        from urllib.parse import urlparse
         import tldextract
 
         subdomain_groups = defaultdict(list)
@@ -155,7 +153,6 @@ class BatchDetector:
     def _detect_path_pattern_batches(self, url_data: List[Dict]) -> List[Dict]:
         """Group URLs by path patterns"""
         from urllib.parse import urlparse
-        import re
 
         # extract path prefixes (first 2 components)
         path_groups = defaultdict(list)

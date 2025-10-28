@@ -5,11 +5,14 @@ Purpose: Deep analysis of domain/subdomain structure, cross-domain linking,
          external dependencies, and domain-based clustering
 """
 
-import re
 from collections import Counter, defaultdict
-from typing import Dict, List, Set, Tuple
-from urllib.parse import urlparse, parse_qs
-import tldextract
+from typing import Dict, List
+from urllib.parse import urlparse
+
+try:
+    import tldextract  # type: ignore
+except ImportError:
+    tldextract = None
 
 
 class SubdomainAnalyzer:
@@ -114,14 +117,18 @@ class SubdomainAnalyzer:
     def _get_domain_overview(self) -> Dict:
         """Get overview of all domains."""
 
+        total_urls = sum(len(data['urls']) for data in self.domains.values())
+
         overview = {
             'total_domains': len(self.domains),
             'total_subdomains': len(self.subdomain_map),
+            'total_urls': total_urls,
             'domains': {}
         }
 
+        top_domains = []
         for domain, data in self.domains.items():
-            overview['domains'][domain] = {
+            domain_info = {
                 'url_count': len(data['urls']),
                 'subdomain_count': len(data['subdomains']),
                 'subdomains': sorted(list(data['subdomains'])),
@@ -131,6 +138,15 @@ class SubdomainAnalyzer:
                 'avg_depth': sum(d * c for d, c in data['depth_distribution'].items()) / sum(data['depth_distribution'].values()) if data['depth_distribution'] else 0,
                 'top_paths': dict(data['path_patterns'].most_common(10))
             }
+            overview['domains'][domain] = domain_info
+            top_domains.append({
+                'domain': domain,
+                'url_count': len(data['urls']),
+                'subdomain_count': len(data['subdomains'])
+            })
+
+        top_domains.sort(key=lambda x: x['url_count'], reverse=True)
+        overview['top_domains'] = top_domains[:20]
 
         return overview
 
@@ -207,7 +223,7 @@ class SubdomainAnalyzer:
             cross_domain['top_external_targets'][link['target_domain']] += 1
 
             # create domain pair
-            pair = f"{link['source_domain']} → {link['target_domain']}"
+            pair = f"{link['source_domain']} -> {link['target_domain']}"
             cross_domain['domain_pairs'][pair] += 1
 
             # analyze tld patterns
@@ -497,67 +513,55 @@ def execute(data: List[Dict]) -> Dict:
     Returns:
         Subdomain analysis results
     """
-    # check if tldextract is available, if not use simple parsing
-    try:
-        import tldextract
-    except ImportError:
-        # create a simple mock for tldextract
-        class SimpleTLDExtract:
+    # ensure tldextract availability or provide a basic fallback
+    global tldextract
+    if tldextract is None:
+        class SimpleTLDExtractModule:
             @staticmethod
             def extract(url):
                 from urllib.parse import urlparse
+
                 parsed = urlparse(url)
                 parts = parsed.netloc.split('.')
 
                 class Result:
-                    def __init__(self, parts):
-                        if len(parts) >= 2:
-                            self.suffix = parts[-1]
-                            self.domain = parts[-2]
-                            self.subdomain = '.'.join(parts[:-2]) if len(parts) > 2 else ''
+                    def __init__(self, domain_parts):
+                        if len(domain_parts) >= 2:
+                            self.suffix = domain_parts[-1]
+                            self.domain = domain_parts[-2]
+                            self.subdomain = '.'.join(domain_parts[:-2]) if len(domain_parts) > 2 else ''
                         else:
                             self.suffix = ''
-                            self.domain = parts[0] if parts else ''
+                            self.domain = domain_parts[0] if domain_parts else ''
                             self.subdomain = ''
 
                 return Result(parts)
 
-        import sys
-        sys.modules['tldextract'] = SimpleTLDExtract()
+        tldextract = SimpleTLDExtractModule
 
     analyzer = SubdomainAnalyzer()
     return analyzer.analyze(data)
 
 
 def print_summary(results: Dict):
-    """Print human-readable summary."""
+    """Print summary."""
 
-    print("\n" + "="*80)
-    print("SUBDOMAIN & DOMAIN ANALYSIS SUMMARY")
-    print("="*80)
+    print("Subdomain and domain analysis summary")
 
-    # overview
     overview = results['domain_overview']
-    print(f"\nDomain Overview:")
-    print(f"  Total Domains: {overview['total_domains']}")
-    print(f"  Total Subdomains: {overview['total_subdomains']}")
+    print(f"Total Domains: {overview['total_domains']}")
+    print(f"Total Subdomains: {overview['total_subdomains']}")
 
-    # subdomain analysis
     subdomain = results['subdomain_analysis']
-    print(f"\nSubdomain Distribution:")
-    print(f"  Unique Subdomains: {subdomain['total_unique_subdomains']}")
+    print(f"Unique Subdomains: {subdomain['total_unique_subdomains']}")
 
     if 'subdomain_purposes' in subdomain:
-        print(f"\n  Purpose Classification:")
-        for purpose, subs in subdomain['subdomain_purposes'].items():
-            print(f"    {purpose}: {len(subs)} subdomains")
+        print("Purpose classification:")
+        for purpose, subs in list(subdomain['subdomain_purposes'].items())[:5]:
+            print(f"{purpose}: {len(subs)} subdomains")
 
-    # external dependencies
     deps = results['external_dependencies']
-    print(f"\nExternal Dependencies:")
     if deps['critical_dependencies']:
-        print(f"  Critical Dependencies: {len(deps['critical_dependencies'])}")
+        print(f"Critical dependencies: {len(deps['critical_dependencies'])}")
         for dep in deps['critical_dependencies'][:3]:
-            print(f"    - {dep['domain']}: {dep['total_links']} links ({dep['criticality']} priority)")
-
-    print("\n" + "="*80)
+            print(f"{dep['domain']}: {dep['total_links']} links")

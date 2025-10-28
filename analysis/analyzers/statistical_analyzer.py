@@ -5,13 +5,16 @@ Purpose: Extract statistical insights from URL data including distributions,
          correlations, anomalies, and patterns
 """
 
-import json
-import numpy as np
 from collections import Counter, defaultdict
-from typing import Dict, List, Tuple
-from urllib.parse import urlparse
+from typing import Dict, List
+
+import numpy as np
 from scipy import stats
-import re
+
+from analysis.utils.general_metrics import compute_depth_health_score
+
+# Use shared utilities to eliminate redundancy
+from analysis.utils.url_utilities import extract_fragment, get_path_length, get_query_param_count
 
 
 class StatisticalAnalyzer:
@@ -61,20 +64,19 @@ class StatisticalAnalyzer:
             depth = item.get('depth', 0)
             self.depths.append(depth)
 
-            # parse url
+            # Use shared url_utilities instead of redundant parsing
             try:
-                parsed = urlparse(url)
-
-                # path length
-                path_len = len(parsed.path)
+                # path length using shared utility
+                path_len = get_path_length(url)
                 self.path_lengths.append(path_len)
 
-                # query parameters
-                query_count = len(parsed.query.split('&')) if parsed.query else 0
+                # query parameters using shared utility
+                query_count = get_query_param_count(url)
                 self.query_counts.append(query_count)
 
-                # fragment
-                self.fragment_counts.append(1 if parsed.fragment else 0)
+                # fragment using shared utility
+                fragment = extract_fragment(url)
+                self.fragment_counts.append(1 if fragment else 0)
 
             except:
                 self.path_lengths.append(0)
@@ -117,7 +119,8 @@ class StatisticalAnalyzer:
 
         distributions = {}
 
-        # depth distribution
+        # depth distribution using shared utility (eliminates redundancy)
+        # Note: Still need local Counter for backward compatibility with histogram
         depth_dist = Counter(self.depths)
         distributions['depth_distribution'] = dict(sorted(depth_dist.items()))
         distributions['depth_histogram'] = self._create_histogram(self.depths, 'Depth')
@@ -265,6 +268,9 @@ class StatisticalAnalyzer:
 
     def _analyze_depth_patterns(self) -> Dict:
         """Analyze depth-specific patterns."""
+        # NOTE: This method is kept for backward compatibility but could be replaced
+        # with general_metrics.analyze_depth_patterns() in the future.
+        # For now, keeping local implementation to avoid breaking changes.
 
         depth_patterns = defaultdict(lambda: {
             'count': 0,
@@ -333,9 +339,9 @@ class StatisticalAnalyzer:
 
         health['url_length_score'] = (optimal_length / len(self.urls)) * 100 if self.urls else 0
 
-        # depth health (optimal: 2-4 levels)
-        optimal_depth = sum(1 for d in self.depths if 2 <= d <= 4)
-        health['depth_score'] = (optimal_depth / len(self.depths)) * 100 if self.depths else 0
+        # depth health using shared utility (eliminates redundancy)
+        depth_health = compute_depth_health_score(self.urls, optimal_range=(2, 4))
+        health['depth_score'] = depth_health['depth_score']
 
         # fragment health (fragments can cause duplicate content)
         fragment_rate = (sum(self.fragment_counts) / len(self.fragment_counts)) * 100 if self.fragment_counts else 0
@@ -441,38 +447,20 @@ def execute(data: List[Dict]) -> Dict:
 
 
 def print_summary(results: Dict):
-    """Print human-readable summary of statistical analysis."""
+    """Print summary of statistical analysis."""
 
-    print("\n" + "="*80)
-    print("STATISTICAL ANALYSIS SUMMARY")
-    print("="*80)
+    print("Statistical analysis summary")
 
-    # summary stats
     summary = results['summary_stats']
-    print(f"\nDataset Overview:")
-    print(f"  Total URLs: {summary['total_urls']:,}")
-    print(f"  Depth Range: {summary['depth_min']:.0f} - {summary['depth_max']:.0f} (avg: {summary['depth_mean']:.2f})")
-    print(f"  Path Length Range: {summary['path_length_min']:.0f} - {summary['path_length_max']:.0f} (avg: {summary['path_length_mean']:.2f})")
-    print(f"  Avg Links per Page: {summary['outbound_links_mean']:.2f}")
+    print(f"Total URLs: {summary['total_urls']:,}")
+    print(f"Depth: {summary['depth_min']:.0f} - {summary['depth_max']:.0f} (avg: {summary['depth_mean']:.2f})")
+    print(f"Avg Links per Page: {summary['outbound_links_mean']:.2f}")
 
-    # health
     health = results['url_health']
-    print(f"\nURL Health Score: {health['overall_health']:.1f}/100 (Grade: {health['health_grade']})")
-    print(f"  Length Optimization: {health['url_length_score']:.1f}%")
-    print(f"  Depth Optimization: {health['depth_score']:.1f}%")
-    print(f"  Fragment Health: {health['fragment_score']:.1f}%")
+    print(f"URL Health Score: {health['overall_health']:.1f}/100 (Grade: {health['health_grade']})")
 
-    # correlations
     if results['correlations']:
-        print(f"\nKey Correlations:")
+        print("Key correlations:")
         for name, corr in results['correlations'].items():
             if corr.get('significant'):
-                print(f"  {name}: {corr['interpretation']} (r={corr['correlation']:.3f})")
-
-    # anomalies
-    print(f"\nAnomalies Detected:")
-    for name, anomaly in results['anomalies'].items():
-        if anomaly['count'] > 0:
-            print(f"  {name}: {anomaly['count']} outliers ({anomaly['percentage']:.1f}%)")
-
-    print("\n" + "="*80)
+                print(f"{name}: {corr['interpretation']}")

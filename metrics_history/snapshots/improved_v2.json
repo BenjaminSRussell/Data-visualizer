@@ -1,0 +1,18 @@
+{
+  "snapshot_id": "improved_v2",
+  "timestamp": "2025-10-27T19:04:08.399847",
+  "metadata": {
+    "version": "1.2",
+    "changes": "Optimized parser"
+  },
+  "metrics": {
+    "total_urls": 5400,
+    "data_quality_score": 85.2,
+    "duplication_rate": 28.0,
+    "urls_per_second": 1.15,
+    "error_rate": 3.1,
+    "storage_efficiency": 72.0,
+    "max_depth_reached": 6,
+    "avg_depth": 2.7
+  }
+}

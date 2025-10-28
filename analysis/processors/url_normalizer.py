@@ -9,9 +9,10 @@ Based on diagnostic evidence:
 """
 
 import hashlib
-from urllib.parse import urlparse, urlunparse, parse_qs
-from typing import List, Dict, Optional
 from collections import defaultdict
+from typing import Dict, List
+from urllib.parse import parse_qs, urlparse, urlunparse
+
 import tldextract
 
 
@@ -208,15 +209,14 @@ class URLNormalizer:
         """Print normalization statistics"""
         stats = self.normalization_stats
 
-        print("\n" + "="*80)
-        print("URL NORMALIZATION STATISTICS")
-        print("="*80)
-        print(f"  Input URLs: {stats['total_input']:,}")
-        print(f"  Output URLs: {stats['total_output']:,}")
-        print(f"  Reduction: {stats['total_input'] - stats['total_output']:,} URLs ({(stats['total_input'] - stats['total_output']) / stats['total_input'] * 100:.1f}%)")
-        print(f"  Fragments removed: {stats['fragments_removed']:,}")
-        print(f"  Duplicates merged: {stats['duplicates_merged']:,}")
-        print("="*80 + "\n")
+        print("URL normalization statistics")
+        print(f"Input URLs: {stats['total_input']:,}")
+        print(f"Output URLs: {stats['total_output']:,}")
+        reduction = stats['total_input'] - stats['total_output']
+        percent = (reduction / stats['total_input'] * 100) if stats['total_input'] else 0
+        print(f"Reduction: {reduction:,} URLs ({percent:.1f}%)")
+        print(f"Fragments removed: {stats['fragments_removed']:,}")
+        print(f"Duplicates merged: {stats['duplicates_merged']:,}")
 
 
 def normalize_jsonl_file(input_file: str, output_file: str, remove_fragments=True):

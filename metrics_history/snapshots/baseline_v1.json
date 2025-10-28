@@ -1,0 +1,18 @@
+{
+  "snapshot_id": "baseline_v1",
+  "timestamp": "2025-10-27T19:04:08.399656",
+  "metadata": {
+    "version": "1.0",
+    "changes": "Initial baseline"
+  },
+  "metrics": {
+    "total_urls": 5000,
+    "data_quality_score": 65.0,
+    "duplication_rate": 52.0,
+    "urls_per_second": 0.8,
+    "error_rate": 5.0,
+    "storage_efficiency": 48.0,
+    "max_depth_reached": 8,
+    "avg_depth": 3.2
+  }
+}

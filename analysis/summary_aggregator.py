@@ -7,11 +7,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
-
 
 ANALYSIS_TARGETS: Dict[str, Tuple[str, ...]] = {
     "basic": ("analysis_results.json",),
@@ -118,7 +118,8 @@ def build_markdown_report(snapshots: List[AnalysisSnapshot], aggregate: Dict[str
         if alerts:
             lines.append("\n**Alerts**")
             for alert in alerts[:5]:
-                lines.append(f"- ⚠️ {alert}")
+                ascii_only = "".join(ch for ch in alert if ord(ch) < 128).strip()
+                lines.append(f"- {ascii_only or alert.strip()}")
 
         lines.append("")
 
@@ -178,7 +179,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     output_root = Path(args.output_root).resolve()
 
     if not output_root.exists():
-        print(f"Output directory not found: {output_root}")
+        sys.stderr.write(f"Output directory not found: {output_root}\n")
         return 1
 
     snapshots: List[AnalysisSnapshot] = []
@@ -189,7 +190,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
             snapshots.append(snapshot)
 
     if not snapshots:
-        print("No analysis results found to aggregate.")
+        sys.stderr.write("No analysis results found to aggregate.\n")
         return 1
 
     aggregate = aggregate_snapshots(snapshots)
@@ -208,10 +209,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     summary_md_path.write_text(report_text, encoding="utf-8")
 
     if args.print_stdout:
-        print(report_text)
-
-    print(f"Summary generated: {summary_json_path}")
-    print(f"Readable report:  {summary_md_path}")
+        sys.stdout.write(report_text + "\n")
 
     return 0
 

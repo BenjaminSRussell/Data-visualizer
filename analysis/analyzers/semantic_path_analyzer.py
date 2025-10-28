@@ -7,9 +7,11 @@ Purpose: Extract deep semantic meaning from URL structures using
 
 import re
 from collections import Counter, defaultdict
-from typing import Dict, List, Set, Tuple
-from urllib.parse import urlparse, unquote, parse_qs
-import json
+from typing import Dict, List
+from urllib.parse import parse_qs
+
+# Use shared utilities to eliminate redundancy
+from analysis.utils.url_utilities import get_path_depth, parse_url_components
 
 
 class SemanticPathAnalyzer:
@@ -95,8 +97,10 @@ class SemanticPathAnalyzer:
         if not url:
             return
 
-        parsed = urlparse(url)
-        path = unquote(parsed.path)
+        # Use shared utility for parsing
+        components = parse_url_components(url)
+        from urllib.parse import unquote
+        path = unquote(components['path'])
 
         # tokenize path
         tokens = self._tokenize_path(path)
@@ -292,10 +296,11 @@ class SemanticPathAnalyzer:
 
         for item in data:
             url = item.get('url', '')
-            parsed = urlparse(url)
+            # Use shared utility for parsing
+            components = parse_url_components(url)
 
-            if parsed.query:
-                params = parse_qs(parsed.query)
+            if components['has_query']:
+                params = parse_qs(components['query'])
 
                 for key, values in params.items():
                     param_names[key] += 1
@@ -304,8 +309,11 @@ class SemanticPathAnalyzer:
                         # store first 100 chars of value
                         param_values[key][value[:100]] += 1
 
+        # Count parameterized URLs
+        parameterized_count = sum(1 for item in data if parse_url_components(item.get('url', ''))['has_query'])
+
         return {
-            'total_parameterized_urls': sum(1 for item in data if parse_qs(urlparse(item.get('url', '')).query)),
+            'total_parameterized_urls': parameterized_count,
             'top_parameter_names': dict(param_names.most_common(20)),
             'common_parameters': {
                 key: dict(values.most_common(10))
@@ -367,8 +375,9 @@ class SemanticPathAnalyzer:
 
         for url in self.urls:
             url_len = len(url)
-            parsed = urlparse(url)
-            path = parsed.path
+            # Use shared utility for parsing (eliminates redundancy)
+            components = parse_url_components(url)
+            path = components['path']
 
             # length assessment
             if url_len > 100:
@@ -388,8 +397,8 @@ class SemanticPathAnalyzer:
             if re.search(r'[A-Z]', path):
                 quality_metrics['has_uppercase'] += 1
 
-            # depth check
-            depth = len([p for p in path.split('/') if p])
+            # depth check using shared utility (eliminates redundancy)
+            depth = get_path_depth(url)
             if depth > 5:
                 quality_metrics['too_deep'] += 1
             elif 2 <= depth <= 4:
@@ -483,41 +492,24 @@ def execute(data: List[Dict]) -> Dict:
 
 
 def print_summary(results: Dict):
-    """Print human-readable summary of semantic analysis."""
+    """Print summary of semantic analysis."""
 
-    print("\n" + "="*80)
-    print("SEMANTIC PATH ANALYSIS SUMMARY")
-    print("="*80)
+    print("Semantic path analysis summary")
 
-    # vocabulary
     vocab = results['vocabulary']
-    print(f"\nVocabulary Analysis:")
-    print(f"  Total Tokens: {vocab['total_tokens']:,}")
-    print(f"  Unique Tokens: {vocab['unique_tokens']:,}")
-    print(f"  Diversity: {vocab['vocabulary_diversity'].upper()}")
-    print(f"  Top Keywords: {', '.join(list(vocab['top_tokens'].keys())[:10])}")
+    print(f"Total Tokens: {vocab['total_tokens']:,}")
+    print(f"Unique Tokens: {vocab['unique_tokens']:,}")
+    print(f"Diversity: {vocab['vocabulary_diversity'].upper()}")
 
-    # semantic categories
     semantics = results['semantic_categories']
     if 'dominant_category' in semantics:
         dom = semantics['dominant_category']
-        print(f"\nDominant Category: {dom['name'].upper()} ({dom['count']} pages)")
+        print(f"Dominant Category: {dom['name'].upper()} ({dom['count']} pages)")
 
-    # content types
     content = results['content_type_prediction']
-    print(f"\nPredicted Content Types:")
-    for ctype, data in sorted(content.items(), key=lambda x: x[1]['count'], reverse=True)[:5]:
-        print(f"  {ctype}: {data['percentage']:.1f}%")
+    print("Top content types:")
+    for ctype, data in sorted(content.items(), key=lambda x: x[1]['count'], reverse=True)[:3]:
+        print(f"{ctype}: {data['percentage']:.1f}%")
 
-    # quality
     quality = results['url_quality']
-    print(f"\nURL Quality Score: {quality['quality_score']:.1f}/100 (Grade: {quality['quality_grade']})")
-
-    # seo insights
-    seo = results['seo_insights']
-    if seo['issues']:
-        print(f"\nSEO Issues Found:")
-        for issue in seo['issues'][:3]:
-            print(f"  - {issue}")
-
-    print("\n" + "="*80)
+    print(f"URL Quality Score: {quality['quality_score']:.1f}/100 (Grade: {quality['quality_grade']})")

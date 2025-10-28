@@ -5,11 +5,17 @@ Purpose: Analyze URL network as a graph, compute centrality metrics,
          identify clusters, and detect link patterns
 """
 
-import json
-from collections import defaultdict, Counter
-from typing import Dict, List, Set, Tuple
-from urllib.parse import urlparse, urljoin
-import math
+from collections import Counter, defaultdict
+from typing import Dict, List
+from urllib.parse import urlparse
+
+# Use shared utilities to eliminate redundancy
+from analysis.utils.url_utilities import (
+    get_base_url,
+    is_internal_link,
+    parse_url_components,
+    resolve_link,
+)
 
 
 class NetworkAnalyzer:
@@ -59,44 +65,15 @@ class NetworkAnalyzer:
             self.url_data[url] = item
             links = item.get('links', [])
 
-            base_url = self._get_base_url(url)
+            base_url = get_base_url(url)  # Use shared utility
 
             for link in links:
-                # resolve relative links
-                target = self._resolve_link(link, url, base_url)
+                # resolve relative links using shared utility
+                target = resolve_link(link, url, base_url)
 
-                if target and self._is_internal(url, target):
+                if target and is_internal_link(url, target):  # Use shared utility
                     self.graph[url].add(target)
                     self.reverse_graph[target].add(url)
-
-    def _get_base_url(self, url: str) -> str:
-        """Get base URL."""
-        parsed = urlparse(url)
-        return f"{parsed.scheme}://{parsed.netloc}"
-
-    def _resolve_link(self, link: str, source_url: str, base_url: str) -> str:
-        """Resolve relative and absolute links."""
-
-        if not link or link.startswith('#'):
-            return None
-
-        if link.startswith('//'):
-            return 'https:' + link
-        elif link.startswith('/'):
-            return urljoin(base_url, link)
-        elif link.startswith('http'):
-            return link
-        else:
-            return urljoin(source_url, link)
-
-    def _is_internal(self, source: str, target: str) -> bool:
-        """Check if link is internal (same domain)."""
-        try:
-            source_domain = urlparse(source).netloc
-            target_domain = urlparse(target).netloc
-            return source_domain == target_domain
-        except:
-            return False
 
     def _compute_network_metrics(self) -> Dict:
         """Compute basic network metrics."""
@@ -267,14 +244,14 @@ class NetworkAnalyzer:
                         patterns['fragment_links'] += 1
                     continue
 
-                # resolve the candidate link
-                target = self._resolve_link(link, url, self._get_base_url(url))
+                # resolve the candidate link using shared utility
+                target = resolve_link(link, url, get_base_url(url))
 
                 if not target:
                     continue
 
-                # count external links
-                if not self._is_internal(url, target):
+                # count external links using shared utility
+                if not is_internal_link(url, target):
                     patterns['external_links'] += 1
                     continue
 
@@ -362,10 +339,10 @@ class NetworkAnalyzer:
 
         communities = defaultdict(set)
 
-        # group by url path prefix
+        # group by url path prefix using shared utility
         for url in self.url_data:
-            parsed = urlparse(url)
-            path_parts = [p for p in parsed.path.split('/') if p]
+            components = parse_url_components(url)
+            path_parts = components['path_segments']
 
             # use first path segment as community identifier
             if path_parts:
@@ -433,45 +410,23 @@ def execute(data: List[Dict]) -> Dict:
 
 
 def print_summary(results: Dict):
-    """Print human-readable summary of network analysis."""
+    """Print summary of network analysis."""
 
-    print("\n" + "="*80)
-    print("NETWORK ANALYSIS SUMMARY")
-    print("="*80)
+    print("Network analysis summary")
 
-    # report network metrics
     metrics = results['network_metrics']
-    print(f"\nNetwork Metrics:")
-    print(f"  Nodes: {metrics['nodes']:,}")
-    print(f"  Edges: {metrics['edges']:,}")
-    print(f"  Density: {metrics['density']:.6f}")
-    print(f"  Average Degree: {metrics['average_degree']:.2f}")
-    print(f"  Reciprocity: {metrics['reciprocity']:.4f}")
+    print(f"Nodes: {metrics['nodes']:,}")
+    print(f"Edges: {metrics['edges']:,}")
+    print(f"Density: {metrics['density']:.6f}")
+    print(f"Average Degree: {metrics['average_degree']:.2f}")
 
-    # report centrality highlights
     centrality = results['centrality']
-    print(f"\nMost Central Pages:")
     if centrality['top_by_degree']:
         top = centrality['top_by_degree'][0]
-        print(f"  Top by Degree: {top['url']} (degree: {top['degree']})")
+        print(f"Most central page: {top['url'][:60]} (degree: {top['degree']})")
 
-    # report clustering statistics
-    clustering = results['clustering']
-    print(f"\nClustering:")
-    print(f"  Global Clustering Coefficient: {clustering['global_clustering_coefficient']:.4f}")
-
-    # report community metrics
     communities = results['community_detection']
-    print(f"\nCommunities Detected: {communities['total_communities']}")
+    print(f"Communities: {communities['total_communities']}")
     if communities['top_communities']:
         top_comm = communities['top_communities'][0]
-        print(f"  Largest: {top_comm['community']} ({top_comm['percentage']:.1f}%)")
-
-    # report link pattern counts
-    patterns = results['link_patterns']
-    print(f"\nLink Patterns:")
-    print(f"  Self Links: {patterns['self_links']}")
-    print(f"  External Links: {patterns['external_links']}")
-    print(f"  Sibling Links: {patterns['sibling_links']}")
-
-    print("\n" + "="*80)
+        print(f"Largest: {top_comm['community']} ({top_comm['percentage']:.1f}%)")

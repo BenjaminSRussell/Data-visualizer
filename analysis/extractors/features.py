@@ -2,7 +2,7 @@
 
 from urllib.parse import urlparse, parse_qs
 import logging
-from typing import Dict, Optional
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 

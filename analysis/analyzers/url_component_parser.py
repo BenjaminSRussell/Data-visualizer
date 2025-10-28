@@ -3,14 +3,22 @@ URL Component Parser - Deep Decomposition
 
 Purpose: Extract EVERY component from URLs - scheme, auth, host, port, path,
          parameters, fragments, encoded values, file extensions, etc.
+
+         This is the CANONICAL source for detailed component extraction.
 """
 
 import re
 from collections import Counter, defaultdict
-from typing import Dict, List, Set, Tuple, Optional
-from urllib.parse import urlparse, parse_qs, unquote, unquote_plus
-import base64
-import json
+from typing import Dict, List
+from urllib.parse import parse_qs, unquote
+
+# Use shared utilities for basic parsing (this module extends them)
+from analysis.utils.url_utilities import (
+    classify_fragment,
+    extract_file_extension,
+    get_path_depth,
+    parse_url_components,
+)
 
 
 class URLComponentParser:
@@ -70,35 +78,35 @@ class URLComponentParser:
         """Parse all components from a single URL."""
 
         try:
-            # parse url
-            parsed = urlparse(url)
+            # Use shared utility for basic parsing
+            components = parse_url_components(url)
 
             # scheme
-            self.components['all']['schemes'][parsed.scheme] += 1
+            self.components['all']['schemes'][components['scheme']] += 1
 
             # authentication
-            if parsed.username:
-                self.components['all']['auth_users'][parsed.username] += 1
+            if components['username']:
+                self.components['all']['auth_users'][components['username']] += 1
 
             # host
-            if parsed.hostname:
-                self.components['all']['hosts'][parsed.hostname.lower()] += 1
+            if components['hostname']:
+                self.components['all']['hosts'][components['hostname'].lower()] += 1
 
             # port
-            if parsed.port:
-                self.components['all']['ports'][parsed.port] += 1
+            if components['port']:
+                self.components['all']['ports'][components['port']] += 1
 
             # path analysis
-            if parsed.path:
-                self._analyze_path_component(parsed.path)
+            if components['path']:
+                self._analyze_path_component(components['path'])
 
             # query parameters
-            if parsed.query:
-                self._analyze_query_component(parsed.query)
+            if components['query']:
+                self._analyze_query_component(components['query'])
 
             # fragment
-            if parsed.fragment:
-                self._analyze_fragment_component(parsed.fragment)
+            if components['fragment']:
+                self._analyze_fragment_component(components['fragment'])
 
             # detect encoding
             self._detect_encoding(url)
@@ -109,12 +117,12 @@ class URLComponentParser:
             # store pattern
             self.url_patterns.append({
                 'url': url,
-                'has_auth': bool(parsed.username),
-                'has_port': bool(parsed.port),
-                'has_query': bool(parsed.query),
-                'has_fragment': bool(parsed.fragment),
-                'path_segments': len([s for s in parsed.path.split('/') if s]),
-                'scheme': parsed.scheme
+                'has_auth': components['has_auth'],
+                'has_port': components['has_port'],
+                'has_query': components['has_query'],
+                'has_fragment': components['has_fragment'],
+                'path_segments': components['path_depth'],
+                'scheme': components['scheme']
             })
 
         except Exception as e:
@@ -126,20 +134,19 @@ class URLComponentParser:
         # store full path
         self.components['all']['paths'].append(path)
 
+        # Use shared utility for depth calculation
+        depth = get_path_depth(path)
+        self.components['all']['path_depths'][depth] += 1
+
         # path segments
         segments = [s for s in path.split('/') if s]
-        self.components['all']['path_depths'][len(segments)] += 1
-
         for segment in segments:
             self.components['all']['path_segments'][segment] += 1
 
-        # file extension
-        if '.' in path:
-            parts = path.split('.')
-            if len(parts) > 1:
-                ext = parts[-1].lower().split('?')[0].split('#')[0]
-                if len(ext) <= 10 and ext.isalnum():
-                    self.components['all']['file_extensions'][ext] += 1
+        # file extension using shared utility
+        ext = extract_file_extension(path)
+        if ext:
+            self.components['all']['file_extensions'][ext] += 1
 
     def _analyze_query_component(self, query: str):
         """Analyze query string parameters."""
@@ -158,7 +165,7 @@ class URLComponentParser:
     def _analyze_fragment_component(self, fragment: str):
         """Analyze URL fragments."""
 
-        # store fragment
+        # Use shared utility for fragment decoding
         decoded = unquote(fragment)
         self.components['all']['fragments'][decoded] += 1
 
@@ -397,18 +404,16 @@ class URLComponentParser:
 
         fragments = self.components['all']['fragments']
 
-        # classify fragments
-        anchor_pattern = r'^[a-zA-Z][\w-]*$'  # id selectors
-        route_pattern = r'^(/|#/).*'  # client-side routing
-
+        # Classify fragments using shared utility
         anchors = []
         routes = []
         other = []
 
         for fragment in fragments:
-            if re.match(anchor_pattern, fragment):
+            classification = classify_fragment(fragment)
+            if classification == 'anchor':
                 anchors.append(fragment)
-            elif re.match(route_pattern, fragment):
+            elif classification == 'route':
                 routes.append(fragment)
             else:
                 other.append(fragment)
@@ -565,26 +570,22 @@ def execute(data: List[Dict]) -> Dict:
 def print_summary(results: Dict):
     """Print human-readable summary."""
 
-    print("\n" + "="*80)
-    print("URL COMPONENT ANALYSIS SUMMARY")
-    print("="*80)
+    print("URL component analysis summary")
 
     # schemes
     schemes = results['scheme_analysis']
-    print(f"\nSchemes:")
-    print(f"  Security Ratio (HTTPS): {schemes['security_ratio']:.2%}")
-    print(f"  Distribution: {schemes['scheme_distribution']}")
+    print("Schemes:")
+    print(f"Security ratio (HTTPS): {schemes['security_ratio']:.2%}")
+    print(f"Distribution: {schemes['scheme_distribution']}")
 
     # extensions
     extensions = results['extension_analysis']
-    print(f"\nFile Extensions:")
-    print(f"  Unique Extensions: {extensions['unique_extensions']}")
+    print("File extensions:")
+    print(f"Unique extensions: {extensions['unique_extensions']}")
     if extensions['most_common']:
-        print(f"  Most Common: {extensions['most_common'][0]} ({extensions['most_common'][1]} times)")
+        print(f"Most common: {extensions['most_common'][0]} ({extensions['most_common'][1]} times)")
 
     # parameters
     params = results['parameter_analysis']
-    print(f"\nQuery Parameters:")
-    print(f"  Unique Parameters: {params['total_unique_parameters']}")
-
-    print("\n" + "="*80)
+    print("Query parameters:")
+    print(f"Unique parameters: {params['total_unique_parameters']}")
