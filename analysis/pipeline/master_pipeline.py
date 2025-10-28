@@ -274,22 +274,22 @@ class MasterPipeline:
         self._run_analyzers(analyzers, "enhanced")
 
     def run_mlx_analysis(self) -> None:
+        """Run pattern recognition analysis (MLX ML components removed)."""
         mlx_cfg = self._analysis_config("mlx")
         if not mlx_cfg.get("enabled"):
             return
 
-        self.logger.info("Starting MLX analysis")
+        self.logger.info("Starting pattern recognition analysis")
 
         try:
-            from analysis.processors.url_normalizer import URLNormalizer
-            from analysis.ml.url_embeddings import URLEmbedder
-            from analysis.ml.batch_detector import BatchDetector
-            from analysis.ml.pattern_recognition import PatternRecognizer
+            from analysis.url_normalizer import URLNormalizer
+            from analysis.pattern_recognition import PatternRecognizer
         except ImportError as exc:
-            self.logger.warning("MLX dependencies not available: %s", exc)
-            self.results["mlx"] = {"error": "MLX dependencies not installed"}
+            self.logger.warning("Pattern recognition dependencies not available: %s", exc)
+            self.results["mlx"] = {"error": "Pattern recognition modules not found"}
             return
 
+        # Normalize URLs (optional preprocessing)
         normalization_cfg = self.config.get("normalization", {})
         remove_fragments = normalization_cfg.get(
             "remove_fragments",
@@ -302,40 +302,21 @@ class MasterPipeline:
 
         normalizer = URLNormalizer()
         self.logger.info("Normalizing URLs")
+        start_time = time.time()
         self.normalized_data = normalizer.normalize_batch(
             self.data,
             remove_fragments=remove_fragments,
             merge_metadata=merge_metadata,
         )
-        self.results["mlx_normalization"] = normalizer.get_stats()
+        self.results["normalization"] = normalizer.get_stats()
+        self.execution_times["normalization"] = time.time() - start_time
 
-        mlx_params = self.config.get("mlx", {})
-        embedder = URLEmbedder(embedding_dim=mlx_params.get("embedding_dim", 128))
-        urls = [item["url"] for item in self.normalized_data if "url" in item]
-
-        self.logger.info("Training embeddings")
-        start_time = time.time()
-        embedder.train_embeddings(
-            urls,
-            epochs=mlx_params.get("training_epochs", 3),
-            window_size=mlx_params.get("window_size", 3),
-        )
-        self.execution_times["embeddings"] = time.time() - start_time
-
-        self.logger.info("Detecting batches")
-        batch_detector = BatchDetector(embedder)
-        batches = batch_detector.detect_all_batches(self.normalized_data)
-        self.results["batch_analysis"] = {
-            "batches": batches,
-            "summary": batch_detector.get_batch_summary(),
-        }
-
-        self.logger.info("Analyzing patterns")
+        # Run pattern recognition (pure regex, no ML)
+        self.logger.info("Analyzing URL patterns")
         pattern_recognizer = PatternRecognizer()
+        start_time = time.time()
         self.results["patterns"] = pattern_recognizer.analyze_patterns(self.normalized_data)
-
-        self._analyze_temporal_clusters()
-        self._analyze_parent_child_relationships()
+        self.execution_times["pattern_recognition"] = time.time() - start_time
 
     def _run_analyzers(self, analyzers: Dict[str, AnalyzerCallable], analysis_type: str) -> None:
         if not analyzers:
