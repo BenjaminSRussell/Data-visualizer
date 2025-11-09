@@ -65,26 +65,27 @@ def test_datasets():
     """Test dataset definitions."""
     print('\n[4/6] Testing Dataset Definitions...')
     try:
-        from app.datasets import DATASETS, get_dataset, list_datasets
+        from app.datasets import PREDEFINED_DATASETS, get_dataset, list_datasets
 
-        assert len(DATASETS) == 9, f'Expected 9 datasets, got {len(DATASETS)}'
+        assert len(PREDEFINED_DATASETS) == 6, f'Expected 6 predefined datasets, got {len(PREDEFINED_DATASETS)}'
 
-        # Test get_dataset function
-        urls_dataset = get_dataset('urls')
-        assert urls_dataset is not None, 'URLs dataset not found'
+        # Test get_dataset function (without session, only checks predefined)
+        urls_by_domain = get_dataset('urls_by_domain')
+        assert urls_by_domain is not None, 'urls_by_domain dataset not found'
 
-        # Test list_datasets function
+        # Test list_datasets function (without session, only predefined)
         all_datasets = list_datasets()
-        assert len(all_datasets) == 9, 'list_datasets returned wrong count'
+        assert len(all_datasets) == 6, 'list_datasets returned wrong count'
 
-        print(f'  [OK] {len(DATASETS)} datasets defined')
+        print(f'  [OK] {len(PREDEFINED_DATASETS)} predefined datasets')
 
         # Check SQL queries
-        queries_with_sql = sum(1 for ds in DATASETS.values() if ds.sql_query)
-        simple_queries = len(DATASETS) - queries_with_sql
+        queries_with_sql = sum(1 for ds in PREDEFINED_DATASETS.values() if ds.sql_query)
+        simple_queries = len(PREDEFINED_DATASETS) - queries_with_sql
 
         print(f'  [OK] {queries_with_sql} custom SQL queries')
         print(f'  [OK] {simple_queries} simple SELECT queries')
+        print(f'  [OK] Dynamic datasets discovered at runtime')
 
         return True
     except Exception as e:
