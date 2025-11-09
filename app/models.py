@@ -25,7 +25,7 @@ class URL(Base):
 
     # Relationships
     classifications = relationship("Classification", back_populates="url", cascade="all, delete-orphan")
-    metadata = relationship("PageMetadata", back_populates="url", uselist=False, cascade="all, delete-orphan")
+    page_metadata = relationship("PageMetadata", back_populates="url", uselist=False, cascade="all, delete-orphan")
 
 
 class Classification(Base):

@@ -208,17 +208,17 @@ async def get_url_details(url_id: int, db: Session = Depends(get_db)):
         ]
 
     # Add metadata
-    if url.metadata:
+    if url.page_metadata:
         response["metadata"] = {
-            "title": url.metadata.title,
-            "description": url.metadata.description,
-            "keywords": url.metadata.keywords,
-            "language": url.metadata.language,
-            "word_count": url.metadata.word_count,
-            "has_images": url.metadata.has_images,
-            "has_videos": url.metadata.has_videos,
-            "has_forms": url.metadata.has_forms,
-            "extracted_at": url.metadata.extracted_at
+            "title": url.page_metadata.title,
+            "description": url.page_metadata.description,
+            "keywords": url.page_metadata.keywords,
+            "language": url.page_metadata.language,
+            "word_count": url.page_metadata.word_count,
+            "has_images": url.page_metadata.has_images,
+            "has_videos": url.page_metadata.has_videos,
+            "has_forms": url.page_metadata.has_forms,
+            "extracted_at": url.page_metadata.extracted_at
         }
 
     return response
