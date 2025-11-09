@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Dataset Explorer - Data Visualizer{% endblock %}
+{% block nav_datasets %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Dataset Explorer</h2>
+    <p>Select a dataset to explore and visualize the data.</p>
+
+    <div class="filter-group">
+        <select id="dataset-select" style="flex: 1; min-width: 300px;">
+            <option value="">Loading datasets...</option>
+        </select>
+        <button class="btn" onclick="loadDatasetData()">Load Data</button>
+    </div>
+</div>
+
+<div id="dataset-info" class="card" style="display: none;">
+    <h2 id="dataset-title"></h2>
+    <p id="dataset-description"></p>
+    <p><strong>Total Records:</strong> <span id="total-records">0</span></p>
+</div>
+
+<div id="data-container" class="card" style="display: none;">
+    <div style="overflow-x: auto;">
+        <table id="data-table">
+            <thead id="table-head"></thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        <button id="prev-btn" onclick="prevPage()" disabled>Previous</button>
+        <span id="page-info" style="padding: 0.5rem 1rem;">Page 1</span>
+        <button id="next-btn" onclick="nextPage()">Next</button>
+    </div>
+</div>
+
+<div id="loading" class="loading" style="display: none;">Loading data...</div>
+<div id="error" class="error" style="display: none;"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentDataset = '';
+    let currentPage = 0;
+    let pageSize = 50;
+    let totalRecords = 0;
+    let datasets = [];
+
+    // Load available datasets
+    async function loadDatasets() {
+        try {
+            const response = await fetch('/api/datasets');
+            datasets = await response.json();
+
+            const select = document.getElementById('dataset-select');
+            select.innerHTML = '<option value="">-- Select a dataset --</option>';
+
+            datasets.forEach(dataset => {
+                const option = document.createElement('option');
+                option.value = dataset.name.toLowerCase().replace(/\s+/g, '_');
+                option.textContent = dataset.name;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Failed to load datasets:', error);
+        }
+    }
+
+    // Load dataset data
+    async function loadDatasetData() {
+        const selectElement = document.getElementById('dataset-select');
+        const datasetKey = selectElement.value;
+
+        if (!datasetKey) {
+            alert('Please select a dataset');
+            return;
+        }
+
+        currentDataset = datasetKey;
+        currentPage = 0;
+        await fetchData();
+    }
+
+    // Fetch data from API
+    async function fetchData() {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('error').style.display = 'none';
+        document.getElementById('data-container').style.display = 'none';
+
+        try {
+            const offset = currentPage * pageSize;
+            const response = await fetch(`/api/datasets/${currentDataset}?limit=${pageSize}&offset=${offset}`);
+            const result = await response.json();
+
+            totalRecords = result.total_count;
+            displayData(result.data);
+            updatePagination();
+
+            // Show dataset info
+            const dataset = datasets.find(d => d.name.toLowerCase().replace(/\s+/g, '_') === currentDataset);
+            if (dataset) {
+                document.getElementById('dataset-title').textContent = dataset.name;
+                document.getElementById('dataset-description').textContent = dataset.description;
+                document.getElementById('total-records').textContent = formatNumber(totalRecords);
+                document.getElementById('dataset-info').style.display = 'block';
+            }
+
+        } catch (error) {
+            document.getElementById('error').textContent = 'Failed to load data: ' + error.message;
+            document.getElementById('error').style.display = 'block';
+        } finally {
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+
+    // Display data in table
+    function displayData(data) {
+        if (!data || data.length === 0) {
+            document.getElementById('data-container').innerHTML = '<p>No data available.</p>';
+            document.getElementById('data-container').style.display = 'block';
+            return;
+        }
+
+        // Get columns from first row
+        const columns = Object.keys(data[0]);
+
+        // Build table header
+        const thead = document.getElementById('table-head');
+        thead.innerHTML = '<tr>' + columns.map(col => `<th>${col}</th>`).join('') + '</tr>';
+
+        // Build table body
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = data.map(row => {
+            return '<tr>' + columns.map(col => {
+                let value = row[col];
+
+                // Format values
+                if (value === null || value === undefined) {
+                    value = 'N/A';
+                } else if (typeof value === 'number') {
+                    value = formatNumber(value);
+                } else if (typeof value === 'boolean') {
+                    value = value ? 'Yes' : 'No';
+                } else if (col.includes('_at') || col.includes('date')) {
+                    value = formatDate(value);
+                } else {
+                    value = truncate(String(value), 100);
+                }
+
+                return `<td>${value}</td>`;
+            }).join('') + '</tr>';
+        }).join('');
+
+        document.getElementById('data-container').style.display = 'block';
+    }
+
+    // Update pagination controls
+    function updatePagination() {
+        const totalPages = Math.ceil(totalRecords / pageSize);
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const pageInfo = document.getElementById('page-info');
+
+        prevBtn.disabled = currentPage === 0;
+        nextBtn.disabled = currentPage >= totalPages - 1;
+
+        pageInfo.textContent = `Page ${currentPage + 1} of ${totalPages}`;
+    }
+
+    // Navigation functions
+    async function prevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            await fetchData();
+        }
+    }
+
+    async function nextPage() {
+        const totalPages = Math.ceil(totalRecords / pageSize);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            await fetchData();
+        }
+    }
+
+    // Load datasets on page load
+    window.addEventListener('DOMContentLoaded', loadDatasets);
+</script>
+{% endblock %}

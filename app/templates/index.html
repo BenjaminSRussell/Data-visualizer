@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Data Visualizer{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Database Statistics</h2>
+    <div id="loading" class="loading">Loading statistics...</div>
+    <div id="stats" style="display: none;">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number" id="total-urls">0</div>
+                <div class="label">Total URLs</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="domains-count">0</div>
+                <div class="label">Unique Domains</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="total-classifications">0</div>
+                <div class="label">Classifications</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="total-patterns">0</div>
+                <div class="label">Patterns Discovered</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="total-sessions">0</div>
+                <div class="label">Crawl Sessions</div>
+            </div>
+        </div>
+    </div>
+    <div id="error" class="error" style="display: none;"></div>
+</div>
+
+<div class="card">
+    <h2>Available Datasets</h2>
+    <div id="datasets-loading" class="loading">Loading datasets...</div>
+    <div id="datasets-list" style="display: none;"></div>
+</div>
+
+<div class="card">
+    <h2>Quick Actions</h2>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="/datasets-explorer"><button class="btn">Explore Datasets</button></a>
+        <a href="/url-explorer"><button class="btn">Browse URLs</button></a>
+        <a href="/patterns"><button class="btn">View Patterns</button></a>
+        <a href="/api/docs" target="_blank"><button class="btn">API Documentation</button></a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Load statistics
+    async function loadStats() {
+        try {
+            const response = await fetch('/api/stats');
+            const data = await response.json();
+
+            document.getElementById('total-urls').textContent = formatNumber(data.total_urls);
+            document.getElementById('domains-count').textContent = formatNumber(data.domains_count);
+            document.getElementById('total-classifications').textContent = formatNumber(data.total_classifications);
+            document.getElementById('total-patterns').textContent = formatNumber(data.total_patterns);
+            document.getElementById('total-sessions').textContent = formatNumber(data.total_sessions);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('stats').style.display = 'block';
+        } catch (error) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').textContent = 'Failed to load statistics: ' + error.message;
+            document.getElementById('error').style.display = 'block';
+        }
+    }
+
+    // Load datasets
+    async function loadDatasets() {
+        try {
+            const response = await fetch('/api/datasets');
+            const datasets = await response.json();
+
+            const container = document.getElementById('datasets-list');
+            container.innerHTML = '<div style="display: grid; gap: 1rem;">';
+
+            datasets.forEach(dataset => {
+                container.innerHTML += `
+                    <div style="padding: 1rem; background: #f8f9fa; border-radius: 5px;">
+                        <h3 style="color: #667eea; margin-bottom: 0.5rem;">${dataset.name}</h3>
+                        <p style="color: #666; margin-bottom: 0.5rem;">${dataset.description}</p>
+                        <p style="font-size: 0.9rem; color: #999;">Table: ${dataset.table_name}</p>
+                    </div>
+                `;
+            });
+
+            container.innerHTML += '</div>';
+
+            document.getElementById('datasets-loading').style.display = 'none';
+            container.style.display = 'block';
+        } catch (error) {
+            document.getElementById('datasets-loading').textContent = 'Failed to load datasets: ' + error.message;
+        }
+    }
+
+    // Load data on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        loadStats();
+        loadDatasets();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}URL Explorer - Data Visualizer{% endblock %}
+{% block nav_urls %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>URL Explorer</h2>
+    <p>Browse and filter URLs from the database.</p>
+
+    <div class="filter-group">
+        <input type="text" id="domain-filter" placeholder="Filter by domain">
+        <select id="status-filter">
+            <option value="">All Status Codes</option>
+            <option value="200">200 OK</option>
+            <option value="301">301 Moved</option>
+            <option value="302">302 Found</option>
+            <option value="404">404 Not Found</option>
+            <option value="500">500 Server Error</option>
+        </select>
+        <button class="btn" onclick="applyFilters()">Apply Filters</button>
+        <button class="btn" onclick="clearFilters()" style="background: #6c757d;">Clear</button>
+    </div>
+</div>
+
+<div class="card">
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>URL</th>
+                    <th>Domain</th>
+                    <th>Status</th>
+                    <th>Content Type</th>
+                    <th>Last Crawled</th>
+                </tr>
+            </thead>
+            <tbody id="urls-body">
+                <tr><td colspan="6" class="loading">Loading URLs...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        <button id="prev-btn" onclick="prevPage()" disabled>Previous</button>
+        <span id="page-info">Page 1</span>
+        <button id="next-btn" onclick="nextPage()">Next</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentPage = 0;
+    let pageSize = 50;
+    let totalUrls = 0;
+    let currentFilters = {};
+
+    // Load URLs
+    async function loadUrls() {
+        try {
+            const offset = currentPage * pageSize;
+            let url = `/api/urls?limit=${pageSize}&offset=${offset}`;
+
+            // Add filters
+            if (currentFilters.domain) {
+                url += `&domain=${encodeURIComponent(currentFilters.domain)}`;
+            }
+            if (currentFilters.status_code) {
+                url += `&status_code=${currentFilters.status_code}`;
+            }
+
+            const response = await fetch(url);
+            const result = await response.json();
+
+            totalUrls = result.total;
+            displayUrls(result.data);
+            updatePagination();
+        } catch (error) {
+            document.getElementById('urls-body').innerHTML =
+                `<tr><td colspan="6" class="error">Failed to load URLs: ${error.message}</td></tr>`;
+        }
+    }
+
+    // Display URLs
+    function displayUrls(urls) {
+        const tbody = document.getElementById('urls-body');
+
+        if (!urls || urls.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No URLs found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = urls.map(url => `
+            <tr>
+                <td>${url.id}</td>
+                <td><a href="${url.url}" target="_blank" class="url-link">${truncate(url.url, 60)}</a></td>
+                <td>${url.domain || 'N/A'}</td>
+                <td>${url.status_code || 'N/A'}</td>
+                <td>${truncate(url.content_type || 'N/A', 30)}</td>
+                <td>${formatDate(url.last_crawled)}</td>
+            </tr>
+        `).join('');
+    }
+
+    // Apply filters
+    function applyFilters() {
+        const domain = document.getElementById('domain-filter').value.trim();
+        const statusCode = document.getElementById('status-filter').value;
+
+        currentFilters = {};
+        if (domain) currentFilters.domain = domain;
+        if (statusCode) currentFilters.status_code = statusCode;
+
+        currentPage = 0;
+        loadUrls();
+    }
+
+    // Clear filters
+    function clearFilters() {
+        document.getElementById('domain-filter').value = '';
+        document.getElementById('status-filter').value = '';
+        currentFilters = {};
+        currentPage = 0;
+        loadUrls();
+    }
+
+    // Update pagination
+    function updatePagination() {
+        const totalPages = Math.ceil(totalUrls / pageSize);
+        document.getElementById('prev-btn').disabled = currentPage === 0;
+        document.getElementById('next-btn').disabled = currentPage >= totalPages - 1;
+        document.getElementById('page-info').textContent = `Page ${currentPage + 1} of ${totalPages}`;
+    }
+
+    // Navigation
+    function prevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            loadUrls();
+        }
+    }
+
+    function nextPage() {
+        const totalPages = Math.ceil(totalUrls / pageSize);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            loadUrls();
+        }
+    }
+
+    // Load on page load
+    window.addEventListener('DOMContentLoaded', loadUrls);
+</script>
+{% endblock %}

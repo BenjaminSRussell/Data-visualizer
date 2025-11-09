@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Patterns - Data Visualizer{% endblock %}
+{% block nav_patterns %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Discovered Patterns</h2>
+    <p>Explore patterns discovered in the data.</p>
+
+    <div class="filter-group">
+        <select id="pattern-type-filter">
+            <option value="">All Pattern Types</option>
+        </select>
+        <button class="btn" onclick="applyFilter()">Apply Filter</button>
+        <button class="btn" onclick="clearFilter()" style="background: #6c757d;">Clear</button>
+    </div>
+</div>
+
+<div class="card">
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Pattern Type</th>
+                    <th>Pattern Value</th>
+                    <th>Frequency</th>
+                    <th>Confidence</th>
+                    <th>Discovered At</th>
+                </tr>
+            </thead>
+            <tbody id="patterns-body">
+                <tr><td colspan="6" class="loading">Loading patterns...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        <button id="prev-btn" onclick="prevPage()" disabled>Previous</button>
+        <span id="page-info">Page 1</span>
+        <button id="next-btn" onclick="nextPage()">Next</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentPage = 0;
+    let pageSize = 50;
+    let totalPatterns = 0;
+    let currentPatternType = '';
+    let patternTypes = new Set();
+
+    // Load patterns
+    async function loadPatterns() {
+        try {
+            const offset = currentPage * pageSize;
+            let url = `/api/patterns?limit=${pageSize}&offset=${offset}`;
+
+            if (currentPatternType) {
+                url += `&pattern_type=${encodeURIComponent(currentPatternType)}`;
+            }
+
+            const response = await fetch(url);
+            const result = await response.json();
+
+            totalPatterns = result.total;
+            displayPatterns(result.data);
+            updatePagination();
+
+            // Collect pattern types for filter
+            result.data.forEach(p => {
+                if (p.pattern_type) patternTypes.add(p.pattern_type);
+            });
+            updatePatternTypeFilter();
+        } catch (error) {
+            document.getElementById('patterns-body').innerHTML =
+                `<tr><td colspan="6" class="error">Failed to load patterns: ${error.message}</td></tr>`;
+        }
+    }
+
+    // Display patterns
+    function displayPatterns(patterns) {
+        const tbody = document.getElementById('patterns-body');
+
+        if (!patterns || patterns.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No patterns found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = patterns.map(pattern => `
+            <tr>
+                <td>${pattern.id}</td>
+                <td><strong>${pattern.pattern_type || 'N/A'}</strong></td>
+                <td>${truncate(pattern.pattern_value || 'N/A', 80)}</td>
+                <td>${formatNumber(pattern.frequency || 0)}</td>
+                <td>${pattern.confidence ? (pattern.confidence * 100).toFixed(1) + '%' : 'N/A'}</td>
+                <td>${formatDate(pattern.discovered_at)}</td>
+            </tr>
+        `).join('');
+    }
+
+    // Update pattern type filter
+    function updatePatternTypeFilter() {
+        const select = document.getElementById('pattern-type-filter');
+        const currentValue = select.value;
+
+        select.innerHTML = '<option value="">All Pattern Types</option>';
+
+        Array.from(patternTypes).sort().forEach(type => {
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = type;
+            if (type === currentValue) option.selected = true;
+            select.appendChild(option);
+        });
+    }
+
+    // Apply filter
+    function applyFilter() {
+        currentPatternType = document.getElementById('pattern-type-filter').value;
+        currentPage = 0;
+        loadPatterns();
+    }
+
+    // Clear filter
+    function clearFilter() {
+        document.getElementById('pattern-type-filter').value = '';
+        currentPatternType = '';
+        currentPage = 0;
+        loadPatterns();
+    }
+
+    // Update pagination
+    function updatePagination() {
+        const totalPages = Math.ceil(totalPatterns / pageSize);
+        document.getElementById('prev-btn').disabled = currentPage === 0;
+        document.getElementById('next-btn').disabled = currentPage >= totalPages - 1;
+        document.getElementById('page-info').textContent = `Page ${currentPage + 1} of ${totalPages}`;
+    }
+
+    // Navigation
+    function prevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            loadPatterns();
+        }
+    }
+
+    function nextPage() {
+        const totalPages = Math.ceil(totalPatterns / pageSize);
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            loadPatterns();
+        }
+    }
+
+    // Load on page load
+    window.addEventListener('DOMContentLoaded', loadPatterns);
+</script>
+{% endblock %}
