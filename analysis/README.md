@@ -4,7 +4,7 @@
 
 A comprehensive URL analysis system that performs deep statistical, semantic, network, and pathway analysis on website crawl data. Built with multiple parallel analyzers to extract maximum insights from JSONL sitemap data.
 
-## 📊 Analysis Results Summary (Site.jsonl - 6,163 URLs)
+##  Analysis Results Summary (Site.jsonl - 6,163 URLs)
 
 ### Overall Scores
 - **URL Health**: 66.5/100 (Grade: D)
@@ -162,7 +162,7 @@ Dead-End Pages: 3,152 (51.1%)
 **Navigation Hubs**: 590 total
 - Top hub: `/default.aspx` (1,492 connections)
 
-## 🚀 Usage
+##  Usage
 
 ### Running the Full Analysis
 
@@ -220,7 +220,7 @@ python3 analysis/view_insights.py my_analysis
 
 ## 🎨 Key Insights for hartford.edu
 
-### Strengths ✅
+### Strengths PASS
 1. **Zero orphan pages** - all pages connected to tree
 2. **Strong educational categorization** - clear content focus
 3. **Good URL quality** (79.7/100) - readable, well-structured URLs
@@ -239,7 +239,7 @@ python3 analysis/view_insights.py my_analysis
 4. **Connect components**: Link the 405 disconnected sections together
 5. **Optimize hub pages**: Leverage high-authority pages for better linking
 
-## 🔬 Analysis Methodology
+##  Analysis Methodology
 
 ### Statistical Analysis
 - **Descriptive Statistics**: NumPy/SciPy for calculations
@@ -264,7 +264,7 @@ python3 analysis/view_insights.py my_analysis
 - **Components**: BFS traversal
 - **Importance**: Multi-factor scoring (depth, links, children)
 
-## 📊 Data Format
+##  Data Format
 
 ### Input (JSONL)
 ```json
@@ -314,7 +314,7 @@ scipy>=1.7.0
 
 All other modules use Python standard library.
 
-## 📝 Notes
+##  Notes
 
 - **Memory Usage**: ~500MB for 6K URLs
 - **Thread Safety**: All analyzers are thread-safe
@@ -323,14 +323,14 @@ All other modules use Python standard library.
 
 ## 🏆 Analysis Completeness
 
-- ✅ Statistical Analysis
-- ✅ Network Analysis
-- ✅ Semantic Analysis
-- ✅ Pathway Analysis
-- ✅ Master Pipeline
-- ✅ Automated Insights
-- ✅ Report Generation
-- ✅ Insights Viewer
+- PASS Statistical Analysis
+- PASS Network Analysis
+- PASS Semantic Analysis
+- PASS Pathway Analysis
+- PASS Master Pipeline
+- PASS Automated Insights
+- PASS Report Generation
+- PASS Insights Viewer
 
 ## 📞 Support
 
