@@ -60,7 +60,7 @@ class PageMetadata(Base):
     extracted_at = Column(TIMESTAMP, default=datetime.utcnow)
 
     # Relationships
-    url = relationship("URL", back_populates="metadata")
+    url = relationship("URL", back_populates="page_metadata")
 
 
 class Pattern(Base):

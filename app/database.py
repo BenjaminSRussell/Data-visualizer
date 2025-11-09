@@ -39,20 +39,28 @@ def get_database_url() -> str:
     return url
 
 
-def get_pool_config() -> dict:
+def get_pool_config(database_url: str) -> dict:
     """Get database pool configuration from environment."""
-    return {
+    config = {
         'poolclass': QueuePool,
         'pool_size': int(os.getenv('DB_POOL_SIZE', '10')),
         'max_overflow': int(os.getenv('DB_MAX_OVERFLOW', '20')),
         'pool_timeout': int(os.getenv('DB_POOL_TIMEOUT', '30')),
         'pool_recycle': int(os.getenv('DB_POOL_RECYCLE', '3600')),
         'pool_pre_ping': True,
-        'echo': os.getenv('DB_ECHO', 'false').lower() == 'true',
-        'connect_args': {
+        'echo': os.getenv('DB_ECHO', 'false').lower() == 'true'
+    }
+
+    if database_url.startswith('postgresql'):
+        config['connect_args'] = {
             'connect_timeout': int(os.getenv('DB_CONNECT_TIMEOUT', '10'))
         }
-    }
+    elif database_url.startswith('sqlite'):
+        config['connect_args'] = {
+            'check_same_thread': False
+        }
+
+    return config
 
 
 def get_engine() -> Engine:
@@ -64,7 +72,7 @@ def get_engine() -> Engine:
 
     try:
         database_url = get_database_url()
-        pool_config = get_pool_config()
+        pool_config = get_pool_config(database_url)
 
         _engine = create_engine(database_url, **pool_config)
 
