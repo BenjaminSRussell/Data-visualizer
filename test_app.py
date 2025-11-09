@@ -12,10 +12,10 @@ def test_imports():
     print('[1/6] Testing Module Imports...')
     try:
         from app import config, database, models, datasets, api, main
-        print('  ✓ All modules imported successfully')
+        print('  [OK] All modules imported successfully')
         return True
     except Exception as e:
-        print(f'  ✗ Import failed: {e}')
+        print(f'  [FAIL] Import failed: {e}')
         return False
 
 
@@ -27,11 +27,11 @@ def test_configuration():
         assert settings.APP_NAME == 'Data Visualizer'
         assert settings.APP_VERSION == '2.0.0'
         assert settings.DEFAULT_PAGE_SIZE > 0
-        print(f'  ✓ {settings.APP_NAME} v{settings.APP_VERSION}')
-        print(f'  ✓ Page size: {settings.DEFAULT_PAGE_SIZE}')
+        print(f'  [OK] {settings.APP_NAME} v{settings.APP_VERSION}')
+        print(f'  [OK] Page size: {settings.DEFAULT_PAGE_SIZE}')
         return True
     except Exception as e:
-        print(f'  ✗ Configuration test failed: {e}')
+        print(f'  [FAIL] Configuration test failed: {e}')
         return False
 
 
@@ -50,14 +50,14 @@ def test_models():
 
         assert len(model_classes) >= 8, 'Not enough models defined'
 
-        print(f'  ✓ {len(model_classes)} ORM models defined:')
+        print(f'  [OK] {len(model_classes)} ORM models defined:')
         for name, cls in sorted(model_classes):
             table = cls.__tablename__
             print(f'    - {name:20s} -> {table}')
 
         return True
     except Exception as e:
-        print(f'  ✗ Models test failed: {e}')
+        print(f'  [FAIL] Models test failed: {e}')
         return False
 
 
@@ -77,18 +77,18 @@ def test_datasets():
         all_datasets = list_datasets()
         assert len(all_datasets) == 9, 'list_datasets returned wrong count'
 
-        print(f'  ✓ {len(DATASETS)} datasets defined')
+        print(f'  [OK] {len(DATASETS)} datasets defined')
 
         # Check SQL queries
         queries_with_sql = sum(1 for ds in DATASETS.values() if ds.sql_query)
         simple_queries = len(DATASETS) - queries_with_sql
 
-        print(f'  ✓ {queries_with_sql} custom SQL queries')
-        print(f'  ✓ {simple_queries} simple SELECT queries')
+        print(f'  [OK] {queries_with_sql} custom SQL queries')
+        print(f'  [OK] {simple_queries} simple SELECT queries')
 
         return True
     except Exception as e:
-        print(f'  ✗ Datasets test failed: {e}')
+        print(f'  [FAIL] Datasets test failed: {e}')
         return False
 
 
@@ -101,7 +101,7 @@ def test_api():
         # Count routes
         routes = [r for r in router.routes if hasattr(r, 'path')]
 
-        print(f'  ✓ {len(routes)} API endpoints defined:')
+        print(f'  [OK] {len(routes)} API endpoints defined:')
         for route in sorted(routes, key=lambda r: r.path):
             if hasattr(route, 'methods'):
                 methods = ', '.join(sorted(route.methods))
@@ -109,7 +109,7 @@ def test_api():
 
         return True
     except Exception as e:
-        print(f'  ✗ API test failed: {e}')
+        print(f'  [FAIL] API test failed: {e}')
         return False
 
 
@@ -130,14 +130,14 @@ def test_application():
                      and not r.path.startswith('/openapi')
                      and not r.path.startswith('/redoc')]
 
-        print(f'  ✓ App initialized: {app.title} v{app.version}')
-        print(f'  ✓ Total routes: {len(all_routes)}')
-        print(f'  ✓ API routes: {len(api_routes)}')
-        print(f'  ✓ UI routes: {len(ui_routes)}')
+        print(f'  [OK] App initialized: {app.title} v{app.version}')
+        print(f'  [OK] Total routes: {len(all_routes)}')
+        print(f'  [OK] API routes: {len(api_routes)}')
+        print(f'  [OK] UI routes: {len(ui_routes)}')
 
         return True
     except Exception as e:
-        print(f'  ✗ Application test failed: {e}')
+        print(f'  [FAIL] Application test failed: {e}')
         return False
 
 
@@ -167,7 +167,7 @@ def main():
     total = len(results)
 
     if all(results):
-        print(f'✅ All {total} Tests Passed!')
+        print(f'PASS All {total} Tests Passed!')
         print('=' * 60)
         print()
         print('Application is ready to run with PostgreSQL.')
@@ -183,7 +183,7 @@ def main():
         print()
         return 0
     else:
-        print(f'✗ {passed}/{total} Tests Passed, {total - passed} Failed')
+        print(f'[FAIL] {passed}/{total} Tests Passed, {total - passed} Failed')
         print('=' * 60)
         return 1
 

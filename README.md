@@ -266,19 +266,19 @@ psql data_visualizer < database/schema.sql
 This refactor simplifies the application significantly:
 
 ### Removed
-- ❌ Complex analysis modules (statistical, network, semantic)
-- ❌ ML/AI components (transformers, torch, mlx)
-- ❌ Pattern recognition engines
-- ❌ Data validation and normalization pipelines
-- ❌ Background task processing (Celery, Redis)
-- ❌ File-based output (JSON, Markdown reports)
+- FAIL Complex analysis modules (statistical, network, semantic)
+- FAIL ML/AI components (transformers, torch, mlx)
+- FAIL Pattern recognition engines
+- FAIL Data validation and normalization pipelines
+- FAIL Background task processing (Celery, Redis)
+- FAIL File-based output (JSON, Markdown reports)
 
 ### Added
-- ✅ Simple web-based UI
-- ✅ Clean REST API
-- ✅ Dataset-centric architecture
-- ✅ PostgreSQL-only data source
-- ✅ Focus on data display and exploration
+- PASS Simple web-based UI
+- PASS Clean REST API
+- PASS Dataset-centric architecture
+- PASS PostgreSQL-only data source
+- PASS Focus on data display and exploration
 
 ## API Documentation
 

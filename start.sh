@@ -11,7 +11,7 @@ echo ""
 if [ ! -f .env ]; then
     echo "⚠️  No .env file found. Creating from template..."
     cp .env.example .env
-    echo "✓ Created .env file. Please edit it with your database credentials."
+    echo "[OK] Created .env file. Please edit it with your database credentials."
     echo ""
 fi
 
