@@ -53,6 +53,11 @@
             font-weight: 600;
         }
 
+        .nav-links a:focus-visible {
+            outline: 2px solid white;
+            outline-offset: 2px;
+        }
+
         .container {
             max-width: 1400px;
             margin: 2rem auto;
@@ -150,6 +155,11 @@
             cursor: not-allowed;
         }
 
+        .pagination button:focus-visible {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
         .loading {
             text-align: center;
             padding: 2rem;
@@ -179,6 +189,12 @@
             font-size: 1rem;
         }
 
+        .filter-group input:focus-visible,
+        .filter-group select:focus-visible {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
         .btn {
             padding: 0.5rem 1rem;
             background: #667eea;
@@ -191,6 +207,11 @@
 
         .btn:hover {
             background: #5568d3;
+        }
+
+        .btn:focus-visible {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
         }
 
         .url-link {
