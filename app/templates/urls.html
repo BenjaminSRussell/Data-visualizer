@@ -3,13 +3,50 @@
 {% block title %}URL Explorer - Data Visualizer{% endblock %}
 {% block nav_urls %}active{% endblock %}
 
+{% block extra_styles %}
+<style>
+    .url-cell {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        position: relative;
+    }
+
+    .url-cell:hover {
+        cursor: pointer;
+    }
+
+    .url-cell-tooltip {
+        visibility: hidden;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 5px;
+        border-radius: 6px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: normal;
+        width: 200px;
+        font-size: 0.9rem;
+    }
+
+    .url-cell:hover .url-cell-tooltip {
+        visibility: visible;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="card">
     <h2>URL Explorer</h2>
     <p>Browse and filter URLs from the database.</p>
 
     <div class="filter-group">
-        <input type="text" id="domain-filter" placeholder="Filter by domain">
+        <input type="text" id="domain-filter" placeholder="Filter by domain" onkeydown="handleDomainFilterKeydown(event)">
         <select id="status-filter">
             <option value="">All Status Codes</option>
             <option value="200">200 OK</option>
@@ -95,7 +132,7 @@
         tbody.innerHTML = urls.map(url => `
             <tr>
                 <td>${url.id}</td>
-                <td><a href="${url.url}" target="_blank" class="url-link">${truncate(url.url, 60)}</a></td>
+                <td><div class="url-cell" onclick="copyToClipboard('${url.url.replace(/'/g, "\\'")}')"><a href="${url.url}" target="_blank" class="url-link">${truncate(url.url, 60)}</a><span class="url-cell-tooltip">Click to copy full URL</span></div></td>
                 <td>${url.domain || 'N/A'}</td>
                 <td>${url.status_code || 'N/A'}</td>
                 <td>${truncate(url.content_type || 'N/A', 30)}</td>
@@ -148,6 +185,23 @@
             currentPage++;
             loadUrls();
         }
+    }
+
+    // Handle Enter key on domain filter
+    function handleDomainFilterKeydown(event) {
+        if (event.keyCode === 13) {
+            applyFilters();
+        }
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Show feedback (optional: could add a toast notification here)
+            console.log('URL copied to clipboard');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+        });
     }
 
     // Load on page load
