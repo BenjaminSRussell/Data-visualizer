@@ -201,10 +201,27 @@
         .url-link:hover {
             text-decoration: underline;
         }
+
+        /* Skip link styling */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
     </style>
     {% block extra_styles %}{% endblock %}
 </head>
 <body>
+    <a href="#main" class="skip-link">Skip to main content</a>
     <nav class="navbar">
         <h1> Data Visualizer</h1>
         <div class="nav-links">
@@ -212,13 +229,13 @@
             <a href="/datasets-explorer" class="{% block nav_datasets %}{% endblock %}">Datasets</a>
             <a href="/url-explorer" class="{% block nav_urls %}{% endblock %}">URLs</a>
             <a href="/patterns" class="{% block nav_patterns %}{% endblock %}">Patterns</a>
-            <a href="/api/docs" target="_blank">API Docs</a>
+            <a href="/api/docs" target="_blank" rel="noopener noreferrer" aria-label="API Docs (opens in new tab)">API Docs</a>
         </div>
     </nav>
 
-    <div class="container">
+    <main id="main" class="container">
         {% block content %}{% endblock %}
-    </div>
+    </main>
 
     <script>
         // Utility functions
