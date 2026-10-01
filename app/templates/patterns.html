@@ -18,6 +18,7 @@
 </div>
 
 <div class="card">
+    <div id="patterns-status" role="status" aria-live="polite" aria-atomic="true" style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"></div>
     <div style="overflow-x: auto;">
         <table>
             <thead>
@@ -74,9 +75,14 @@
                 if (p.pattern_type) patternTypes.add(p.pattern_type);
             });
             updatePatternTypeFilter();
+
+            // Announce to assistive tech
+            const itemCount = result.data ? result.data.length : 0;
+            document.getElementById('patterns-status').textContent = itemCount + ' pattern' + (itemCount !== 1 ? 's' : '') + ' loaded. Page ' + (currentPage + 1) + '.';
         } catch (error) {
             document.getElementById('patterns-body').innerHTML =
                 `<tr><td colspan="6" class="error">Failed to load patterns: ${error.message}</td></tr>`;
+            document.getElementById('patterns-status').textContent = 'Error: Failed to load patterns: ' + error.message;
         }
     }
 
