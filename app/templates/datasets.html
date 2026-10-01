@@ -9,9 +9,12 @@
     <p>Select a dataset to explore and visualize the data.</p>
 
     <div class="filter-group">
-        <select id="dataset-select" style="flex: 1; min-width: 300px;">
-            <option value="">Loading datasets...</option>
-        </select>
+        <div class="filter-control" style="flex: 1; min-width: 300px;">
+            <label for="dataset-select">Dataset</label>
+            <select id="dataset-select">
+                <option value="">Loading datasets...</option>
+            </select>
+        </div>
         <button class="btn" onclick="loadDatasetData()">Load Data</button>
     </div>
 </div>

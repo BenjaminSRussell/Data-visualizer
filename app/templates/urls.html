@@ -9,15 +9,21 @@
     <p>Browse and filter URLs from the database.</p>
 
     <div class="filter-group">
-        <input type="text" id="domain-filter" placeholder="Filter by domain">
-        <select id="status-filter">
-            <option value="">All Status Codes</option>
-            <option value="200">200 OK</option>
-            <option value="301">301 Moved</option>
-            <option value="302">302 Found</option>
-            <option value="404">404 Not Found</option>
-            <option value="500">500 Server Error</option>
-        </select>
+        <div class="filter-control">
+            <label for="domain-filter">Domain</label>
+            <input type="text" id="domain-filter" placeholder="e.g., example.com">
+        </div>
+        <div class="filter-control">
+            <label for="status-filter">Status Code</label>
+            <select id="status-filter">
+                <option value="">All Status Codes</option>
+                <option value="200">200 OK</option>
+                <option value="301">301 Moved</option>
+                <option value="302">302 Found</option>
+                <option value="404">404 Not Found</option>
+                <option value="500">500 Server Error</option>
+            </select>
+        </div>
         <button class="btn" onclick="applyFilters()">Apply Filters</button>
         <button class="btn" onclick="clearFilters()" style="background: #6c757d;">Clear</button>
     </div>
