@@ -52,6 +52,19 @@
     let currentPatternType = '';
     let patternTypes = new Set();
 
+    // Load all pattern types
+    async function loadPatternTypes() {
+        try {
+            const response = await fetch('/api/pattern-types');
+            const result = await response.json();
+
+            patternTypes = new Set(result.data || []);
+            updatePatternTypeFilter();
+        } catch (error) {
+            console.error("Failed to load pattern types:", error.message);
+        }
+    }
+
     // Load patterns
     async function loadPatterns() {
         try {
@@ -68,12 +81,6 @@
             totalPatterns = result.total;
             displayPatterns(result.data);
             updatePagination();
-
-            // Collect pattern types for filter
-            result.data.forEach(p => {
-                if (p.pattern_type) patternTypes.add(p.pattern_type);
-            });
-            updatePatternTypeFilter();
         } catch (error) {
             document.getElementById('patterns-body').innerHTML =
                 `<tr><td colspan="6" class="error">Failed to load patterns: ${error.message}</td></tr>`;
@@ -85,7 +92,7 @@
         const tbody = document.getElementById('patterns-body');
 
         if (!patterns || patterns.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No patterns found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No patterns found matching current criteria</td></tr>';
             return;
         }
 
@@ -157,6 +164,9 @@
     }
 
     // Load on page load
-    window.addEventListener('DOMContentLoaded', loadPatterns);
+    window.addEventListener('DOMContentLoaded', async () => {
+        await loadPatternTypes();
+        await loadPatterns();
+    });
 </script>
 {% endblock %}

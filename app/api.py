@@ -449,6 +449,39 @@ async def list_domains(
         )
 
 
+@router.get("/pattern-types", tags=["patterns"])
+async def get_pattern_types(db: Session = Depends(get_db)):
+    """
+    Get all distinct pattern types.
+    Returns a list of all unique pattern types in the database.
+    """
+    try:
+        pattern_types = db.query(
+            models.Pattern.pattern_type
+        ).filter(
+            models.Pattern.pattern_type.isnot(None)
+        ).distinct().order_by(
+            models.Pattern.pattern_type
+        ).all()
+
+        return {
+            "data": [row[0] for row in pattern_types]
+        }
+
+    except SQLAlchemyError as db_error:
+        logger.error(f"Database error retrieving pattern types: {db_error}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Failed to retrieve pattern types"
+        )
+    except Exception as pattern_error:
+        logger.error(f"Error retrieving pattern types: {pattern_error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve pattern types"
+        )
+
+
 @router.get("/patterns", tags=["patterns"])
 async def list_patterns(
     pattern_type: Optional[str] = Query(None, max_length=50, description="Filter by pattern type"),
