@@ -32,5 +32,5 @@ repos:
         name: forbid-emoji
         entry: python scripts/check_no_emoji.py
         language: system
-        stages: [commit]
+        stages: [pre-commit]
         files: "\\.py$"
