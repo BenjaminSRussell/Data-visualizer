@@ -23,6 +23,7 @@
 </div>
 
 <div id="data-container" class="card" style="display: none;">
+    <div id="data-status" role="status" aria-live="polite" aria-atomic="true" style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"></div>
     <div style="overflow-x: auto;">
         <table id="data-table">
             <thead id="table-head"></thead>
@@ -110,9 +111,14 @@
                 document.getElementById('dataset-info').style.display = 'block';
             }
 
+            // Announce to assistive tech
+            const itemCount = result.data ? result.data.length : 0;
+            document.getElementById('data-status').textContent = itemCount + ' record' + (itemCount !== 1 ? 's' : '') + ' loaded. Page ' + (currentPage + 1) + '.';
+
         } catch (error) {
             document.getElementById('error').textContent = 'Failed to load data: ' + error.message;
             document.getElementById('error').style.display = 'block';
+            document.getElementById('data-status').textContent = 'Error: Failed to load data: ' + error.message;
         } finally {
             document.getElementById('loading').style.display = 'none';
         }

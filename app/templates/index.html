@@ -6,6 +6,7 @@
 {% block content %}
 <div class="card">
     <h2>Database Statistics</h2>
+    <div id="stats-status" role="status" aria-live="polite" aria-atomic="true" style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"></div>
     <div id="loading" class="loading">Loading statistics...</div>
     <div id="stats" style="display: none;">
         <div class="stats-grid">
@@ -36,6 +37,7 @@
 
 <div class="card">
     <h2>Available Datasets</h2>
+    <div id="datasets-status" role="status" aria-live="polite" aria-atomic="true" style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"></div>
     <div id="datasets-loading" class="loading">Loading datasets...</div>
     <div id="datasets-list" style="display: none;"></div>
 </div>
@@ -67,10 +69,12 @@
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('stats').style.display = 'block';
+            document.getElementById('stats-status').textContent = 'Statistics loaded.';
         } catch (error) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('error').textContent = 'Failed to load statistics: ' + error.message;
             document.getElementById('error').style.display = 'block';
+            document.getElementById('stats-status').textContent = 'Error: Failed to load statistics: ' + error.message;
         }
     }
 
@@ -97,8 +101,10 @@
 
             document.getElementById('datasets-loading').style.display = 'none';
             container.style.display = 'block';
+            document.getElementById('datasets-status').textContent = datasets.length + ' dataset' + (datasets.length !== 1 ? 's' : '') + ' loaded.';
         } catch (error) {
             document.getElementById('datasets-loading').textContent = 'Failed to load datasets: ' + error.message;
+            document.getElementById('datasets-status').textContent = 'Error: Failed to load datasets: ' + error.message;
         }
     }
 
