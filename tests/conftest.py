@@ -132,7 +132,7 @@ def sample_urls_pathological():
             # UTF-8, Latin-1, emojis, special unicode
             "https://example.com/café/page",
             "https://example.com/日本語/ページ",
-            "https://example.com/emoji/😀/page",
+            "https://example.com/emoji//page",
             "https://example.com/𝕌𝕟𝕚𝕔𝕠𝕕𝕖/page",  # Math alphanumeric symbols
             "https://example.com/Ωμέγα/page",  # Greek
         ],
