@@ -689,14 +689,16 @@ async def register_dataset(payload: dict = Body(...), db: Session = Depends(get_
     if not name:
         raise HTTPException(status_code=400, detail="name required")
     db.execute(
-        text("""INSERT INTO dataset_registry (name, source_uri, row_count, schema_hash, sla_hours)
+        text(
+            """INSERT INTO dataset_registry (name, source_uri, row_count, schema_hash, sla_hours)
                VALUES (:n, :u, :c, :h, :s)
                ON CONFLICT (name) DO UPDATE SET
                  source_uri=EXCLUDED.source_uri,
                  row_count=EXCLUDED.row_count,
                  schema_hash=EXCLUDED.schema_hash,
                  sla_hours=EXCLUDED.sla_hours,
-                 ingested_at=now()"""),
+                 ingested_at=now()"""
+        ),
         {
             "n": name,
             "u": payload.get("source_uri"),
@@ -738,8 +740,10 @@ async def list_dashboards(db: Session = Depends(get_db)):
 @router.post("/dashboards", tags=["dashboards"])
 async def save_dashboard(payload: DashboardIn, db: Session = Depends(get_db)):
     row = db.execute(
-        text("""INSERT INTO dashboards (name, layout_json, owner)
-               VALUES (:n, CAST(:l AS jsonb), :o) RETURNING id"""),
+        text(
+            """INSERT INTO dashboards (name, layout_json, owner)
+               VALUES (:n, CAST(:l AS jsonb), :o) RETURNING id"""
+        ),
         {"n": payload.name, "l": __import__("json").dumps(payload.layout_json), "o": payload.owner},
     ).fetchone()
     db.commit()

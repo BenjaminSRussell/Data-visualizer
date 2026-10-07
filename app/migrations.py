@@ -14,12 +14,16 @@ MIGRATIONS_DIR = Path(__file__).resolve().parents[1] / "database" / "migrations"
 
 
 def ensure_migrations_table(conn) -> None:
-    conn.execute(text("""
+    conn.execute(
+        text(
+            """
             CREATE TABLE IF NOT EXISTS schema_migrations (
               version TEXT PRIMARY KEY,
               applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
             )
-            """))
+            """
+        )
+    )
 
 
 def apply_migrations() -> list[str]:
