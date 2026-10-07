@@ -402,6 +402,7 @@ def execute_dataset_query(
     offset = validate_offset(offset)
 
     from app import cache as dv_cache
+
     key = dv_cache.cache_key(
         "dataset",
         {"name": dataset_name, "limit": limit, "offset": offset, "filters": filters or {}},

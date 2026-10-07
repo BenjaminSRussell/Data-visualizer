@@ -16,9 +16,9 @@ from fastapi.templating import Jinja2Templates
 
 from app.api import router as api_router
 from app.auth import AuthMiddleware
-from app.migrations import apply_migrations
 from app.config import settings
 from app.database import init_db, test_connection
+from app.migrations import apply_migrations
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

@@ -380,4 +380,3 @@ See `.env.example` (`REDIS_URL`, `UI_AUTH_TOKEN`, `AUTH_DISABLED`). Health stays
 - Default `HOST=127.0.0.1` and `AUTH_DISABLED=false`.
 - Binding `0.0.0.0` (or any non-loopback) with `AUTH_DISABLED=true` exits at startup.
 - Set `UI_AUTH_TOKEN` for the UI/API token middleware.
-

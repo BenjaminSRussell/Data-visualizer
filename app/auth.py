@@ -1,4 +1,5 @@
 """Optional bearer/token auth gate (#27)."""
+
 from __future__ import annotations
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -20,7 +21,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
         auth = request.headers.get("authorization") or ""
         token = request.headers.get("x-api-token") or ""
         expected = settings.UI_AUTH_TOKEN
-        ok = (auth.lower().startswith("bearer ") and auth.split(" ", 1)[1] == expected) or (token == expected)
+        ok = (auth.lower().startswith("bearer ") and auth.split(" ", 1)[1] == expected) or (
+            token == expected
+        )
         if not ok:
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
         return await call_next(request)

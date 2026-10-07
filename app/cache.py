@@ -1,4 +1,5 @@
 """Optional Redis cache for dataset queries (#26)."""
+
 from __future__ import annotations
 
 import hashlib
@@ -20,7 +21,7 @@ def get_redis():
     if _client is not None:
         return _client
     try:
-        import redis
+        import redis  # type: ignore[import-untyped]
 
         _client = redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)
         _client.ping()

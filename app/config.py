@@ -42,5 +42,4 @@ class Settings:
     FRESHNESS_WEBHOOK: str | None = __import__("os").getenv("FRESHNESS_WEBHOOK") or None
 
 
-
 settings = Settings()

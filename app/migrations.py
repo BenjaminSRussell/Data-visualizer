@@ -1,4 +1,5 @@
 """Numbered SQL migrations (#25)."""
+
 from __future__ import annotations
 
 import logging
@@ -13,16 +14,12 @@ MIGRATIONS_DIR = Path(__file__).resolve().parents[1] / "database" / "migrations"
 
 
 def ensure_migrations_table(conn) -> None:
-    conn.execute(
-        text(
-            """
+    conn.execute(text("""
             CREATE TABLE IF NOT EXISTS schema_migrations (
               version TEXT PRIMARY KEY,
               applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
             )
-            """
-        )
-    )
+            """))
 
 
 def apply_migrations() -> list[str]:
@@ -30,7 +27,9 @@ def apply_migrations() -> list[str]:
     applied: list[str] = []
     with engine.begin() as conn:
         ensure_migrations_table(conn)
-        existing = {r[0] for r in conn.execute(text("SELECT version FROM schema_migrations")).fetchall()}
+        existing = {
+            r[0] for r in conn.execute(text("SELECT version FROM schema_migrations")).fetchall()
+        }
         for path in sorted(MIGRATIONS_DIR.glob("*.sql")):
             ver = path.name
             if ver in existing:

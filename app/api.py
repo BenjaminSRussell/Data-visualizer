@@ -112,11 +112,14 @@ async def health_check(db: Session = Depends(get_db)):
         ).fetchone()[0]
 
         from app import cache as dv_cache
+
         details = {
             "tables_available": table_count,
             "connection_pool": "active",
             "cache": dv_cache.stats(),
-            "redis_configured": bool(__import__("app.config", fromlist=["settings"]).settings.REDIS_URL),
+            "redis_configured": bool(
+                __import__("app.config", fromlist=["settings"]).settings.REDIS_URL
+            ),
         }
         return HealthResponse(
             status="healthy",
@@ -196,7 +199,9 @@ async def export_dataset_csv(
                 # still emit an empty file with no header when unknown shape
                 yield ""
                 return
-            writer = csv.DictWriter(buf, fieldnames=list(data_rows[0].keys()), extrasaction="ignore")
+            writer = csv.DictWriter(
+                buf, fieldnames=list(data_rows[0].keys()), extrasaction="ignore"
+            )
             writer.writeheader()
             yield buf.getvalue()
             buf.seek(0)
@@ -220,8 +225,6 @@ async def export_dataset_csv(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database query failed"
         )
-
-
 
 
 @router.get("/datasets/{dataset_name}", response_model=DatasetResponse, tags=["datasets"])
@@ -624,12 +627,14 @@ async def list_sessions(
 
 
 # --- Registry / dashboards / queries / freshness (#28–#31) ---
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+
 from fastapi import Body
 from pydantic import BaseModel, Field
+from sqlalchemy import text
+
 from app import cache as dv_cache
 from app.config import settings as app_settings
-from sqlalchemy import text
 
 
 class DashboardIn(BaseModel):
@@ -647,9 +652,11 @@ class SavedQueryIn(BaseModel):
 @router.get("/registry", tags=["registry"])
 async def list_registry(db: Session = Depends(get_db)):
     try:
-        rows = db.execute(text(
-            "SELECT name, source_uri, ingested_at, row_count, schema_hash, sla_hours FROM dataset_registry ORDER BY name"
-        )).fetchall()
+        rows = db.execute(
+            text(
+                "SELECT name, source_uri, ingested_at, row_count, schema_hash, sla_hours FROM dataset_registry ORDER BY name"
+            )
+        ).fetchall()
     except Exception:
         return {"datasets": []}
     now = datetime.now(timezone.utc)
@@ -662,15 +669,17 @@ async def list_registry(db: Session = Depends(get_db)):
             if getattr(ingested, "tzinfo", None) is None:
                 ingested = ingested.replace(tzinfo=timezone.utc)
             stale = (now - ingested) > timedelta(hours=sla)
-        out.append({
-            "name": r[0],
-            "source_uri": r[1],
-            "ingested_at": ingested.isoformat() if ingested else None,
-            "row_count": r[3],
-            "schema_hash": r[4],
-            "sla_hours": sla,
-            "freshness": "stale" if stale else "fresh",
-        })
+        out.append(
+            {
+                "name": r[0],
+                "source_uri": r[1],
+                "ingested_at": ingested.isoformat() if ingested else None,
+                "row_count": r[3],
+                "schema_hash": r[4],
+                "sla_hours": sla,
+                "freshness": "stale" if stale else "fresh",
+            }
+        )
     return {"datasets": out}
 
 
@@ -680,16 +689,14 @@ async def register_dataset(payload: dict = Body(...), db: Session = Depends(get_
     if not name:
         raise HTTPException(status_code=400, detail="name required")
     db.execute(
-        text(
-            """INSERT INTO dataset_registry (name, source_uri, row_count, schema_hash, sla_hours)
+        text("""INSERT INTO dataset_registry (name, source_uri, row_count, schema_hash, sla_hours)
                VALUES (:n, :u, :c, :h, :s)
                ON CONFLICT (name) DO UPDATE SET
                  source_uri=EXCLUDED.source_uri,
                  row_count=EXCLUDED.row_count,
                  schema_hash=EXCLUDED.schema_hash,
                  sla_hours=EXCLUDED.sla_hours,
-                 ingested_at=now()"""
-        ),
+                 ingested_at=now()"""),
         {
             "n": name,
             "u": payload.get("source_uri"),
@@ -705,14 +712,24 @@ async def register_dataset(payload: dict = Body(...), db: Session = Depends(get_
 @router.get("/dashboards", tags=["dashboards"])
 async def list_dashboards(db: Session = Depends(get_db)):
     try:
-        rows = db.execute(text("SELECT id, name, layout_json, owner, updated_at FROM dashboards ORDER BY updated_at DESC")).fetchall()
+        rows = db.execute(
+            text(
+                "SELECT id, name, layout_json, owner, updated_at FROM dashboards ORDER BY updated_at DESC"
+            )
+        ).fetchall()
     except Exception:
         return {"dashboards": []}
     if not rows:
         return {"dashboards": [], "empty": True}
     return {
         "dashboards": [
-            {"id": r[0], "name": r[1], "layout_json": r[2], "owner": r[3], "updated_at": r[4].isoformat() if r[4] else None}
+            {
+                "id": r[0],
+                "name": r[1],
+                "layout_json": r[2],
+                "owner": r[3],
+                "updated_at": r[4].isoformat() if r[4] else None,
+            }
             for r in rows
         ]
     }
@@ -721,10 +738,8 @@ async def list_dashboards(db: Session = Depends(get_db)):
 @router.post("/dashboards", tags=["dashboards"])
 async def save_dashboard(payload: DashboardIn, db: Session = Depends(get_db)):
     row = db.execute(
-        text(
-            """INSERT INTO dashboards (name, layout_json, owner)
-               VALUES (:n, CAST(:l AS jsonb), :o) RETURNING id"""
-        ),
+        text("""INSERT INTO dashboards (name, layout_json, owner)
+               VALUES (:n, CAST(:l AS jsonb), :o) RETURNING id"""),
         {"n": payload.name, "l": __import__("json").dumps(payload.layout_json), "o": payload.owner},
     ).fetchone()
     db.commit()
@@ -734,12 +749,20 @@ async def save_dashboard(payload: DashboardIn, db: Session = Depends(get_db)):
 @router.get("/saved-queries", tags=["queries"])
 async def list_saved_queries(db: Session = Depends(get_db)):
     try:
-        rows = db.execute(text("SELECT id, name, sql, owner, created_at FROM saved_queries ORDER BY id DESC")).fetchall()
+        rows = db.execute(
+            text("SELECT id, name, sql, owner, created_at FROM saved_queries ORDER BY id DESC")
+        ).fetchall()
     except Exception:
         return {"queries": []}
     return {
         "queries": [
-            {"id": r[0], "name": r[1], "sql": r[2], "owner": r[3], "created_at": r[4].isoformat() if r[4] else None}
+            {
+                "id": r[0],
+                "name": r[1],
+                "sql": r[2],
+                "owner": r[3],
+                "created_at": r[4].isoformat() if r[4] else None,
+            }
             for r in rows
         ]
     }
@@ -752,12 +775,16 @@ async def create_saved_query(payload: SavedQueryIn, db: Session = Depends(get_db
         raise HTTPException(status_code=400, detail="sql required")
     # cheap lint: reject multiple statements / dangerous keywords for library safety
     lowered = sql.lower()
-    if any(x in lowered for x in (";--", " drop ", " delete ", " truncate ", " alter ", " insert ", " update ")):
+    if any(
+        x in lowered
+        for x in (";--", " drop ", " delete ", " truncate ", " alter ", " insert ", " update ")
+    ):
         raise HTTPException(status_code=400, detail="mutating SQL rejected")
     if ";" in sql.rstrip(";"):
         raise HTTPException(status_code=400, detail="multiple statements rejected")
     try:
         import sqlparse
+
         parsed = sqlparse.parse(sql)
         if not parsed:
             raise HTTPException(status_code=400, detail="invalid SQL")
@@ -798,7 +825,9 @@ async def freshness_check(db: Session = Depends(get_db)):
         if ds.get("freshness") != "stale":
             # clear open alert if recovered
             db.execute(
-                text("UPDATE freshness_alerts SET cleared_at=now() WHERE dataset_name=:n AND cleared_at IS NULL"),
+                text(
+                    "UPDATE freshness_alerts SET cleared_at=now() WHERE dataset_name=:n AND cleared_at IS NULL"
+                ),
                 {"n": ds["name"]},
             )
             continue
@@ -810,7 +839,9 @@ async def freshness_check(db: Session = Depends(get_db)):
             continue
         payload = {"text": f"Dataset {ds['name']} is stale", "dataset": ds}
         db.execute(
-            text("INSERT INTO freshness_alerts (dataset_name, payload_json) VALUES (:n, CAST(:p AS jsonb))"),
+            text(
+                "INSERT INTO freshness_alerts (dataset_name, payload_json) VALUES (:n, CAST(:p AS jsonb))"
+            ),
             {"n": ds["name"], "p": json.dumps(payload)},
         )
         if app_settings.FRESHNESS_WEBHOOK:
