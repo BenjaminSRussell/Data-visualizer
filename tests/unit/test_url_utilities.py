@@ -533,11 +533,11 @@ class TestEdgeCases:
         assert fragment == "fragment"
 
     def test_invalid_port_99999(self):
-        """Invalid port 99999 should parse (validation is separate)."""
+        """Out-of-range ports are rejected by urllib (port becomes None)."""
         url = "https://example.com:99999/page"
         components = parse_url_components(url)
 
-        assert components["port"] == 99999
+        assert components["port"] is None
 
     def test_port_zero(self):
         """Port 0 should parse."""
