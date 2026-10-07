@@ -209,6 +209,23 @@ Data-visualizer/
 └── README.md               # This file
 ```
 
+
+
+## Schema migrations (#25)
+
+Do **not** dump/reload to evolve schema. Use versioned SQL:
+
+```bash
+# Apply pending migrations (uses DATABASE_URL or postgresql:///data_visualizer)
+python manage.py migrate
+
+# List migration files
+python manage.py migrate --dry-run
+```
+
+New changes go in `database/migrations/0002_*.sql`. Keep `database/schema.sql`
+as a fresh-install snapshot (regenerate via `pg_dump --schema-only` after migrate).
+
 ## Database Schema
 
 ### Core Tables

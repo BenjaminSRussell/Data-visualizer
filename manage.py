@@ -105,5 +105,88 @@ def summary(output_dir: Path = typer.Option(OUTPUT_ROOT, "--output", "-o")) -> N
     raise typer.Exit(run_command(command))
 
 
+
+
+@APP.command()
+def migrate(
+    database_url: Optional[str] = typer.Option(
+        None,
+        "--database-url",
+        help="Postgres URL (default DATABASE_URL or postgresql:///data_visualizer)",
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Print pending versions only"),
+) -> None:
+    """Apply versioned SQL migrations under database/migrations/ (#25)."""
+    import os
+    import re
+
+    try:
+        import psycopg2
+    except ImportError as exc:
+        typer.echo("psycopg2 required: pip install psycopg2-binary", err=True)
+        raise typer.Exit(1) from exc
+
+    url = database_url or os.environ.get("DATABASE_URL") or "postgresql:///data_visualizer"
+    # Simple URL parse for psycopg2: postgresql://user:pass@host:port/db or postgresql:///db
+    migrations_dir = ROOT / "database" / "migrations"
+    files = sorted(migrations_dir.glob("*.sql"))
+    if not files:
+        typer.echo("No migrations found")
+        raise typer.Exit(1)
+
+    def version_of(path: Path) -> str:
+        return path.stem  # e.g. 0001_initial
+
+    pending = [f for f in files]
+    if dry_run:
+        typer.echo("Migration files:")
+        for f in pending:
+            typer.echo(f"  {version_of(f)}")
+        raise typer.Exit(0)
+
+    conn = psycopg2.connect(url)
+    conn.autocommit = False
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS schema_migrations (
+                    version VARCHAR(64) PRIMARY KEY,
+                    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            cur.execute("SELECT version FROM schema_migrations")
+            applied = {row[0] for row in cur.fetchall()}
+        conn.commit()
+
+        for path in pending:
+            ver = version_of(path)
+            if ver in applied or ver.startswith("0000_"):
+                # 0000 is embedded above; skip duplicate file apply if present
+                if ver.startswith("0000_"):
+                    continue
+                if ver in applied:
+                    typer.echo(f"skip {ver}")
+                    continue
+            sql = path.read_text(encoding="utf-8")
+            typer.echo(f"apply {ver}...")
+            with conn.cursor() as cur:
+                cur.execute(sql)
+                cur.execute(
+                    "INSERT INTO schema_migrations(version) VALUES (%s) ON CONFLICT DO NOTHING",
+                    (ver,),
+                )
+            conn.commit()
+            typer.echo(f"applied {ver}")
+        typer.echo("migrate complete")
+    except Exception as exc:
+        conn.rollback()
+        typer.echo(f"migrate failed: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    finally:
+        conn.close()
+
+
 if __name__ == "__main__":
     APP()
