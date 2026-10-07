@@ -1,8 +1,10 @@
 """SQLAlchemy models matching the PostgreSQL schema."""
 
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, Float, Boolean, TIMESTAMP, ForeignKey, ARRAY
+
+from sqlalchemy import ARRAY, TIMESTAMP, Boolean, Column, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 

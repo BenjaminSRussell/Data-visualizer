@@ -4,11 +4,12 @@ Dynamic dataset management with SQL injection prevention and automatic schema di
 
 import logging
 import re
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
-from sqlalchemy import text, inspect
-from sqlalchemy.orm import Session
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +129,7 @@ PREDEFINED_DATASETS = {
         description="URLs grouped by domain with counts",
         table_name="urls",
         is_custom=True,
+        columns=["domain", "url_count", "file_types", "last_crawl", "success_rate"],
         sql_query="""
             SELECT
                 domain,
@@ -146,6 +148,7 @@ PREDEFINED_DATASETS = {
         description="Classified URLs with categories and confidence scores",
         table_name="classifications",
         is_custom=True,
+        columns=["id", "category", "confidence", "model_version", "url", "domain", "created_at"],
         sql_query="""
             SELECT
                 c.id,
@@ -165,6 +168,19 @@ PREDEFINED_DATASETS = {
         description="Detailed page metadata including content analysis",
         table_name="page_metadata",
         is_custom=True,
+        columns=[
+            "id",
+            "title",
+            "description",
+            "language",
+            "word_count",
+            "has_images",
+            "has_videos",
+            "has_forms",
+            "url",
+            "domain",
+            "extracted_at",
+        ],
         sql_query="""
             SELECT
                 pm.id,
@@ -188,6 +204,16 @@ PREDEFINED_DATASETS = {
         description="Comprehensive domain-level statistics",
         table_name="urls",
         is_custom=True,
+        columns=[
+            "domain",
+            "total_urls",
+            "successful_urls",
+            "error_urls",
+            "unique_extensions",
+            "first_crawl",
+            "last_crawl",
+            "html_percentage",
+        ],
         sql_query="""
             SELECT
                 domain,
@@ -210,6 +236,7 @@ PREDEFINED_DATASETS = {
         description="Distribution of content types across all URLs",
         table_name="urls",
         is_custom=True,
+        columns=["content_type", "count", "percentage"],
         sql_query="""
             SELECT
                 content_type,
@@ -226,6 +253,7 @@ PREDEFINED_DATASETS = {
         description="Distribution of HTTP status codes",
         table_name="urls",
         is_custom=True,
+        columns=["status_code", "count", "percentage"],
         sql_query="""
             SELECT
                 status_code,
@@ -287,23 +315,30 @@ def list_datasets(session: Optional[Session] = None) -> List[Dataset]:
         return list(PREDEFINED_DATASETS.values())
 
 
-def build_safe_where_clause(filters: Dict[str, Any]) -> tuple[str, Dict[str, Any]]:
+def build_safe_where_clause(
+    filters: Dict[str, Any],
+    allowed_columns: Optional[List[str]] = None,
+) -> tuple[str, Dict[str, Any]]:
     """
     Build a safe WHERE clause using parameterized queries.
 
-    Returns:
-        Tuple of (where_clause_string, parameters_dict)
+    Raises:
+        ValueError: if a filter column is well-formed but not in allowed_columns.
     """
     if not filters:
         return "", {}
 
+    allowed = set(allowed_columns) if allowed_columns is not None else None
     where_parts = []
-    params = {}
+    params: Dict[str, Any] = {}
 
     for column_name, value in filters.items():
         if not validate_identifier(column_name):
-            logger.warning(f"Skipping invalid column name in filter: {column_name}")
-            continue
+            raise ValueError(f"Invalid filter column name: {column_name}")
+        if allowed is not None and column_name not in allowed:
+            raise ValueError(
+                f"Unknown filter column '{column_name}'. " f"Allowed: {sorted(allowed)}"
+            )
 
         param_name = f"filter_{column_name}"
         where_parts.append(f"{column_name} = :{param_name}")
@@ -313,6 +348,24 @@ def build_safe_where_clause(filters: Dict[str, Any]) -> tuple[str, Dict[str, Any
         return "", {}
 
     return " AND ".join(where_parts), params
+
+
+def _dataset_allowed_columns(dataset: Dataset) -> Optional[List[str]]:
+    """Columns that may be filtered. Prefer declared dataset.columns."""
+    if dataset.columns:
+        return list(dataset.columns)
+    return None
+
+
+def _default_order_by(dataset: Dataset) -> str:
+    """Stable ORDER BY for pagination (#36)."""
+    cols = dataset.columns or []
+    for candidate in ("id", "created_at", "url", "domain"):
+        if candidate in cols:
+            return candidate
+    if cols:
+        return cols[0]
+    return "1"
 
 
 def execute_dataset_query(
@@ -349,26 +402,34 @@ def execute_dataset_query(
     offset = validate_offset(offset)
 
     try:
+        allowed = _dataset_allowed_columns(dataset)
+        where_clause, params = build_safe_where_clause(filters or {}, allowed)
+
         if dataset.sql_query:
-            base_query = dataset.sql_query
-            where_clause, params = "", {}
+            # Wrap predefined SQL so filters apply (#36)
+            base_query = f"SELECT * FROM ({dataset.sql_query}) AS dataset_src"
         else:
             if not validate_identifier(dataset.table_name):
                 raise ValueError(f"Invalid table name: {dataset.table_name}")
 
             column_list = ", ".join(dataset.columns) if dataset.columns else "*"
             base_query = f"SELECT {column_list} FROM {dataset.table_name}"
-            where_clause, params = build_safe_where_clause(filters or {})
 
         if where_clause:
-            if "WHERE" in base_query.upper():
-                full_query = f"{base_query} AND {where_clause}"
-            else:
-                full_query = f"{base_query} WHERE {where_clause}"
+            full_query = f"{base_query} WHERE {where_clause}"
         else:
             full_query = base_query
 
-        full_query += f" LIMIT :limit OFFSET :offset"
+        # Deterministic pagination for table datasets; wrap SQL already ordered
+        order_col = _default_order_by(dataset)
+        if dataset.sql_query:
+            # Outer wrap may not know inner aliases; order by first selected col index
+            full_query += " ORDER BY 1"
+        else:
+            if validate_identifier(order_col) or order_col == "1":
+                full_query += f" ORDER BY {order_col}"
+
+        full_query += " LIMIT :limit OFFSET :offset"
         params["limit"] = limit
         params["offset"] = offset
 
@@ -412,18 +473,18 @@ def get_dataset_count(
         raise ValueError(f"Dataset '{dataset_name}' not found")
 
     try:
+        allowed = _dataset_allowed_columns(dataset)
+        where_clause, params = build_safe_where_clause(filters or {}, allowed)
+
         if dataset.sql_query:
             base_query = f"SELECT COUNT(*) as count FROM ({dataset.sql_query}) as subquery"
-            params = {}
         else:
             if not validate_identifier(dataset.table_name):
                 raise ValueError(f"Invalid table name: {dataset.table_name}")
-
             base_query = f"SELECT COUNT(*) as count FROM {dataset.table_name}"
-            where_clause, params = build_safe_where_clause(filters or {})
 
-            if where_clause:
-                base_query += f" WHERE {where_clause}"
+        if where_clause:
+            base_query += f" WHERE {where_clause}"
 
         result = db.execute(text(base_query), params)
         count = result.fetchone()[0]

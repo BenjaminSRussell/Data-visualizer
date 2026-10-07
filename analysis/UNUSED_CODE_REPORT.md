@@ -33,17 +33,17 @@
 - **`analysis/processors.{batch_processor,sitemap_processor,url_processor}` and dependent helpers**: Imported indirectly via package initialisers but not exercised without database-backed workflows. Treat as dormant feature, not dead code.
 
 ## AI-ish / Robotic Code Signals
-- **analysis/helpers/__init__.py:1-45**  
-  - *Signals*: Marketing-toned docstring describing “Strategic Helper Function Library” with enumerated pillars; exports large surface area unused by runtime.  
-  - *Risk*: Suggests boilerplate generated to satisfy prompt requirements; increases surface area without integration.  
+- **analysis/helpers/__init__.py:1-45**
+  - *Signals*: Marketing-toned docstring describing “Strategic Helper Function Library” with enumerated pillars; exports large surface area unused by runtime.
+  - *Risk*: Suggests boilerplate generated to satisfy prompt requirements; increases surface area without integration.
   - *Recommendation*: Trim docstring to factual info and only export helpers that have callers; add tests before adoption.
-- **analysis/helpers/semantic_clustering.py:1-84**  
-  - *Signals*: Docstring references other files and line numbers (“Enhances semantic_path_analyzer.py (lines 15-250)”), weighted heuristics with hand-wavy comments, no callers in dynamic trace.  
-  - *Risk*: High-maintenance analytical code with unverifiable metrics; likely promptware.  
+- **analysis/helpers/semantic_clustering.py:1-84**
+  - *Signals*: Docstring references other files and line numbers (“Enhances semantic_path_analyzer.py (lines 15-250)”), weighted heuristics with hand-wavy comments, no callers in dynamic trace.
+  - *Risk*: High-maintenance analytical code with unverifiable metrics; likely promptware.
   - *Recommendation*: Either integrate via targeted unit tests + documented consumers or quarantine until justified.
-- **analysis/processors/url_processor.py:12-120**  
-  - *Signals*: Workflow docstring enumerating six steps, references non-existent modules (`analysis.fetch_url`, `server.storage.save_url`), extensive logging scaffolding without error handling.  
-  - *Risk*: Indicates cargo-cult pipeline stitched from prompts; missing dependencies (`analysis.fetch_url`) would crash immediately.  
+- **analysis/processors/url_processor.py:12-120**
+  - *Signals*: Workflow docstring enumerating six steps, references non-existent modules (`analysis.fetch_url`, `server.storage.save_url`), extensive logging scaffolding without error handling.
+  - *Risk*: Indicates cargo-cult pipeline stitched from prompts; missing dependencies (`analysis.fetch_url`) would crash immediately.
   - *Recommendation*: Gate behind feature flag, add dependency checks, or refactor into minimal viable ingestion backed by real modules.
 
 ## Appendices

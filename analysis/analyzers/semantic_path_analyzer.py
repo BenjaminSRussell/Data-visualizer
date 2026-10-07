@@ -362,7 +362,9 @@ class SemanticPathAnalyzer:
             "diversity_level": (
                 "high"
                 if template_diversity > 0.7
-                else "medium" if template_diversity > 0.3 else "low"
+                else "medium"
+                if template_diversity > 0.3
+                else "low"
             ),
         }
 

@@ -9,7 +9,7 @@ All analyzers should use this instead of parsing URLs themselves.
 """
 
 from typing import Dict, List, Optional
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import parse_qs, unquote, urlparse
 
 
 class URLComponentCache:

@@ -11,7 +11,7 @@ def test_imports():
     """Test that all modules can be imported."""
     print("[1/6] Testing Module Imports...")
     try:
-        from app import config, database, models, datasets, api, main
+        from app import api, config, database, datasets, main, models
 
         print("  [OK] All modules imported successfully")
         return True
@@ -43,7 +43,6 @@ def test_models():
     try:
         from app import models
 
-        # Get all model classes
         model_classes = [
             (name, getattr(models, name))
             for name in dir(models)
@@ -83,13 +82,12 @@ def test_datasets():
 
         print(f"  [OK] {len(PREDEFINED_DATASETS)} predefined datasets")
 
-        # Check SQL queries
         queries_with_sql = sum(1 for ds in PREDEFINED_DATASETS.values() if ds.sql_query)
         simple_queries = len(PREDEFINED_DATASETS) - queries_with_sql
 
         print(f"  [OK] {queries_with_sql} custom SQL queries")
         print(f"  [OK] {simple_queries} simple SELECT queries")
-        print(f"  [OK] Dynamic datasets discovered at runtime")
+        print("  [OK] Dynamic datasets discovered at runtime")
 
         return True
     except Exception as e:
