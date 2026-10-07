@@ -13,7 +13,7 @@ class Settings:
     )
 
     # Server
-    HOST: str = os.getenv("HOST", "0.0.0.0")
+    HOST: str = os.getenv("HOST", "127.0.0.1")
     PORT: int = int(os.getenv("PORT", "8000"))
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
 
@@ -36,11 +36,10 @@ class Settings:
 
     # Optional auth (#27)
     UI_AUTH_TOKEN: str | None = __import__("os").getenv("UI_AUTH_TOKEN") or None
-    AUTH_DISABLED: bool = __import__("os").getenv("AUTH_DISABLED", "true").lower() == "true"
+    AUTH_DISABLED: bool = __import__("os").getenv("AUTH_DISABLED", "false").lower() == "true"
 
     # Freshness (#31)
     FRESHNESS_WEBHOOK: str | None = __import__("os").getenv("FRESHNESS_WEBHOOK") or None
-
 
 
 settings = Settings()
