@@ -9,11 +9,13 @@
     <p>Explore patterns discovered in the data.</p>
 
     <div class="filter-group">
-        <select id="pattern-type-filter">
-            <option value="">All Pattern Types</option>
-        </select>
-        <button class="btn" onclick="applyFilter()">Apply Filter</button>
-        <button class="btn" onclick="clearFilter()" style="background: #6c757d;">Clear</button>
+        <label for="pattern-type-filter">Pattern type
+            <select id="pattern-type-filter">
+                <option value="">All Pattern Types</option>
+            </select>
+        </label>
+        <button class="btn" type="button" onclick="applyFilter()">Apply Filter</button>
+        <button class="btn" type="button" onclick="clearFilter()" style="background: #6c757d;">Clear</button>
     </div>
 </div>
 
