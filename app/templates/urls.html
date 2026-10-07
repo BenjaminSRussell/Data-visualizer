@@ -101,7 +101,7 @@
         tbody.innerHTML = urls.map(url => `
             <tr>
                 <td>${url.id}</td>
-                <td><a href="${url.url}" target="_blank" class="url-link">${truncate(url.url, 60)}</a></td>
+                <td><a href="${url.url}" target="_blank" rel="noopener noreferrer" class="url-link">${truncate(url.url, 60)}</a></td>
                 <td>${url.domain || 'N/A'}</td>
                 <td>${url.status_code || 'N/A'}</td>
                 <td>${truncate(url.content_type || 'N/A', 30)}</td>
