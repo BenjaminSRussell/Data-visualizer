@@ -29,8 +29,10 @@ data/archive/
 
 # Data files (keep input data if tracked, ignore generated data)
 *.jsonl
-!data/input/*.jsonl
 
 # Python pickle files (embeddings, models, etc.)
 *.pkl
 *.pickle
+.forensics/
+data/input/*.jsonl
+!data/input/sample.jsonl
