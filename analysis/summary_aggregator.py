@@ -8,12 +8,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any
 
-ANALYSIS_TARGETS: Dict[str, Tuple[str, ...]] = {
+ANALYSIS_TARGETS: dict[str, tuple[str, ...]] = {
     "basic": ("analysis_results.json",),
     "enhanced": ("enhanced_analysis_results.json",),
     "mlx": ("enhanced_results.json",),
@@ -23,30 +24,30 @@ ANALYSIS_TARGETS: Dict[str, Tuple[str, ...]] = {
 @dataclass
 class AnalysisSnapshot:
     name: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    insights: Dict[str, Any] = field(default_factory=dict)
-    summary: Dict[str, Any] = field(default_factory=dict)
-    path: Optional[Path] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    insights: dict[str, Any] = field(default_factory=dict)
+    summary: dict[str, Any] = field(default_factory=dict)
+    path: Path | None = None
 
     @property
     def total_urls(self) -> int:
         return int(self.metadata.get("total_urls", self.metadata.get("raw_urls", 0)))
 
     @property
-    def timestamp(self) -> Optional[str]:
+    def timestamp(self) -> str | None:
         return self.metadata.get("analysis_timestamp")
 
 
-def load_json(path: Path) -> Dict[str, Any]:
+def load_json(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
 
 
-def extract_snapshot(name: str, directory: Path) -> Optional[AnalysisSnapshot]:
+def extract_snapshot(name: str, directory: Path) -> AnalysisSnapshot | None:
     if not directory.exists():
         return None
 
-    candidate: Optional[Path] = None
+    candidate: Path | None = None
     for filename in ANALYSIS_TARGETS[name]:
         candidate_path = directory / filename
         if candidate_path.exists():
@@ -79,8 +80,8 @@ def extract_snapshot(name: str, directory: Path) -> Optional[AnalysisSnapshot]:
     )
 
 
-def build_markdown_report(snapshots: List[AnalysisSnapshot], aggregate: Dict[str, Any]) -> str:
-    lines: List[str] = []
+def build_markdown_report(snapshots: list[AnalysisSnapshot], aggregate: dict[str, Any]) -> str:
+    lines: list[str] = []
     lines.append("# Unified Analysis Summary\n")
     lines.append(f"_Generated: {aggregate['generated_at']}_\n")
 
@@ -104,11 +105,15 @@ def build_markdown_report(snapshots: List[AnalysisSnapshot], aggregate: Dict[str
 
         scores = snapshot.summary.get("scores") or {}
         if scores:
-            score_bits = ", ".join(f"{k}: {v:.1f}" for k, v in scores.items() if isinstance(v, (int, float)))
+            score_bits = ", ".join(
+                f"{k}: {v:.1f}" for k, v in scores.items() if isinstance(v, (int, float))
+            )
             if score_bits:
                 lines.append(f"- Scores: {score_bits}")
 
-        key_findings = snapshot.summary.get("key_findings") or snapshot.insights.get("summary", {}).get("summary_points")
+        key_findings = snapshot.summary.get("key_findings") or snapshot.insights.get(
+            "summary", {}
+        ).get("summary_points")
         if key_findings:
             lines.append("\n**Key Findings**")
             for finding in key_findings[:5]:
@@ -126,13 +131,13 @@ def build_markdown_report(snapshots: List[AnalysisSnapshot], aggregate: Dict[str
     return "\n".join(lines).strip() + "\n"
 
 
-def aggregate_snapshots(snapshots: List[AnalysisSnapshot]) -> Dict[str, Any]:
+def aggregate_snapshots(snapshots: list[AnalysisSnapshot]) -> dict[str, Any]:
     totals = {
         "urls": sum(snapshot.total_urls for snapshot in snapshots),
         "alerts": sum(len(snapshot.summary.get("alerts", [])) for snapshot in snapshots),
     }
 
-    highlights: List[str] = []
+    highlights: list[str] = []
     for snapshot in snapshots:
         key_findings = snapshot.summary.get("key_findings") or []
         highlights.extend(key_findings[:2])
@@ -157,8 +162,10 @@ def aggregate_snapshots(snapshots: List[AnalysisSnapshot]) -> Dict[str, Any]:
     return aggregate
 
 
-def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Aggregate analysis results into a unified report.")
+def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Aggregate analysis results into a unified report."
+    )
     parser.add_argument(
         "output_root",
         nargs="?",
@@ -174,7 +181,7 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: Optional[Iterable[str]] = None) -> int:
+def main(argv: Iterable[str] | None = None) -> int:
     args = parse_args(argv)
     output_root = Path(args.output_root).resolve()
 
@@ -182,8 +189,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         sys.stderr.write(f"Output directory not found: {output_root}\n")
         return 1
 
-    snapshots: List[AnalysisSnapshot] = []
-    for name in ANALYSIS_TARGETS.keys():
+    snapshots: list[AnalysisSnapshot] = []
+    for name in ANALYSIS_TARGETS:
         directory = output_root / name
         snapshot = extract_snapshot(name, directory)
         if snapshot:

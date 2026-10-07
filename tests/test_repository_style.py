@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 SKIP_DIRS = {"venv", ".venv", "__pycache__", ".git"}
-EMOJI_PATTERN = re.compile("[\U0001F300-\U0001FAFF]")
-TRIVIAL_COMMENT_PREFIXES = (
-    re.compile(r"#\s*(Get|Set|Return|Assign|Save|Call)\b"),
-)
+EMOJI_PATTERN = re.compile("[\U0001f300-\U0001faff]")
+TRIVIAL_COMMENT_PREFIXES = (re.compile(r"#\s*(Get|Set|Return|Assign|Save|Call)\b"),)
 
 
 def iter_python_files(root: Path) -> Iterable[Path]:

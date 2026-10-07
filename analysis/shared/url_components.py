@@ -8,8 +8,7 @@ This is the CANONICAL source for all URL component extraction.
 All analyzers should use this instead of parsing URLs themselves.
 """
 
-from typing import Dict, List, Optional
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import parse_qs, unquote, urlparse
 
 
 class URLComponentCache:
@@ -21,11 +20,11 @@ class URLComponentCache:
     """
 
     def __init__(self):
-        self._cache: Dict[str, Dict] = {}
+        self._cache: dict[str, dict] = {}
         self._parse_count = 0
         self._cache_hits = 0
 
-    def get_components(self, url: str) -> Dict:
+    def get_components(self, url: str) -> dict:
         """
         Get all components for a URL. Returns cached result if available,
         otherwise parses and caches.
@@ -70,26 +69,26 @@ class URLComponentCache:
         self._cache[url] = components
         return components
 
-    def _parse_url(self, url: str) -> Dict:
+    def _parse_url(self, url: str) -> dict:
         """Parse URL and extract all components in one pass."""
         try:
             parsed = urlparse(url)
 
             # Basic components
-            scheme = parsed.scheme or ''
-            netloc = parsed.netloc or ''
-            hostname = parsed.hostname or ''
+            scheme = parsed.scheme or ""
+            netloc = parsed.netloc or ""
+            hostname = parsed.hostname or ""
             port = parsed.port
-            path = parsed.path or ''
-            query = parsed.query or ''
-            fragment = parsed.fragment or ''
+            path = parsed.path or ""
+            query = parsed.query or ""
+            fragment = parsed.fragment or ""
 
             # Domain decomposition
             domain, subdomain = self._extract_domain_parts(hostname)
 
             # Path analysis
-            path_normalized = path.rstrip('/')
-            segments = [s for s in path.split('/') if s]
+            path_normalized = path.rstrip("/")
+            segments = [s for s in path.split("/") if s]
             depth = len(segments)
             extension = self._extract_extension(path)
 
@@ -98,7 +97,7 @@ class URLComponentCache:
             query_normalized = self._normalize_query(query_params)
 
             # Fragment analysis
-            fragment_decoded = unquote(fragment) if fragment else ''
+            fragment_decoded = unquote(fragment) if fragment else ""
 
             # Boolean flags
             has_auth = bool(parsed.username)
@@ -108,77 +107,71 @@ class URLComponentCache:
 
             # Derived properties
             url_length = len(url)
-            is_root = depth == 0 or path in ('/', '')
+            is_root = depth == 0 or path in ("/", "")
             is_file = extension is not None
 
             return {
                 # Original
-                'url': url,
-
+                "url": url,
                 # Basic components
-                'scheme': scheme,
-                'netloc': netloc,
-                'hostname': hostname,
-                'domain': domain,
-                'subdomain': subdomain,
-                'port': port,
-
+                "scheme": scheme,
+                "netloc": netloc,
+                "hostname": hostname,
+                "domain": domain,
+                "subdomain": subdomain,
+                "port": port,
                 # Path components
-                'path': path,
-                'path_normalized': path_normalized,
-                'depth': depth,
-                'segments': segments,
-                'extension': extension,
-
+                "path": path,
+                "path_normalized": path_normalized,
+                "depth": depth,
+                "segments": segments,
+                "extension": extension,
                 # Query components
-                'query': query,
-                'query_params': query_params,
-                'query_normalized': query_normalized,
-
+                "query": query,
+                "query_params": query_params,
+                "query_normalized": query_normalized,
                 # Fragment components
-                'fragment': fragment,
-                'fragment_decoded': fragment_decoded,
-
+                "fragment": fragment,
+                "fragment_decoded": fragment_decoded,
                 # Boolean flags
-                'has_auth': has_auth,
-                'has_port': has_port,
-                'has_query': has_query,
-                'has_fragment': has_fragment,
-
+                "has_auth": has_auth,
+                "has_port": has_port,
+                "has_query": has_query,
+                "has_fragment": has_fragment,
                 # Derived properties
-                'url_length': url_length,
-                'is_root': is_root,
-                'is_file': is_file
+                "url_length": url_length,
+                "is_root": is_root,
+                "is_file": is_file,
             }
 
         except Exception as e:
             # Provide minimal component structure when parsing fails.
             return {
-                'url': url,
-                'scheme': '',
-                'netloc': '',
-                'hostname': '',
-                'domain': '',
-                'subdomain': '',
-                'port': None,
-                'path': '',
-                'path_normalized': '',
-                'depth': 0,
-                'segments': [],
-                'extension': None,
-                'query': '',
-                'query_params': {},
-                'query_normalized': '',
-                'fragment': '',
-                'fragment_decoded': '',
-                'has_auth': False,
-                'has_port': False,
-                'has_query': False,
-                'has_fragment': False,
-                'url_length': len(url),
-                'is_root': True,
-                'is_file': False,
-                'error': str(e)
+                "url": url,
+                "scheme": "",
+                "netloc": "",
+                "hostname": "",
+                "domain": "",
+                "subdomain": "",
+                "port": None,
+                "path": "",
+                "path_normalized": "",
+                "depth": 0,
+                "segments": [],
+                "extension": None,
+                "query": "",
+                "query_params": {},
+                "query_normalized": "",
+                "fragment": "",
+                "fragment_decoded": "",
+                "has_auth": False,
+                "has_port": False,
+                "has_query": False,
+                "has_fragment": False,
+                "url_length": len(url),
+                "is_root": True,
+                "is_file": False,
+                "error": str(e),
             }
 
     def _extract_domain_parts(self, hostname: str) -> tuple:
@@ -189,42 +182,42 @@ class URLComponentCache:
             (domain, subdomain) tuple
         """
         if not hostname:
-            return '', ''
+            return "", ""
 
-        parts = hostname.split('.')
+        parts = hostname.split(".")
 
         # Handle common TLDs
         if len(parts) >= 2:
             # Simple heuristic: last two parts are domain (example.com)
-            domain = '.'.join(parts[-2:])
-            subdomain = '.'.join(parts[:-2]) if len(parts) > 2 else ''
+            domain = ".".join(parts[-2:])
+            subdomain = ".".join(parts[:-2]) if len(parts) > 2 else ""
             return domain, subdomain
 
-        return hostname, ''
+        return hostname, ""
 
-    def _extract_extension(self, path: str) -> Optional[str]:
+    def _extract_extension(self, path: str) -> str | None:
         """Extract file extension from path."""
-        if not path or '.' not in path:
+        if not path or "." not in path:
             return None
 
         # Remove query and fragment
-        path = path.split('?')[0].split('#')[0]
+        path = path.split("?")[0].split("#")[0]
 
         # Use the last path segment to isolate the extension candidate.
-        filename = path.split('/')[-1]
+        filename = path.split("/")[-1]
 
-        if '.' in filename:
-            ext = filename.split('.')[-1].lower()
+        if "." in filename:
+            ext = filename.split(".")[-1].lower()
             # Validate: alphanumeric and reasonable length
             if ext.isalnum() and len(ext) <= 10:
                 return ext
 
         return None
 
-    def _normalize_query(self, query_params: Dict) -> str:
+    def _normalize_query(self, query_params: dict) -> str:
         """Normalize query string by sorting parameters."""
         if not query_params:
-            return ''
+            return ""
 
         # Sort parameters alphabetically
         sorted_items = sorted(query_params.items())
@@ -235,10 +228,11 @@ class URLComponentCache:
             for value in values:
                 parts.append(f"{key}={value}")
 
-        return '&'.join(parts)
+        return "&".join(parts)
 
-    def get_normalized_url(self, url: str, remove_fragment: bool = True,
-                          remove_tracking: bool = True) -> str:
+    def get_normalized_url(
+        self, url: str, remove_fragment: bool = True, remove_tracking: bool = True
+    ) -> str:
         """
         Get normalized version of URL for deduplication.
 
@@ -256,16 +250,16 @@ class URLComponentCache:
         normalized = f"{components['scheme']}://{components['netloc']}"
 
         # Add normalized path (no trailing slash unless root)
-        path = components['path_normalized']
+        path = components["path_normalized"]
         if path:
             normalized += path
-        elif not path or path == '/':
-            normalized += '/'
+        elif not path or path == "/":
+            normalized += "/"
 
         # Add query (optionally filter tracking params)
-        if components['has_query']:
+        if components["has_query"]:
             if remove_tracking:
-                filtered_params = self._remove_tracking_params(components['query_params'])
+                filtered_params = self._remove_tracking_params(components["query_params"])
                 if filtered_params:
                     query_str = self._normalize_query(filtered_params)
                     normalized += f"?{query_str}"
@@ -273,38 +267,49 @@ class URLComponentCache:
                 normalized += f"?{components['query_normalized']}"
 
         # Add fragment (optional)
-        if not remove_fragment and components['has_fragment']:
+        if not remove_fragment and components["has_fragment"]:
             normalized += f"#{components['fragment']}"
 
         return normalized
 
-    def _remove_tracking_params(self, query_params: Dict) -> Dict:
+    def _remove_tracking_params(self, query_params: dict) -> dict:
         """Remove common tracking parameters."""
         tracking_params = {
-            'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
-            'fbclid', 'gclid', 'msclkid', '_ga', '_gl', 'mc_cid', 'mc_eid',
-            'ref', 'source', 'campaign', 'ad_id', 'ad_name'
+            "utm_source",
+            "utm_medium",
+            "utm_campaign",
+            "utm_term",
+            "utm_content",
+            "fbclid",
+            "gclid",
+            "msclkid",
+            "_ga",
+            "_gl",
+            "mc_cid",
+            "mc_eid",
+            "ref",
+            "source",
+            "campaign",
+            "ad_id",
+            "ad_name",
         }
 
-        return {
-            k: v for k, v in query_params.items()
-            if k.lower() not in tracking_params
-        }
+        return {k: v for k, v in query_params.items() if k.lower() not in tracking_params}
 
-    def get_cache_stats(self) -> Dict:
+    def get_cache_stats(self) -> dict:
         """Get cache performance statistics."""
         total_requests = self._parse_count + self._cache_hits
         hit_rate = (self._cache_hits / total_requests * 100) if total_requests > 0 else 0
 
         return {
-            'cache_size': len(self._cache),
-            'parse_count': self._parse_count,
-            'cache_hits': self._cache_hits,
-            'total_requests': total_requests,
-            'hit_rate_percent': hit_rate
+            "cache_size": len(self._cache),
+            "parse_count": self._parse_count,
+            "cache_hits": self._cache_hits,
+            "total_requests": total_requests,
+            "hit_rate_percent": hit_rate,
         }
 
-    def bulk_parse(self, urls: List[str]) -> None:
+    def bulk_parse(self, urls: list[str]) -> None:
         """Pre-populate cache with multiple URLs."""
         for url in urls:
             if url not in self._cache:
@@ -329,22 +334,21 @@ def get_url_cache() -> URLComponentCache:
     return _global_cache
 
 
-def get_components(url: str) -> Dict:
+def get_components(url: str) -> dict:
     """Convenience function to get components from global cache."""
     return get_url_cache().get_components(url)
 
 
-def get_normalized_url(url: str, remove_fragment: bool = True,
-                       remove_tracking: bool = True) -> str:
+def get_normalized_url(url: str, remove_fragment: bool = True, remove_tracking: bool = True) -> str:
     """Convenience function to get normalized URL."""
     return get_url_cache().get_normalized_url(url, remove_fragment, remove_tracking)
 
 
-def bulk_parse_urls(urls: List[str]) -> None:
+def bulk_parse_urls(urls: list[str]) -> None:
     """Convenience function to bulk parse URLs."""
     get_url_cache().bulk_parse(urls)
 
 
-def get_cache_stats() -> Dict:
+def get_cache_stats() -> dict:
     """Convenience function to get cache stats."""
     return get_url_cache().get_cache_stats()

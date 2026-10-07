@@ -9,11 +9,13 @@ import argparse
 import json
 import sys
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any
 
 import pandas as pd
+
 try:
     from jsonschema import Draft7Validator
 except ImportError:  # pragma: no cover - optional dependency
@@ -37,7 +39,7 @@ SETTINGS = get_settings()
 
 # validation schemas
 
-JSON_RECORD_SCHEMA: Dict[str, Any] = {
+JSON_RECORD_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
         "url": {"type": "string", "minLength": 1},
@@ -76,12 +78,13 @@ else:
 
 # validation results container
 
+
 @dataclass
 class ValidationResult:
     valid: bool = True
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    summary: Dict[str, Any] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    summary: dict[str, Any] = field(default_factory=dict)
 
     def report(self) -> None:
         """print validation summary."""
@@ -107,7 +110,8 @@ class ValidationResult:
 
 # core validation logic
 
-def iterate_records(path: Path) -> Iterable[Dict[str, Any]]:
+
+def iterate_records(path: Path) -> Iterable[dict[str, Any]]:
     """yield parsed json from a jsonl file."""
     with path.open("r", encoding="utf-8") as handle:
         for line_number, raw in enumerate(handle, start=1):
@@ -121,9 +125,11 @@ def iterate_records(path: Path) -> Iterable[Dict[str, Any]]:
                 raise ValueError(f"Line {line_number}: invalid JSON ({exc})") from exc
 
 
-def _schema_errors(record: Dict[str, Any], validator: Optional[Draft7Validator]) -> List[Tuple[str, str]]:
+def _schema_errors(
+    record: dict[str, Any], validator: Draft7Validator | None
+) -> list[tuple[str, str]]:
     if validator is None:
-        errors: List[Tuple[str, str]] = []
+        errors: list[tuple[str, str]] = []
         required_fields = ["url", "depth", "status_code", "content_type", "links"]
         for field in required_fields:
             if field not in record:
@@ -143,7 +149,7 @@ def validate_records(path: Path) -> ValidationResult:
     """validate jsonl records against schema and basic rules."""
     result = ValidationResult()
     validator = Draft7Validator(JSON_RECORD_SCHEMA) if Draft7Validator is not None else None
-    records: List[Dict[str, Any]] = []
+    records: list[dict[str, Any]] = []
 
     try:
         for record in iterate_records(path):
@@ -228,7 +234,7 @@ def validate_records(path: Path) -> ValidationResult:
     return result
 
 
-def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
+def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate JSONL crawl data before analysis.")
     parser.add_argument("input_path", type=Path, help="Path to the JSONL file.")
     parser.add_argument(
@@ -239,7 +245,7 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: Optional[Iterable[str]] = None) -> int:
+def main(argv: Iterable[str] | None = None) -> int:
     args = parse_args(argv)
     input_path: Path = args.input_path
 
