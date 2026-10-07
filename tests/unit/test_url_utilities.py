@@ -311,13 +311,12 @@ class TestMixedEncoding:
 
         assert depth == 2
 
-    def test_emoji_in_path(self):
-        """Emoji in path should parse."""
+    def test_double_slash_path_segments(self):
+        """Double slashes collapse; empty segments are dropped."""
         url = "https://example.com/emoji//page"
         segments = extract_path_segments(url)
 
-        assert len(segments) == 3
-        assert "" in segments[1]
+        assert segments == ["emoji", "page"]
 
     def test_unicode_math_symbols(self):
         """Unicode math symbols should parse."""
