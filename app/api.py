@@ -111,10 +111,17 @@ async def health_check(db: Session = Depends(get_db)):
             text("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")
         ).fetchone()[0]
 
+        from app import cache as dv_cache
+        details = {
+            "tables_available": table_count,
+            "connection_pool": "active",
+            "cache": dv_cache.stats(),
+            "redis_configured": bool(__import__("app.config", fromlist=["settings"]).settings.REDIS_URL),
+        }
         return HealthResponse(
             status="healthy",
             database="connected",
-            details={"tables_available": table_count, "connection_pool": "active"},
+            details=details,
         )
 
     except SQLAlchemyError as db_error:
@@ -614,3 +621,209 @@ async def list_sessions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list sessions"
         )
+
+
+# --- Registry / dashboards / queries / freshness (#28–#31) ---
+from datetime import datetime, timezone, timedelta
+from fastapi import Body
+from pydantic import BaseModel, Field
+from app import cache as dv_cache
+from app.config import settings as app_settings
+from sqlalchemy import text
+
+
+class DashboardIn(BaseModel):
+    name: str
+    layout_json: dict = Field(default_factory=dict)
+    owner: str = "local"
+
+
+class SavedQueryIn(BaseModel):
+    name: str
+    sql: str
+    owner: str = "local"
+
+
+@router.get("/registry", tags=["registry"])
+async def list_registry(db: Session = Depends(get_db)):
+    try:
+        rows = db.execute(text(
+            "SELECT name, source_uri, ingested_at, row_count, schema_hash, sla_hours FROM dataset_registry ORDER BY name"
+        )).fetchall()
+    except Exception:
+        return {"datasets": []}
+    now = datetime.now(timezone.utc)
+    out = []
+    for r in rows:
+        ingested = r[2]
+        sla = r[5] or 168
+        stale = False
+        if ingested is not None:
+            if getattr(ingested, "tzinfo", None) is None:
+                ingested = ingested.replace(tzinfo=timezone.utc)
+            stale = (now - ingested) > timedelta(hours=sla)
+        out.append({
+            "name": r[0],
+            "source_uri": r[1],
+            "ingested_at": ingested.isoformat() if ingested else None,
+            "row_count": r[3],
+            "schema_hash": r[4],
+            "sla_hours": sla,
+            "freshness": "stale" if stale else "fresh",
+        })
+    return {"datasets": out}
+
+
+@router.post("/registry/register", tags=["registry"])
+async def register_dataset(payload: dict = Body(...), db: Session = Depends(get_db)):
+    name = payload.get("name")
+    if not name:
+        raise HTTPException(status_code=400, detail="name required")
+    db.execute(
+        text(
+            """INSERT INTO dataset_registry (name, source_uri, row_count, schema_hash, sla_hours)
+               VALUES (:n, :u, :c, :h, :s)
+               ON CONFLICT (name) DO UPDATE SET
+                 source_uri=EXCLUDED.source_uri,
+                 row_count=EXCLUDED.row_count,
+                 schema_hash=EXCLUDED.schema_hash,
+                 sla_hours=EXCLUDED.sla_hours,
+                 ingested_at=now()"""
+        ),
+        {
+            "n": name,
+            "u": payload.get("source_uri"),
+            "c": int(payload.get("row_count") or 0),
+            "h": payload.get("schema_hash"),
+            "s": int(payload.get("sla_hours") or 168),
+        },
+    )
+    db.commit()
+    return {"ok": True, "name": name}
+
+
+@router.get("/dashboards", tags=["dashboards"])
+async def list_dashboards(db: Session = Depends(get_db)):
+    try:
+        rows = db.execute(text("SELECT id, name, layout_json, owner, updated_at FROM dashboards ORDER BY updated_at DESC")).fetchall()
+    except Exception:
+        return {"dashboards": []}
+    if not rows:
+        return {"dashboards": [], "empty": True}
+    return {
+        "dashboards": [
+            {"id": r[0], "name": r[1], "layout_json": r[2], "owner": r[3], "updated_at": r[4].isoformat() if r[4] else None}
+            for r in rows
+        ]
+    }
+
+
+@router.post("/dashboards", tags=["dashboards"])
+async def save_dashboard(payload: DashboardIn, db: Session = Depends(get_db)):
+    row = db.execute(
+        text(
+            """INSERT INTO dashboards (name, layout_json, owner)
+               VALUES (:n, CAST(:l AS jsonb), :o) RETURNING id"""
+        ),
+        {"n": payload.name, "l": __import__("json").dumps(payload.layout_json), "o": payload.owner},
+    ).fetchone()
+    db.commit()
+    return {"id": row[0], "name": payload.name}
+
+
+@router.get("/saved-queries", tags=["queries"])
+async def list_saved_queries(db: Session = Depends(get_db)):
+    try:
+        rows = db.execute(text("SELECT id, name, sql, owner, created_at FROM saved_queries ORDER BY id DESC")).fetchall()
+    except Exception:
+        return {"queries": []}
+    return {
+        "queries": [
+            {"id": r[0], "name": r[1], "sql": r[2], "owner": r[3], "created_at": r[4].isoformat() if r[4] else None}
+            for r in rows
+        ]
+    }
+
+
+@router.post("/saved-queries", tags=["queries"])
+async def create_saved_query(payload: SavedQueryIn, db: Session = Depends(get_db)):
+    sql = (payload.sql or "").strip()
+    if not sql:
+        raise HTTPException(status_code=400, detail="sql required")
+    # cheap lint: reject multiple statements / dangerous keywords for library safety
+    lowered = sql.lower()
+    if any(x in lowered for x in (";--", " drop ", " delete ", " truncate ", " alter ", " insert ", " update ")):
+        raise HTTPException(status_code=400, detail="mutating SQL rejected")
+    if ";" in sql.rstrip(";"):
+        raise HTTPException(status_code=400, detail="multiple statements rejected")
+    try:
+        import sqlparse
+        parsed = sqlparse.parse(sql)
+        if not parsed:
+            raise HTTPException(status_code=400, detail="invalid SQL")
+    except ImportError:
+        if not lowered.startswith("select"):
+            raise HTTPException(status_code=400, detail="only SELECT allowed without sqlparse")
+    row = db.execute(
+        text("INSERT INTO saved_queries (name, sql, owner) VALUES (:n, :s, :o) RETURNING id"),
+        {"n": payload.name, "s": sql, "o": payload.owner},
+    ).fetchone()
+    db.commit()
+    return {"id": row[0]}
+
+
+@router.post("/saved-queries/{query_id}/run", tags=["queries"])
+async def run_saved_query(query_id: int, db: Session = Depends(get_db)):
+    row = db.execute(text("SELECT sql FROM saved_queries WHERE id=:i"), {"i": query_id}).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="query not found")
+    sql = row[0]
+    if not sql.lower().lstrip().startswith("select"):
+        raise HTTPException(status_code=400, detail="only SELECT runnable")
+    result = db.execute(text(sql))
+    cols = list(result.keys())
+    data = [dict(zip(cols, r)) for r in result.fetchmany(200)]
+    return {"columns": cols, "rows": data}
+
+
+@router.post("/freshness/check", tags=["freshness"])
+async def freshness_check(db: Session = Depends(get_db)):
+    """Fire webhook once per open window when dataset SLA breached (#31)."""
+    import json
+    import urllib.request
+
+    reg = await list_registry(db)
+    fired = []
+    for ds in reg.get("datasets", []):
+        if ds.get("freshness") != "stale":
+            # clear open alert if recovered
+            db.execute(
+                text("UPDATE freshness_alerts SET cleared_at=now() WHERE dataset_name=:n AND cleared_at IS NULL"),
+                {"n": ds["name"]},
+            )
+            continue
+        open_alert = db.execute(
+            text("SELECT id FROM freshness_alerts WHERE dataset_name=:n AND cleared_at IS NULL"),
+            {"n": ds["name"]},
+        ).fetchone()
+        if open_alert:
+            continue
+        payload = {"text": f"Dataset {ds['name']} is stale", "dataset": ds}
+        db.execute(
+            text("INSERT INTO freshness_alerts (dataset_name, payload_json) VALUES (:n, CAST(:p AS jsonb))"),
+            {"n": ds["name"], "p": json.dumps(payload)},
+        )
+        if app_settings.FRESHNESS_WEBHOOK:
+            req = urllib.request.Request(
+                app_settings.FRESHNESS_WEBHOOK,
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            try:
+                urllib.request.urlopen(req, timeout=5).read()
+            except Exception:
+                pass
+        fired.append(ds["name"])
+    db.commit()
+    return {"fired": fired}

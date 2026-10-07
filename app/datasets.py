@@ -401,6 +401,15 @@ def execute_dataset_query(
     limit = validate_limit(limit)
     offset = validate_offset(offset)
 
+    from app import cache as dv_cache
+    key = dv_cache.cache_key(
+        "dataset",
+        {"name": dataset_name, "limit": limit, "offset": offset, "filters": filters or {}},
+    )
+    cached = dv_cache.get_json(key)
+    if cached is not None:
+        return cached
+
     try:
         allowed = _dataset_allowed_columns(dataset)
         where_clause, params = build_safe_where_clause(filters or {}, allowed)
@@ -438,6 +447,7 @@ def execute_dataset_query(
         rows = [dict(zip(column_names, row)) for row in result]
 
         logger.info(f"Query executed successfully: {dataset_name}, {len(rows)} rows returned")
+        dv_cache.set_json(key, rows)
         return rows
 
     except SQLAlchemyError as db_error:

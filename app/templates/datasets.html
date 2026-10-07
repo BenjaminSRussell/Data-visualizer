@@ -4,6 +4,12 @@
 {% block nav_datasets %}active{% endblock %}
 
 {% block content %}
+<div class="card" id="registry-card">
+  <h2>Dataset registry</h2>
+  <p>Provenance and freshness (#28).</p>
+  <div id="registry-badges" class="filter-group"></div>
+</div>
+
 <div class="card">
     <h2>Dataset Explorer</h2>
     <p>Select a dataset to explore and visualize the data.</p>
@@ -48,6 +54,21 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script>
+async function loadRegistry() {
+  try {
+    const r = await fetch('/api/registry');
+    const data = await r.json();
+    const el = document.getElementById('registry-badges');
+    if (!el) return;
+    const rows = data.datasets || [];
+    if (!rows.length) { el.textContent = 'No registry rows yet — POST /api/registry/register on ingest.'; return; }
+    el.innerHTML = rows.map(d => `<span class="btn" style="background:${d.freshness==='stale'?'#c0392b':'#27ae60'}">${d.name}: ${d.freshness}</span>`).join(' ');
+  } catch (e) { console.warn(e); }
+}
+window.addEventListener('DOMContentLoaded', loadRegistry);
+</script>
+
 <script>
     let currentDataset = '';
     let currentPage = 0;

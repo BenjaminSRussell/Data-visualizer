@@ -30,5 +30,17 @@ class Settings:
     DEFAULT_PAGE_SIZE: int = 50
     MAX_PAGE_SIZE: int = 1000
 
+    # Optional Redis cache (#26)
+    REDIS_URL: str | None = __import__("os").getenv("REDIS_URL") or None
+    REDIS_TTL_SECONDS: int = int(__import__("os").getenv("REDIS_TTL_SECONDS", "30"))
+
+    # Optional auth (#27)
+    UI_AUTH_TOKEN: str | None = __import__("os").getenv("UI_AUTH_TOKEN") or None
+    AUTH_DISABLED: bool = __import__("os").getenv("AUTH_DISABLED", "true").lower() == "true"
+
+    # Freshness (#31)
+    FRESHNESS_WEBHOOK: str | None = __import__("os").getenv("FRESHNESS_WEBHOOK") or None
+
+
 
 settings = Settings()

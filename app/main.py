@@ -15,6 +15,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.api import router as api_router
+from app.auth import AuthMiddleware
+from app.migrations import apply_migrations
 from app.config import settings
 from app.database import init_db, test_connection
 
@@ -38,6 +40,11 @@ async def lifespan(app: FastAPI):
         logger.error("[FAIL] Database connection failed")
         logger.error("Please check your DATABASE_URL environment variable")
 
+    try:
+        apply_migrations()
+        logger.info("[OK] Migrations applied")
+    except Exception as mig_err:
+        logger.warning("[WARN] Migrations: %s", mig_err)
     db_initialized = init_db()
     if db_initialized:
         logger.info("[OK] Database tables initialized")
@@ -68,6 +75,7 @@ allowed_origins = os.getenv(
     "CORS_ORIGINS", "http://localhost,http://localhost:8000,http://127.0.0.1,http://127.0.0.1:8000"
 ).split(",")
 
+app.add_middleware(AuthMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,

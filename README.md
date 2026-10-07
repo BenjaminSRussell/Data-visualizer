@@ -353,3 +353,24 @@ For issues or questions, please open an issue on GitHub.
 
 ## Data fixtures
 Full crawl JSONL files stay outside git. Use `data/input/sample.jsonl` for local tests.
+
+
+## Schema migrations (#25)
+
+```bash
+python manage.py migrate
+```
+
+Numbered SQL files live in `database/migrations/`. Do not dump/reload for additive changes.
+
+## Optional Redis (#26) & auth (#27)
+
+See `.env.example` (`REDIS_URL`, `UI_AUTH_TOKEN`, `AUTH_DISABLED`). Health stays open when auth is enabled.
+
+## Registry / dashboards / queries / freshness (#28–#31)
+
+- `GET /api/registry` — provenance + freshness badges
+- `POST /api/registry/register` — ingest registration
+- `GET/POST /api/dashboards` — saved layouts
+- `GET/POST /api/saved-queries` (+ `/run`) — query library with lint
+- `POST /api/freshness/check` — SLA webhook (once per open window)

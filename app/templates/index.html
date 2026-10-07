@@ -5,6 +5,31 @@
 
 {% block content %}
 <div class="card">
+  <h2>Saved dashboards</h2>
+  <div id="saved-dashboards">Loading…</div>
+  <h2 style="margin-top:1rem">Saved queries</h2>
+  <div id="saved-queries">Loading…</div>
+</div>
+<script>
+async function loadSaved() {
+  try {
+    const d = await (await fetch('/api/dashboards')).json();
+    const el = document.getElementById('saved-dashboards');
+    if (d.empty || !(d.dashboards||[]).length) el.textContent = 'No saved dashboards yet.';
+    else el.innerHTML = '<ul>' + d.dashboards.map(x => `<li>${x.name}</li>`).join('') + '</ul>';
+  } catch { document.getElementById('saved-dashboards').textContent = 'Dashboards API unavailable until migrations run.'; }
+  try {
+    const q = await (await fetch('/api/saved-queries')).json();
+    const el = document.getElementById('saved-queries');
+    const rows = q.queries || [];
+    if (!rows.length) el.textContent = 'No saved queries yet.';
+    else el.innerHTML = '<ul>' + rows.map(x => `<li>${x.name}</li>`).join('') + '</ul>';
+  } catch { document.getElementById('saved-queries').textContent = 'Queries API unavailable until migrations run.'; }
+}
+window.addEventListener('DOMContentLoaded', loadSaved);
+</script>
+
+<div class="card">
     <h2>Database Statistics</h2>
     <div id="stats-status" role="status" aria-live="polite" aria-atomic="true" style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"></div>
     <div id="loading" class="loading">Loading statistics...</div>

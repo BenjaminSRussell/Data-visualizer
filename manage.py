@@ -107,3 +107,15 @@ def summary(output_dir: Path = typer.Option(OUTPUT_ROOT, "--output", "-o")) -> N
 
 if __name__ == "__main__":
     APP()
+
+
+@APP.command("migrate")
+def migrate() -> None:
+    """Apply numbered SQL migrations under database/migrations (#25)."""
+    from app.migrations import apply_migrations
+
+    applied = apply_migrations()
+    if applied:
+        typer.echo("Applied: " + ", ".join(applied))
+    else:
+        typer.echo("No pending migrations")
