@@ -193,4 +193,19 @@ async def sessions_page(request: Request):
 if __name__ == "__main__":
     import uvicorn
 
+    # Refuse all-interfaces bind when auth is off (#48)
+    host = (settings.HOST or "").strip()
+    loopback = host in {"127.0.0.1", "localhost", "::1"}
+    if settings.AUTH_DISABLED and not loopback:
+        logger.error(
+            "Refusing to bind HOST=%s with AUTH_DISABLED=true. "
+            "Set UI_AUTH_TOKEN and AUTH_DISABLED=false, or use HOST=127.0.0.1.",
+            host,
+        )
+        raise SystemExit(2)
+    if settings.AUTH_DISABLED:
+        logger.warning("AUTH_DISABLED=true — UI/API auth middleware is bypassed (loopback only)")
+    elif not settings.UI_AUTH_TOKEN:
+        logger.warning("UI_AUTH_TOKEN unset — AuthMiddleware will deny protected routes")
+
     uvicorn.run(app, host=settings.HOST, port=settings.PORT, log_level="info", access_log=True)

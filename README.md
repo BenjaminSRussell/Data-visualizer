@@ -67,7 +67,7 @@ nano .env
 Example `.env`:
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/data_visualizer
-HOST=0.0.0.0
+HOST=127.0.0.1
 PORT=8000
 ```
 
@@ -228,7 +228,7 @@ See `database/schema.sql` for complete schema definition.
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:password@localhost:5432/data_visualizer` |
-| `HOST` | Server host | `0.0.0.0` |
+| `HOST` | Server host | `127.0.0.1` |
 | `PORT` | Server port | `8000` |
 | `DEBUG` | Debug mode | `False` |
 
@@ -374,3 +374,10 @@ See `.env.example` (`REDIS_URL`, `UI_AUTH_TOKEN`, `AUTH_DISABLED`). Health stays
 - `GET/POST /api/dashboards` — saved layouts
 - `GET/POST /api/saved-queries` (+ `/run`) — query library with lint
 - `POST /api/freshness/check` — SLA webhook (once per open window)
+
+## Auth / bind defaults (#48)
+
+- Default `HOST=127.0.0.1` and `AUTH_DISABLED=false`.
+- Binding `0.0.0.0` (or any non-loopback) with `AUTH_DISABLED=true` exits at startup.
+- Set `UI_AUTH_TOKEN` for the UI/API token middleware.
+
