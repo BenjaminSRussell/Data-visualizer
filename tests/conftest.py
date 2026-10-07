@@ -22,6 +22,7 @@ try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     from analysis.database.models import Base
+
     SQLALCHEMY_AVAILABLE = True
 except (ImportError, Exception) as e:
     SQLALCHEMY_AVAILABLE = False
@@ -94,13 +95,13 @@ def sample_urls_pathological():
     - Null bytes and control characters
     """
     return {
-        'extreme_depth': [
+        "extreme_depth": [
             # 50 levels deep
             "https://example.com/" + "/".join([f"level{i}" for i in range(50)]),
             # 100 levels deep
             "https://example.com/" + "/".join([f"l{i}" for i in range(100)]),
         ],
-        'extreme_length': [
+        "extreme_length": [
             # 1000 character path
             "https://example.com/" + "a" * 1000,
             # 10,000 character path
@@ -108,7 +109,7 @@ def sample_urls_pathological():
             # Very long query string
             "https://example.com/page?" + "&".join([f"param{i}=value{i}" for i in range(500)]),
         ],
-        'malformed_encoding': [
+        "malformed_encoding": [
             # Invalid percent encoding
             "https://example.com/%XX%YY/path",
             "https://example.com/%ZZ/page",
@@ -116,45 +117,45 @@ def sample_urls_pathological():
             # Double encoding
             "https://example.com/%2525/path",  # %25 = %, so %2525 = %25
         ],
-        'recursive_params': [
+        "recursive_params": [
             # Recursive query parameters (infinite redirect potential)
             "https://example.com/page?next=/page?next=/page",
             "https://example.com/redirect?url=https://example.com/redirect?url=https://example.com",
         ],
-        'path_traversal': [
+        "path_traversal": [
             # Path traversal attempts
             "https://example.com/../../../../etc/passwd",
             "https://example.com/..%2F..%2F..%2Fetc%2Fpasswd",  # URL-encoded
             "https://example.com/./././page",
             "https://example.com/dir/../../../etc/passwd",
         ],
-        'mixed_encoding': [
+        "mixed_encoding": [
             # UTF-8, Latin-1, emojis, special unicode
             "https://example.com/café/page",
             "https://example.com/日本語/ページ",
-            "https://example.com/emoji/😀/page",
+            "https://example.com/emoji//page",
             "https://example.com/𝕌𝕟𝕚𝕔𝕠𝕕𝕖/page",  # Math alphanumeric symbols
             "https://example.com/Ωμέγα/page",  # Greek
         ],
-        'protocol_confusion': [
+        "protocol_confusion": [
             # Non-HTTP protocols (should be rejected or handled specially)
             "javascript:alert(1)//https://example.com",
             "data:text/html,<script>alert(1)</script>",
             "file:///etc/passwd",
             "ftp://example.com/file",
         ],
-        'punycode_domains': [
+        "punycode_domains": [
             # Internationalized domain names
             "https://xn--bcher-kva.example/page",  # bücher.example
             "https://xn--e1afmkfd.xn--p1ai/page",  # пример.рф
             "https://xn--bcher-kva.example/page#fragment",
         ],
-        'fragment_bombs': [
+        "fragment_bombs": [
             # Massive fragments
             "https://example.com#" + "A" * 10000,
             "https://example.com/page#" + "/".join([f"section{i}" for i in range(1000)]),
         ],
-        'special_characters': [
+        "special_characters": [
             # Null bytes and control characters
             "https://example.com/\x00/page",
             "https://example.com/page\x01\x02\x03",
@@ -163,7 +164,7 @@ def sample_urls_pathological():
             "https://example.com/path|with|pipes",
             "https://example.com/path<with>brackets",
         ],
-        'edge_cases': [
+        "edge_cases": [
             # Empty components
             "",
             "https://",
@@ -178,7 +179,7 @@ def sample_urls_pathological():
             # Credentials in URL
             "https://user:pass@example.com/page",
             "https://user:pass@example.com:8080/page",
-        ]
+        ],
     }
 
 
@@ -191,43 +192,43 @@ def sample_urls_semantic_groups():
     that tracking parameters don't affect semantic categorization.
     """
     return {
-        'blog_posts': [
+        "blog_posts": [
             "https://example.com/blog/2023/post-1",
             "https://example.com/blog/2023/post-2",
             "https://example.com/blog/2024/article-1",
             "https://example.com/articles/2023/story-1",
             "https://example.com/posts/2024/news-1",
         ],
-        'user_management': [
+        "user_management": [
             "https://example.com/user/profile",
             "https://example.com/account/settings",
             "https://example.com/member/info",
             "https://example.com/usr/dashboard",
         ],
-        'product_pages': [
+        "product_pages": [
             "https://example.com/products/item-1",
             "https://example.com/shop/product/item-2",
             "https://example.com/store/items/item-3",
         ],
-        'tracking_variants': {
-            'base': "https://example.com/blog/post",
-            'variants': [
+        "tracking_variants": {
+            "base": "https://example.com/blog/post",
+            "variants": [
                 "https://example.com/blog/post?utm_source=google&utm_medium=cpc",
                 "https://example.com/blog/post?fbclid=abc123&ref=twitter",
                 "https://example.com/blog/post?gclid=xyz789&campaign=summer",
                 "https://example.com/blog/post?ref=email&track=newsletter",
-            ]
+            ],
         },
-        'abbreviation_variants': [
+        "abbreviation_variants": [
             "https://example.com/dept/sales",
             "https://example.com/department/sales",
             "https://example.com/dpt/sales",
         ],
-        'multilingual': [
+        "multilingual": [
             "https://example.com/blog/article",
             "https://example.com/blog/artikel",  # German
             "https://example.com/blog/articulo",  # Spanish
-        ]
+        ],
     }
 
 
@@ -248,25 +249,13 @@ def sample_graph_data_simple():
     """
     return [
         {
-            'url': 'https://example.com/A',
-            'depth': 0,
-            'links': ['https://example.com/B', 'https://example.com/D']
+            "url": "https://example.com/A",
+            "depth": 0,
+            "links": ["https://example.com/B", "https://example.com/D"],
         },
-        {
-            'url': 'https://example.com/B',
-            'depth': 1,
-            'links': ['https://example.com/C']
-        },
-        {
-            'url': 'https://example.com/C',
-            'depth': 2,
-            'links': []
-        },
-        {
-            'url': 'https://example.com/D',
-            'depth': 1,
-            'links': ['https://example.com/C']
-        }
+        {"url": "https://example.com/B", "depth": 1, "links": ["https://example.com/C"]},
+        {"url": "https://example.com/C", "depth": 2, "links": []},
+        {"url": "https://example.com/D", "depth": 1, "links": ["https://example.com/C"]},
     ]
 
 
@@ -287,77 +276,63 @@ def sample_graph_data_complex():
     urls = []
 
     # Community 1: Blog
-    blog_urls = [f'https://example.com/blog/post-{i}' for i in range(1, 9)]
+    blog_urls = [f"https://example.com/blog/post-{i}" for i in range(1, 9)]
     for i, url in enumerate(blog_urls):
         links = []
         # Link to next post in sequence
         if i < len(blog_urls) - 1:
             links.append(blog_urls[i + 1])
         # Link to homepage
-        links.append('https://example.com/')
+        links.append("https://example.com/")
         # Some posts link to products
         if i % 3 == 0:
-            links.append(f'https://example.com/products/item-{i}')
+            links.append(f"https://example.com/products/item-{i}")
 
-        urls.append({
-            'url': url,
-            'depth': 2,
-            'links': links
-        })
+        urls.append({"url": url, "depth": 2, "links": links})
 
     # Community 2: Products
-    product_urls = [f'https://example.com/products/item-{i}' for i in range(1, 8)]
+    product_urls = [f"https://example.com/products/item-{i}" for i in range(1, 8)]
     for i, url in enumerate(product_urls):
         links = []
         # Link to category page
-        links.append('https://example.com/products')
+        links.append("https://example.com/products")
         # Link to related products
         if i < len(product_urls) - 1:
             links.append(product_urls[i + 1])
 
-        urls.append({
-            'url': url,
-            'depth': 2,
-            'links': links
-        })
+        urls.append({"url": url, "depth": 2, "links": links})
 
     # Community 3: About pages
     about_urls = [
-        'https://example.com/about',
-        'https://example.com/about/team',
-        'https://example.com/about/contact',
-        'https://example.com/about/history',
-        'https://example.com/about/careers'
+        "https://example.com/about",
+        "https://example.com/about/team",
+        "https://example.com/about/contact",
+        "https://example.com/about/history",
+        "https://example.com/about/careers",
     ]
     for i, url in enumerate(about_urls):
-        links = ['https://example.com/']
+        links = ["https://example.com/"]
         # Internal about links
         if i > 0:
             links.append(about_urls[0])  # All link back to main about page
 
-        urls.append({
-            'url': url,
-            'depth': 1 if i == 0 else 2,
-            'links': links
-        })
+        urls.append({"url": url, "depth": 1 if i == 0 else 2, "links": links})
 
     # Add homepage
-    urls.append({
-        'url': 'https://example.com/',
-        'depth': 0,
-        'links': [
-            'https://example.com/blog/post-1',
-            'https://example.com/products',
-            'https://example.com/about'
-        ]
-    })
+    urls.append(
+        {
+            "url": "https://example.com/",
+            "depth": 0,
+            "links": [
+                "https://example.com/blog/post-1",
+                "https://example.com/products",
+                "https://example.com/about",
+            ],
+        }
+    )
 
     # Add products category page
-    urls.append({
-        'url': 'https://example.com/products',
-        'depth': 1,
-        'links': product_urls[:3]
-    })
+    urls.append({"url": "https://example.com/products", "depth": 1, "links": product_urls[:3]})
 
     return urls
 
@@ -381,29 +356,30 @@ def sample_graph_data_with_known_metrics():
     """
     return [
         {
-            'url': 'https://example.com/A',
-            'depth': 0,
-            'links': ['https://example.com/B', 'https://example.com/C']
+            "url": "https://example.com/A",
+            "depth": 0,
+            "links": ["https://example.com/B", "https://example.com/C"],
         },
         {
-            'url': 'https://example.com/B',
-            'depth': 0,
-            'links': ['https://example.com/A', 'https://example.com/D']
+            "url": "https://example.com/B",
+            "depth": 0,
+            "links": ["https://example.com/A", "https://example.com/D"],
         },
         {
-            'url': 'https://example.com/C',
-            'depth': 1,
-            'links': ['https://example.com/A', 'https://example.com/D']
+            "url": "https://example.com/C",
+            "depth": 1,
+            "links": ["https://example.com/A", "https://example.com/D"],
         },
         {
-            'url': 'https://example.com/D',
-            'depth': 1,
-            'links': ['https://example.com/B', 'https://example.com/C']
-        }
+            "url": "https://example.com/D",
+            "depth": 1,
+            "links": ["https://example.com/B", "https://example.com/C"],
+        },
     ]
 
 
 # Test utilities
+
 
 def create_url_list(count, pattern="https://example.com/page-{}"):
     """Helper: Generate list of URLs."""
@@ -415,9 +391,9 @@ def create_jsonl_data(urls, include_links=True):
     data = []
     for i, url in enumerate(urls):
         item = {
-            'url': url,
-            'depth': i % 5,  # Vary depth
-            'links': [] if not include_links else [urls[(i + 1) % len(urls)]]
+            "url": url,
+            "depth": i % 5,  # Vary depth
+            "links": [] if not include_links else [urls[(i + 1) % len(urls)]],
         }
         data.append(item)
     return data

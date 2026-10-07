@@ -19,7 +19,7 @@ def execute(file_path: str) -> List[Dict[str, Any]]:
         return urls
 
     try:
-        with path.open('r', encoding='utf-8') as f:
+        with path.open("r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, 1):
                 line = line.strip()
 
@@ -32,14 +32,16 @@ def execute(file_path: str) -> List[Dict[str, Any]]:
                     continue
 
                 if isinstance(data, dict):
-                    if 'url' in data and data['url']:
+                    if "url" in data and data["url"]:
                         urls.append(data)
                     else:
                         logger.warning("Line %s: No 'url' field found", line_num)
                 elif isinstance(data, str) and data:
-                    urls.append({'url': data})
+                    urls.append({"url": data})
                 else:
-                    logger.warning("Line %s: Unsupported entry type %s", line_num, type(data).__name__)
+                    logger.warning(
+                        "Line %s: Unsupported entry type %s", line_num, type(data).__name__
+                    )
 
     except OSError as exc:
         logger.error("Error loading JSONL file %s: %s", file_path, exc)
@@ -51,23 +53,18 @@ def execute(file_path: str) -> List[Dict[str, Any]]:
 
 def validate(file_path: str) -> Dict[str, Any]:
     """Check JSONL file validity. Returns dict with valid flag, counts, and errors."""
-    result = {
-        'valid': False,
-        'total_lines': 0,
-        'valid_urls': 0,
-        'errors': []
-    }
+    result = {"valid": False, "total_lines": 0, "valid_urls": 0, "errors": []}
 
     path = Path(file_path)
 
     if not path.exists():
-        result['errors'].append(f"File not found: {file_path}")
+        result["errors"].append(f"File not found: {file_path}")
         return result
 
     try:
-        with path.open('r', encoding='utf-8') as f:
+        with path.open("r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, 1):
-                result['total_lines'] += 1
+                result["total_lines"] += 1
                 line = line.strip()
 
                 if not line:
@@ -76,17 +73,17 @@ def validate(file_path: str) -> Dict[str, Any]:
                 try:
                     data: Any = json.loads(line)
                 except json.JSONDecodeError:
-                    result['errors'].append(f"Line {line_num}: Invalid JSON")
+                    result["errors"].append(f"Line {line_num}: Invalid JSON")
                     continue
 
-                if isinstance(data, dict) and data.get('url'):
-                    result['valid_urls'] += 1
+                if isinstance(data, dict) and data.get("url"):
+                    result["valid_urls"] += 1
                 elif isinstance(data, str) and data:
-                    result['valid_urls'] += 1
+                    result["valid_urls"] += 1
 
-        result['valid'] = result['valid_urls'] > 0
+        result["valid"] = result["valid_urls"] > 0
 
     except OSError as exc:
-        result['errors'].append(str(exc))
+        result["errors"].append(str(exc))
 
     return result

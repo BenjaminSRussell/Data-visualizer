@@ -1,4 +1,5 @@
 """Coordinate the analysis pipeline across analyzers and output writers."""
+
 from __future__ import annotations
 
 import json
@@ -167,11 +168,7 @@ class MasterPipeline:
         return result
 
     def _analysis_config(self, tier: str) -> Dict[str, Any]:
-        return (
-            self.config.get("analysis", {})
-            .get("types", {})
-            .get(tier, {})
-        ) or {}
+        return (self.config.get("analysis", {}).get("types", {}).get(tier, {})) or {}
 
     def load_data(self) -> bool:
         self.logger.info("Loading data from %s", self.input_file)
@@ -214,7 +211,9 @@ class MasterPipeline:
         if isinstance(record, str) and record:
             return {"url": record}
 
-        self.logger.warning("Line %s has unsupported payload type: %s", line_num, type(record).__name__)
+        self.logger.warning(
+            "Line %s has unsupported payload type: %s", line_num, type(record).__name__
+        )
         return None
 
     def _select_analyzers(self, names: List[str]) -> Dict[str, AnalyzerCallable]:
@@ -372,9 +371,7 @@ class MasterPipeline:
                 continue
 
             avg_depth = sum(url.get("depth", 0) for url in urls) / len(urls)
-            unique_parents = len(
-                {url.get("parent_url") for url in urls if url.get("parent_url")}
-            )
+            unique_parents = len({url.get("parent_url") for url in urls if url.get("parent_url")})
 
             cluster_analysis.append(
                 {
@@ -415,7 +412,9 @@ class MasterPipeline:
         avg_children = len(child_parent) / unique_parents if unique_parents else 0.0
         max_children = max((len(children) for children in parent_children.values()), default=0)
 
-        parent_counts = sorted(parent_children.items(), key=lambda entry: len(entry[1]), reverse=True)
+        parent_counts = sorted(
+            parent_children.items(), key=lambda entry: len(entry[1]), reverse=True
+        )
 
         self.results["parent_child_relationships"] = {
             "total_urls": total_urls,

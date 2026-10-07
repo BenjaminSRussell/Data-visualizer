@@ -42,47 +42,43 @@ async def execute(
         if result['error'] is None:
             print(f"Fetched {len(result['content'])} bytes")
     """
-    default_headers = {
-        'User-Agent': 'Mozilla/5.0 (compatible; SitemapAnalyzer/1.0)'
-    }
+    default_headers = {"User-Agent": "Mozilla/5.0 (compatible; SitemapAnalyzer/1.0)"}
 
     if headers:
         default_headers.update(headers)
 
     result = {
-        'content': None,
-        'status_code': None,
-        'content_type': None,
-        'final_url': url,
-        'error': None
+        "content": None,
+        "status_code": None,
+        "content_type": None,
+        "final_url": url,
+        "error": None,
     }
 
     for attempt in range(max_retries):
         try:
             async with httpx.AsyncClient(
-                timeout=timeout,
-                follow_redirects=True,
-                headers=default_headers
+                timeout=timeout, follow_redirects=True, headers=default_headers
             ) as client:
                 response = await client.get(url)
 
-                result['content'] = response.text
-                result['status_code'] = response.status_code
-                result['content_type'] = response.headers.get('content-type', '')
-                result['final_url'] = str(response.url)
+                result["content"] = response.text
+                result["status_code"] = response.status_code
+                result["content_type"] = response.headers.get("content-type", "")
+                result["final_url"] = str(response.url)
 
                 if response.status_code >= 400:
-                    result['error'] = f"HTTP {response.status_code}"
+                    result["error"] = f"HTTP {response.status_code}"
                     logger.warning(f"HTTP {response.status_code} for {url}")
                 else:
                     return result
 
         except httpx.TimeoutException:
-            result['error'] = f"Timeout after {timeout}s"
+            result["error"] = f"Timeout after {timeout}s"
             logger.warning(f"Timeout fetching {url} (attempt {attempt + 1}/{max_retries})")
 
         except httpx.RequestError as exc:
-            result['error'] = f"Request error: {exc}"
+            result["error"] = f"Request error: {exc}"
             logger.warning(f"Request error for {url}: {exc} (attempt {attempt + 1}/{max_retries})")
 
     return result
@@ -107,6 +103,4 @@ def execute_sync(
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    return loop.run_until_complete(
-        execute(url, timeout, max_retries, headers)
-    )
+    return loop.run_until_complete(execute(url, timeout, max_retries, headers))

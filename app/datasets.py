@@ -1,6 +1,7 @@
 """
 Dynamic dataset management with SQL injection prevention and automatic schema discovery.
 """
+
 import logging
 import re
 from typing import Dict, List, Any, Optional
@@ -13,12 +14,13 @@ logger = logging.getLogger(__name__)
 
 MAX_LIMIT = 10000
 DEFAULT_LIMIT = 100
-SAFE_IDENTIFIER_PATTERN = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+SAFE_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
 @dataclass
 class Dataset:
     """Represents a queryable dataset."""
+
     name: str
     description: str
     table_name: str
@@ -105,15 +107,15 @@ def create_dynamic_datasets(session: Session) -> Dict[str, Dataset]:
         if not columns_info:
             continue
 
-        column_names = [col['name'] for col in columns_info]
+        column_names = [col["name"] for col in columns_info]
 
         dataset_key = table_name.lower()
         datasets[dataset_key] = Dataset(
-            name=table_name.replace('_', ' ').title(),
+            name=table_name.replace("_", " ").title(),
             description=f"All data from {table_name} table",
             table_name=table_name,
             columns=column_names,
-            is_custom=False
+            is_custom=False,
         )
 
     logger.info(f"Created {len(datasets)} dynamic datasets")
@@ -137,7 +139,7 @@ PREDEFINED_DATASETS = {
             WHERE domain IS NOT NULL
             GROUP BY domain
             ORDER BY url_count DESC
-        """
+        """,
     ),
     "classifications_with_urls": Dataset(
         name="URL Classifications",
@@ -156,7 +158,7 @@ PREDEFINED_DATASETS = {
             FROM classifications c
             JOIN urls u ON c.url_id = u.id
             ORDER BY c.created_at DESC
-        """
+        """,
     ),
     "page_metadata_with_urls": Dataset(
         name="Page Metadata",
@@ -179,7 +181,7 @@ PREDEFINED_DATASETS = {
             FROM page_metadata pm
             JOIN urls u ON pm.url_id = u.id
             ORDER BY pm.extracted_at DESC
-        """
+        """,
     ),
     "domain_statistics": Dataset(
         name="Domain Statistics",
@@ -201,7 +203,7 @@ PREDEFINED_DATASETS = {
             GROUP BY domain
             HAVING COUNT(*) > 0
             ORDER BY total_urls DESC
-        """
+        """,
     ),
     "content_types_distribution": Dataset(
         name="Content Types Distribution",
@@ -217,7 +219,7 @@ PREDEFINED_DATASETS = {
             WHERE content_type IS NOT NULL
             GROUP BY content_type
             ORDER BY count DESC
-        """
+        """,
     ),
     "status_codes_distribution": Dataset(
         name="HTTP Status Codes",
@@ -233,8 +235,8 @@ PREDEFINED_DATASETS = {
             WHERE status_code IS NOT NULL
             GROUP BY status_code
             ORDER BY status_code
-        """
-    )
+        """,
+    ),
 }
 
 _cached_datasets: Optional[Dict[str, Dataset]] = None
@@ -318,7 +320,7 @@ def execute_dataset_query(
     dataset_name: str,
     limit: int = DEFAULT_LIMIT,
     offset: int = 0,
-    filters: Optional[Dict[str, Any]] = None
+    filters: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Execute a dataset query with SQL injection prevention.
@@ -367,8 +369,8 @@ def execute_dataset_query(
             full_query = base_query
 
         full_query += f" LIMIT :limit OFFSET :offset"
-        params['limit'] = limit
-        params['offset'] = offset
+        params["limit"] = limit
+        params["offset"] = offset
 
         result = db.execute(text(full_query), params)
         column_names = result.keys()
@@ -386,9 +388,7 @@ def execute_dataset_query(
 
 
 def get_dataset_count(
-    db: Session,
-    dataset_name: str,
-    filters: Optional[Dict[str, Any]] = None
+    db: Session, dataset_name: str, filters: Optional[Dict[str, Any]] = None
 ) -> int:
     """
     Get total count for a dataset with SQL injection prevention.

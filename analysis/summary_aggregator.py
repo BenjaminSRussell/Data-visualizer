@@ -104,11 +104,15 @@ def build_markdown_report(snapshots: List[AnalysisSnapshot], aggregate: Dict[str
 
         scores = snapshot.summary.get("scores") or {}
         if scores:
-            score_bits = ", ".join(f"{k}: {v:.1f}" for k, v in scores.items() if isinstance(v, (int, float)))
+            score_bits = ", ".join(
+                f"{k}: {v:.1f}" for k, v in scores.items() if isinstance(v, (int, float))
+            )
             if score_bits:
                 lines.append(f"- Scores: {score_bits}")
 
-        key_findings = snapshot.summary.get("key_findings") or snapshot.insights.get("summary", {}).get("summary_points")
+        key_findings = snapshot.summary.get("key_findings") or snapshot.insights.get(
+            "summary", {}
+        ).get("summary_points")
         if key_findings:
             lines.append("\n**Key Findings**")
             for finding in key_findings[:5]:
@@ -158,7 +162,9 @@ def aggregate_snapshots(snapshots: List[AnalysisSnapshot]) -> Dict[str, Any]:
 
 
 def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Aggregate analysis results into a unified report.")
+    parser = argparse.ArgumentParser(
+        description="Aggregate analysis results into a unified report."
+    )
     parser.add_argument(
         "output_root",
         nargs="?",
