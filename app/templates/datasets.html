@@ -13,6 +13,7 @@
             <option value="">Loading datasets...</option>
         </select>
         <button class="btn" onclick="loadDatasetData()">Load Data</button>
+        <a id="download-csv" class="btn" href="#" style="display:none; text-decoration:none;" download>Download CSV</a>
     </div>
 </div>
 
@@ -111,6 +112,9 @@
                 document.getElementById('dataset-description').textContent = dataset.description;
                 document.getElementById('total-records').textContent = formatNumber(totalRecords);
                 document.getElementById('dataset-info').style.display = 'block';
+                const dl = document.getElementById('download-csv');
+                dl.href = `/api/datasets/${currentDataset}.csv`;
+                dl.style.display = 'inline-block';
             }
 
             // Announce to assistive tech

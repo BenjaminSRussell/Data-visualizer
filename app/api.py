@@ -3,10 +3,13 @@ REST API endpoints with comprehensive error handling and input validation.
 All endpoints are protected against common vulnerabilities.
 """
 
+import csv
+import io
 import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, validator
 from sqlalchemy import func, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -162,6 +165,56 @@ async def get_datasets_list(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list datasets"
         )
+
+
+CSV_EXPORT_MAX = 50_000
+
+
+@router.get("/datasets/{dataset_name}.csv", tags=["datasets"])
+async def export_dataset_csv(
+    dataset_name: str = Path(..., description="Name of the dataset to export as CSV"),
+    limit: int = Query(CSV_EXPORT_MAX, ge=1, le=CSV_EXPORT_MAX, description="Max rows to export"),
+    offset: int = Query(0, ge=0, description="Number of rows to skip"),
+    db: Session = Depends(get_db),
+):
+    """Stream a dataset as CSV using the same query path as JSON query_dataset."""
+    try:
+        # Validate name exists (raises ValueError → 404)
+        get_dataset_count(db, dataset_name)
+        data_rows = execute_dataset_query(db, dataset_name, limit=limit, offset=offset)
+
+        def generate():
+            buf = io.StringIO()
+            if not data_rows:
+                # still emit an empty file with no header when unknown shape
+                yield ""
+                return
+            writer = csv.DictWriter(buf, fieldnames=list(data_rows[0].keys()), extrasaction="ignore")
+            writer.writeheader()
+            yield buf.getvalue()
+            buf.seek(0)
+            buf.truncate(0)
+            for row in data_rows:
+                writer.writerow(row)
+                yield buf.getvalue()
+                buf.seek(0)
+                buf.truncate(0)
+
+        filename = f"{dataset_name}.csv"
+        return StreamingResponse(
+            generate(),
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except ValueError as validation_error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(validation_error))
+    except SQLAlchemyError as db_error:
+        logger.error(f"Database error exporting dataset {dataset_name}: {db_error}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database query failed"
+        )
+
+
 
 
 @router.get("/datasets/{dataset_name}", response_model=DatasetResponse, tags=["datasets"])
