@@ -301,7 +301,7 @@ class NetworkAnalyzer:
             new_authority[url] = score
 
         # normalize authority vector
-        max_auth = max(new_authority.values()) if new_authority.values() else 1
+        max_auth = max(new_authority.values(), default=0) or 1.0
         authority = {url: score / max_auth for url, score in new_authority.items()}
 
         # update hub scores
@@ -311,7 +311,7 @@ class NetworkAnalyzer:
             new_hub[url] = score
 
         # normalize hub vector
-        max_hub = max(new_hub.values()) if new_hub.values() else 1
+        max_hub = max(new_hub.values(), default=0) or 1.0
         hub = {url: score / max_hub for url, score in new_hub.items()}
 
         # extract top authorities and hubs
@@ -351,7 +351,7 @@ class NetworkAnalyzer:
                 {
                     "community": name,
                     "size": len(members),
-                    "percentage": (len(members) / len(self.url_data)) * 100,
+                    "percentage": (len(members) / len(self.url_data) * 100) if self.url_data else 0.0,
                 }
                 for name, members in sorted_communities[:20]
             ],
