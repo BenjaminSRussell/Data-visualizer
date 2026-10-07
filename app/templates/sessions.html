@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Sessions - Data Visualizer{% endblock %}
+{% block nav_sessions %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Crawl Sessions</h2>
+    <p>Session status from <code>GET /api/sessions</code>.</p>
+    <div class="filter-group">
+        <select id="status-filter">
+            <option value="">All statuses</option>
+            <option value="running">running</option>
+            <option value="completed">completed</option>
+            <option value="failed">failed</option>
+        </select>
+        <button class="btn" onclick="page=0; loadSessions()">Apply</button>
+    </div>
+</div>
+
+<div class="card">
+    <div id="sessions-error" class="error" style="display:none;" role="alert"></div>
+    <div id="sessions-empty" class="empty" style="display:none;">No sessions found.</div>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Status</th>
+                    <th>Processed</th>
+                    <th>Failed</th>
+                    <th>Started</th>
+                </tr>
+            </thead>
+            <tbody id="sessions-body">
+                <tr><td colspan="5" class="loading">Loading sessions...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <nav aria-label="Pagination">
+        <div class="pagination">
+            <button id="prev-btn" onclick="prevPage()" disabled>Previous</button>
+            <span id="page-info" style="padding: 0.5rem 1rem;">Page 1</span>
+            <button id="next-btn" onclick="nextPage()">Next</button>
+        </div>
+    </nav>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let page = 0;
+    const pageSize = 50;
+    let hasMore = false;
+
+    async function loadSessions() {
+        const body = document.getElementById('sessions-body');
+        const err = document.getElementById('sessions-error');
+        const empty = document.getElementById('sessions-empty');
+        const status = document.getElementById('status-filter').value;
+        err.style.display = 'none';
+        empty.style.display = 'none';
+        body.innerHTML = '<tr><td colspan="5" class="loading">Loading sessions...</td></tr>';
+        try {
+            let url = `/api/sessions?limit=${pageSize}&offset=${page * pageSize}`;
+            if (status) url += `&status=${encodeURIComponent(status)}`;
+            const resp = await fetch(url);
+            if (resp.status === 503) {
+                throw new Error('Service unavailable (503). Database may be down.');
+            }
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const payload = await resp.json();
+            const list = payload.data || payload.sessions || payload || [];
+            const rows = Array.isArray(list) ? list : [];
+            hasMore = rows.length >= pageSize;
+            if (!rows.length) {
+                body.innerHTML = '';
+                empty.style.display = 'block';
+            } else {
+                body.innerHTML = rows.map(r => `<tr>
+                    <td>${r.id ?? ''}</td>
+                    <td>${r.status ?? ''}</td>
+                    <td>${r.processed_count ?? r.processed ?? ''}</td>
+                    <td>${r.failed_count ?? r.failed ?? ''}</td>
+                    <td>${r.started_at ?? r.start_time ?? ''}</td>
+                </tr>`).join('');
+            }
+            document.getElementById('page-info').textContent = `Page ${page + 1}`;
+            document.getElementById('prev-btn').disabled = page === 0;
+            document.getElementById('next-btn').disabled = !hasMore;
+        } catch (e) {
+            body.innerHTML = '';
+            err.style.display = 'block';
+            err.textContent = e.message || String(e);
+        }
+    }
+    function prevPage() { if (page > 0) { page--; loadSessions(); } }
+    function nextPage() { if (hasMore) { page++; loadSessions(); } }
+    loadSessions();
+</script>
+{% endblock %}

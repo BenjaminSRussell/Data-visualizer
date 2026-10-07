@@ -162,6 +162,26 @@ async def patterns_page(request: Request):
         return HTMLResponse(content="<h1>Error loading patterns page</h1>", status_code=500)
 
 
+@app.get("/domains", response_class=HTMLResponse, tags=["ui"])
+async def domains_page(request: Request):
+    """Domains list page (backed by GET /api/domains)."""
+    try:
+        return templates.TemplateResponse("domains.html", {"request": request})
+    except Exception as template_error:
+        logger.error(f"Template rendering error: {template_error}")
+        return HTMLResponse(content="<h1>Error loading domains page</h1>", status_code=500)
+
+
+@app.get("/sessions", response_class=HTMLResponse, tags=["ui"])
+async def sessions_page(request: Request):
+    """Crawl sessions page (backed by GET /api/sessions)."""
+    try:
+        return templates.TemplateResponse("sessions.html", {"request": request})
+    except Exception as template_error:
+        logger.error(f"Template rendering error: {template_error}")
+        return HTMLResponse(content="<h1>Error loading sessions page</h1>", status_code=500)
+
+
 if __name__ == "__main__":
     import uvicorn
 
