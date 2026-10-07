@@ -9,8 +9,8 @@ Detects:
 """
 
 import re
-from typing import List, Dict
 from collections import Counter, defaultdict
+from typing import Dict, List
 from urllib.parse import urlparse
 
 
@@ -47,7 +47,7 @@ class PatternRecognizer:
             "file_patterns": self._find_file_patterns(url_data),
         }
 
-        print(f"Pattern analysis done")
+        print("Pattern analysis done")
 
         return results
 

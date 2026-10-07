@@ -1,14 +1,15 @@
 """Database connection and session management with robust error handling."""
 
-import os
 import logging
-from typing import Generator, Optional
+import os
 from contextlib import contextmanager
-from sqlalchemy import create_engine, text, inspect
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
-from sqlalchemy.pool import QueuePool, Pool
-from sqlalchemy.exc import SQLAlchemyError, OperationalError
+from typing import Generator, Optional
+
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy.pool import Pool, QueuePool
 
 logger = logging.getLogger(__name__)
 

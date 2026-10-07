@@ -4,10 +4,10 @@ Comprehensive integration test with real data.
 Tests all functionality end-to-end with actual crawled URLs.
 """
 
-import os
-import sys
 import json
+import os
 import sqlite3
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -45,7 +45,8 @@ def setup_test_database():
     conn = sqlite3.connect("test_integration.db")
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE urls (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             url TEXT UNIQUE NOT NULL,
@@ -58,9 +59,11 @@ def setup_test_database():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
+    """
+    )
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE classifications (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             url_id INTEGER,
@@ -70,9 +73,11 @@ def setup_test_database():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (url_id) REFERENCES urls(id) ON DELETE CASCADE
         )
-    """)
+    """
+    )
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE patterns (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pattern_type TEXT,
@@ -81,9 +86,11 @@ def setup_test_database():
             confidence REAL,
             discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
+    """
+    )
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE crawl_sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT UNIQUE NOT NULL,
@@ -94,7 +101,8 @@ def setup_test_database():
             completed_at TIMESTAMP,
             status TEXT DEFAULT 'processing'
         )
-    """)
+    """
+    )
 
     conn.commit()
     conn.close()
@@ -166,13 +174,15 @@ def load_real_data():
         (total_loaded, total_loaded),
     )
 
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO patterns (pattern_type, pattern_value, frequency, confidence)
         VALUES
         ('domain', 'hartford.edu', 500, 0.95),
         ('extension', 'aspx', 300, 0.90),
         ('status', '200', 450, 0.98)
-    """)
+    """
+    )
 
     conn.commit()
     conn.close()
@@ -185,7 +195,7 @@ def test_imports():
     """Test module imports."""
     print("\n[3/10] Testing module imports...")
     try:
-        from app import database, datasets, api, main, config
+        from app import api, config, database, datasets, main
 
         print("  [OK] All modules imported")
         return True
@@ -198,7 +208,7 @@ def test_database_connection():
     """Test database connectivity."""
     print("\n[4/10] Testing database connection...")
     try:
-        from app.database import test_connection, get_table_names
+        from app.database import get_table_names, test_connection
 
         connected = test_connection(max_retries=2)
         if not connected:
@@ -219,7 +229,7 @@ def test_dynamic_schema_discovery():
     print("\n[5/10] Testing dynamic schema discovery...")
     try:
         from app.database import get_session
-        from app.datasets import discover_tables, discover_columns, get_all_datasets
+        from app.datasets import discover_columns, discover_tables, get_all_datasets
 
         with get_session() as session:
             tables = discover_tables(session)
@@ -283,16 +293,17 @@ def test_api_endpoints_with_real_data():
     """Test API endpoints with real data."""
     print("\n[7/10] Testing API endpoints with real data...")
     try:
-        from app.database import get_session
         from app import datasets
+        from app.database import get_session
 
         with get_session() as session:
             all_datasets = datasets.get_all_datasets(session)
             print(f"  [OK] {len(all_datasets)} datasets available for API")
 
-        from app.database import get_db
-        from app import models
         from sqlalchemy import func
+
+        from app import models
+        from app.database import get_db
 
         for db in get_db():
             url_count = db.query(func.count(models.URL.id)).scalar()
@@ -315,9 +326,10 @@ def test_data_integrity():
     """Test data integrity and queries."""
     print("\n[8/10] Testing data integrity...")
     try:
-        from app.database import get_session
-        from app import models
         from sqlalchemy import func, select
+
+        from app import models
+        from app.database import get_session
 
         with get_session() as session:
             url_count = session.query(func.count(models.URL.id)).scalar()
@@ -359,9 +371,9 @@ def test_error_handling():
     """Test error handling."""
     print("\n[9/10] Testing error handling...")
     try:
+        from app import models
         from app.database import get_session
         from app.datasets import execute_dataset_query, validate_identifier
-        from app import models
 
         with get_session() as session:
             try:
@@ -403,6 +415,7 @@ def test_performance():
     print("\n[10/10] Testing performance...")
     try:
         import time
+
         from app.database import get_session
         from app.datasets import execute_dataset_query
 

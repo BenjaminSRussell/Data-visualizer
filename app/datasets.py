@@ -4,11 +4,12 @@ Dynamic dataset management with SQL injection prevention and automatic schema di
 
 import logging
 import re
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
-from sqlalchemy import text, inspect
-from sqlalchemy.orm import Session
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +129,7 @@ PREDEFINED_DATASETS = {
         description="URLs grouped by domain with counts",
         table_name="urls",
         is_custom=True,
-        columns=['domain', 'url_count', 'file_types', 'last_crawl', 'success_rate'],
+        columns=["domain", "url_count", "file_types", "last_crawl", "success_rate"],
         sql_query="""
             SELECT
                 domain,
@@ -147,7 +148,7 @@ PREDEFINED_DATASETS = {
         description="Classified URLs with categories and confidence scores",
         table_name="classifications",
         is_custom=True,
-        columns=['id', 'category', 'confidence', 'model_version', 'url', 'domain', 'created_at'],
+        columns=["id", "category", "confidence", "model_version", "url", "domain", "created_at"],
         sql_query="""
             SELECT
                 c.id,
@@ -167,7 +168,19 @@ PREDEFINED_DATASETS = {
         description="Detailed page metadata including content analysis",
         table_name="page_metadata",
         is_custom=True,
-        columns=['id', 'title', 'description', 'language', 'word_count', 'has_images', 'has_videos', 'has_forms', 'url', 'domain', 'extracted_at'],
+        columns=[
+            "id",
+            "title",
+            "description",
+            "language",
+            "word_count",
+            "has_images",
+            "has_videos",
+            "has_forms",
+            "url",
+            "domain",
+            "extracted_at",
+        ],
         sql_query="""
             SELECT
                 pm.id,
@@ -191,7 +204,16 @@ PREDEFINED_DATASETS = {
         description="Comprehensive domain-level statistics",
         table_name="urls",
         is_custom=True,
-        columns=['domain', 'total_urls', 'successful_urls', 'error_urls', 'unique_extensions', 'first_crawl', 'last_crawl', 'html_percentage'],
+        columns=[
+            "domain",
+            "total_urls",
+            "successful_urls",
+            "error_urls",
+            "unique_extensions",
+            "first_crawl",
+            "last_crawl",
+            "html_percentage",
+        ],
         sql_query="""
             SELECT
                 domain,
@@ -214,7 +236,7 @@ PREDEFINED_DATASETS = {
         description="Distribution of content types across all URLs",
         table_name="urls",
         is_custom=True,
-        columns=['content_type', 'count', 'percentage'],
+        columns=["content_type", "count", "percentage"],
         sql_query="""
             SELECT
                 content_type,
@@ -231,7 +253,7 @@ PREDEFINED_DATASETS = {
         description="Distribution of HTTP status codes",
         table_name="urls",
         is_custom=True,
-        columns=['status_code', 'count', 'percentage'],
+        columns=["status_code", "count", "percentage"],
         sql_query="""
             SELECT
                 status_code,
@@ -315,8 +337,7 @@ def build_safe_where_clause(
             raise ValueError(f"Invalid filter column name: {column_name}")
         if allowed is not None and column_name not in allowed:
             raise ValueError(
-                f"Unknown filter column '{column_name}'. "
-                f"Allowed: {sorted(allowed)}"
+                f"Unknown filter column '{column_name}'. " f"Allowed: {sorted(allowed)}"
             )
 
         param_name = f"filter_{column_name}"

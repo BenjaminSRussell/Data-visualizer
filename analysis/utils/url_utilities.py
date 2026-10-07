@@ -6,9 +6,9 @@ Purpose: Single source of truth for all URL parsing, decomposition, and
          across multiple analyzer modules.
 """
 
-from typing import Dict, List, Optional
-from urllib.parse import urlparse, urljoin, unquote
 from collections import Counter
+from typing import Dict, List, Optional
+from urllib.parse import unquote, urljoin, urlparse
 
 
 def parse_url_components(url: str) -> Dict:

@@ -6,8 +6,9 @@ Purpose: Single source of truth for depth distribution, depth patterns,
          calculations across multiple analyzer modules.
 """
 
-from typing import Dict, List
 from collections import Counter, defaultdict
+from typing import Dict, List
+
 from analysis.utils.url_utilities import get_path_depth, parse_url_components
 
 

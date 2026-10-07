@@ -7,8 +7,8 @@ Purpose: Track scraper performance metrics over time to identify trends,
 
 import json
 from datetime import datetime
-from typing import Dict, List, Optional
 from pathlib import Path
+from typing import Dict, List, Optional
 
 
 class MetricsTracker:
@@ -382,7 +382,7 @@ class MetricsTracker:
         regressions = comparison.get("regressions", [])
 
         summary = []
-        summary.append(f"Performance Comparison:")
+        summary.append("Performance Comparison:")
         summary.append(f"  Improvements: {len(improvements)}")
         summary.append(f"  Regressions: {len(regressions)}")
 

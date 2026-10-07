@@ -21,6 +21,7 @@ if str(ROOT) not in sys.path:
 try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
+
     from analysis.database.models import Base
 
     SQLALCHEMY_AVAILABLE = True

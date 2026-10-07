@@ -15,10 +15,15 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from config import Settings, get_settings
-from analysis.analyzers import network_analyzer, semantic_path_analyzer, statistical_analyzer
-from analysis.analyzers import subdomain_analyzer, url_component_parser
+from analysis.analyzers import (
+    network_analyzer,
+    semantic_path_analyzer,
+    statistical_analyzer,
+    subdomain_analyzer,
+    url_component_parser,
+)
 from analysis.mappers import pathway_mapper
+from config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -281,8 +286,8 @@ class MasterPipeline:
         self.logger.info("Starting pattern recognition analysis")
 
         try:
-            from analysis.url_normalizer import URLNormalizer
             from analysis.pattern_recognition import PatternRecognizer
+            from analysis.url_normalizer import URLNormalizer
         except ImportError as exc:
             self.logger.warning("Pattern recognition dependencies not available: %s", exc)
             self.results["mlx"] = {"error": "Pattern recognition modules not found"}

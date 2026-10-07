@@ -8,9 +8,9 @@ Usage:
     python scripts/check_quality.py [data_file]
 """
 
-import sys
-import json
 import argparse
+import json
+import sys
 from pathlib import Path
 
 
@@ -70,7 +70,11 @@ def check_quality(data_file: str):
         else (
             "B"
             if overall_score >= 80
-            else "C" if overall_score >= 70 else "D" if overall_score >= 60 else "F"
+            else "C"
+            if overall_score >= 70
+            else "D"
+            if overall_score >= 60
+            else "F"
         )
     )
 

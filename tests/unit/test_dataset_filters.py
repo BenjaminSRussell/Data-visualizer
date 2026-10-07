@@ -1,5 +1,6 @@
 import pytest
-from app.datasets import build_safe_where_clause, Dataset, _default_order_by
+
+from app.datasets import Dataset, _default_order_by, build_safe_where_clause
 
 
 def test_unknown_filter_column_raises():
