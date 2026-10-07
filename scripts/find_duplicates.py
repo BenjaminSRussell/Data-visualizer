@@ -31,12 +31,12 @@ def find_duplicates(data_file: str, by_fragment: bool = False, by_params: bool =
 
     # Load data
     urls = []
-    with open(data_path, 'r') as f:
+    with open(data_path) as f:
         for line in f:
             try:
                 item = json.loads(line)
-                if item.get('url'):
-                    urls.append(item['url'])
+                if item.get("url"):
+                    urls.append(item["url"])
             except json.JSONDecodeError:
                 pass
 
@@ -105,18 +105,21 @@ def find_param_duplicates(urls):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Find duplicate URLs')
-    parser.add_argument('data_file', nargs='?', default='crawl_results.jsonl',
-                       help='Path to JSONL data file')
-    parser.add_argument('--by-fragment', action='store_true',
-                       help='Find URLs differing only by fragment')
-    parser.add_argument('--by-params', action='store_true',
-                       help='Find URLs differing only by parameters')
+    parser = argparse.ArgumentParser(description="Find duplicate URLs")
+    parser.add_argument(
+        "data_file", nargs="?", default="crawl_results.jsonl", help="Path to JSONL data file"
+    )
+    parser.add_argument(
+        "--by-fragment", action="store_true", help="Find URLs differing only by fragment"
+    )
+    parser.add_argument(
+        "--by-params", action="store_true", help="Find URLs differing only by parameters"
+    )
 
     args = parser.parse_args()
 
     return find_duplicates(args.data_file, args.by_fragment, args.by_params)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

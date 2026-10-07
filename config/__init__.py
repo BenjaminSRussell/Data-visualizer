@@ -120,8 +120,12 @@ def get_settings() -> Settings:
             output_dir=_resolve_path(_env_str("ANALYSIS_OUTPUT_DIR", "data/output")),
         ),
         urls=URLSourceSettings(
-            baseline_file=_resolve_path(_env_str("ANALYSIS_BASELINE_FILE", "data/input/site_01.jsonl")),
-            current_file=_resolve_path(_env_str("ANALYSIS_CURRENT_FILE", "data/input/site_02.jsonl")),
+            baseline_file=_resolve_path(
+                _env_str("ANALYSIS_BASELINE_FILE", "data/input/site_01.jsonl")
+            ),
+            current_file=_resolve_path(
+                _env_str("ANALYSIS_CURRENT_FILE", "data/input/site_02.jsonl")
+            ),
         ),
         performance=PerformanceSettings(
             max_workers=_env_int("ANALYSIS_MAX_WORKERS", 6),

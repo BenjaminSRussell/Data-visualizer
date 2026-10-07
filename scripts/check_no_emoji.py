@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fail if committed Python sources contain emoji characters."""
+
 from __future__ import annotations
 
 import re
@@ -8,11 +9,7 @@ from pathlib import Path
 
 # Broad emoji ranges (sufficient for forbidding decorative emoji in .py)
 EMOJI_RE = re.compile(
-    "["
-    "\U0001F300-\U0001FAFF"
-    "\U00002700-\U000027BF"
-    "\U0001F1E0-\U0001F1FF"
-    "]+"
+    "[" "\U0001f300-\U0001faff" "\U00002700-\U000027bf" "\U0001f1e0-\U0001f1ff" "]+"
 )
 
 

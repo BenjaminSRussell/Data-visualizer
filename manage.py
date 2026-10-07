@@ -23,13 +23,24 @@ def run_command(command: List[str], cwd: Optional[Path] = None) -> int:
 
 @APP.command()
 def analyze(
-    input_path: Path = typer.Option(Path("data/input/site_02.jsonl"), "--input", "-i", exists=True, file_okay=True),
+    input_path: Path = typer.Option(
+        Path("data/input/site_02.jsonl"), "--input", "-i", exists=True, file_okay=True
+    ),
     output_dir: Path = typer.Option(OUTPUT_ROOT, "--output", "-o"),
     analysis_type: str = typer.Option("all", "--type", "-t", help="basic|enhanced|mlx|all"),
     skip_validation: bool = typer.Option(False, "--skip-validation"),
 ) -> None:
     """Run analysis pipeline"""
-    command = [str(RUN_SCRIPT), "analyze", "--input", str(input_path), "--output", str(output_dir), "--type", analysis_type]
+    command = [
+        str(RUN_SCRIPT),
+        "analyze",
+        "--input",
+        str(input_path),
+        "--output",
+        str(output_dir),
+        "--type",
+        analysis_type,
+    ]
     if skip_validation:
         command.append("--skip-validation")
     raise typer.Exit(run_command(command))
@@ -38,7 +49,7 @@ def analyze(
 @APP.command()
 def validate(
     input_path: Path = typer.Argument(..., exists=True, file_okay=True),
-    strict: bool = typer.Option(False, "--strict")
+    strict: bool = typer.Option(False, "--strict"),
 ) -> None:
     """Validate JSONL data"""
     command = ["python3", "analysis/data_validator.py", str(input_path)]

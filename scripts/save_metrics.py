@@ -18,11 +18,12 @@ from analysis.tracking import create_tracker
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Save metrics snapshot')
-    parser.add_argument('run_id', nargs='?', help='Optional run identifier')
-    parser.add_argument('--metadata', nargs='*', help='Metadata in key=value format')
-    parser.add_argument('--results-file', default='output/summary.json',
-                       help='Path to analysis results JSON')
+    parser = argparse.ArgumentParser(description="Save metrics snapshot")
+    parser.add_argument("run_id", nargs="?", help="Optional run identifier")
+    parser.add_argument("--metadata", nargs="*", help="Metadata in key=value format")
+    parser.add_argument(
+        "--results-file", default="output/summary.json", help="Path to analysis results JSON"
+    )
 
     args = parser.parse_args()
 
@@ -33,26 +34,22 @@ def main():
         print("Run the analysis first to generate results.")
         return 1
 
-    with open(results_path, 'r') as f:
+    with open(results_path) as f:
         analysis_results = json.load(f)
 
     # Parse metadata
     metadata = {}
     if args.metadata:
         for item in args.metadata:
-            if '=' in item:
-                key, value = item.split('=', 1)
+            if "=" in item:
+                key, value = item.split("=", 1)
                 metadata[key] = value
 
     # Create tracker and save snapshot
     tracker = create_tracker()
     key_metrics = tracker.extract_key_metrics(analysis_results)
 
-    snapshot_id = tracker.save_snapshot(
-        metrics=key_metrics,
-        run_id=args.run_id,
-        metadata=metadata
-    )
+    snapshot_id = tracker.save_snapshot(metrics=key_metrics, run_id=args.run_id, metadata=metadata)
 
     print(f"Metrics saved with ID: {snapshot_id}")
 
@@ -61,12 +58,11 @@ def main():
     if len(snapshots) >= 2:
         print("Quick comparison with previous run:")
         comparison = tracker.compare_snapshots(
-            snapshots[-2]['snapshot_id'],
-            snapshots[-1]['snapshot_id']
+            snapshots[-2]["snapshot_id"], snapshots[-1]["snapshot_id"]
         )
 
-        improvements = comparison.get('improvements', [])
-        regressions = comparison.get('regressions', [])
+        improvements = comparison.get("improvements", [])
+        regressions = comparison.get("regressions", [])
 
         print(f"Improvements: {len(improvements)}")
         if improvements:
@@ -83,5 +79,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

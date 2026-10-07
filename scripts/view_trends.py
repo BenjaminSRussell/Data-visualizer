@@ -21,9 +21,9 @@ from analysis.tracking import create_tracker
 def format_timestamp(iso_timestamp: str) -> str:
     """Format ISO timestamp to readable format."""
     try:
-        dt = datetime.fromisoformat(iso_timestamp.replace('Z', '+00:00'))
-        return dt.strftime('%Y-%m-%d %H:%M:%S')
-    except:
+        dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
         return iso_timestamp
 
 
@@ -33,26 +33,24 @@ def print_summary_report(tracker):
 
     report = tracker.generate_summary_report()
 
-    if report['status'] == 'insufficient_data':
-        print(report['message'])
+    if report["status"] == "insufficient_data":
+        print(report["message"])
         print("Run your scraper and store metrics with: python save_metrics.py")
         return
 
     print(f"Total snapshots: {report['total_snapshots']}")
-    latest = report['latest_snapshot']
+    latest = report["latest_snapshot"]
     print(f"Latest snapshot: {latest['snapshot_id']} ({format_timestamp(latest['timestamp'])})")
 
-    print(report['summary'])
+    print(report["summary"])
 
     print("Key metric trends (last 5 runs):")
-    for metric_name, trend in report['trends'].items():
-        if trend['data_points']:
-            first = trend['data_points'][0]['value']
-            last = trend['data_points'][-1]['value']
+    for metric_name, trend in report["trends"].items():
+        if trend["data_points"]:
+            first = trend["data_points"][0]["value"]
+            last = trend["data_points"][-1]["value"]
 
-            print(
-                f"{metric_name}: first={first:.2f}, latest={last:.2f}, trend={trend['trend']}"
-            )
+            print(f"{metric_name}: first={first:.2f}, latest={last:.2f}, trend={trend['trend']}")
 
 
 def print_snapshot_list(tracker):
@@ -70,8 +68,8 @@ def print_snapshot_list(tracker):
 
     for snapshot in snapshots:
         metadata_str = ""
-        if snapshot.get('metadata'):
-            metadata_items = [f"{k}={v}" for k, v in snapshot['metadata'].items()]
+        if snapshot.get("metadata"):
+            metadata_items = [f"{k}={v}" for k, v in snapshot["metadata"].items()]
             metadata_str = f" ({', '.join(metadata_items)})"
 
         print(f"{snapshot['snapshot_id']}")
@@ -98,23 +96,22 @@ def print_comparison(tracker, id1, id2):
     )
 
     # Improvements
-    improvements = comparison.get('improvements', [])
+    improvements = comparison.get("improvements", [])
     if improvements:
         print(f"Improvements ({len(improvements)}):")
-        for imp in sorted(improvements, key=lambda x: abs(x['percent']), reverse=True):
+        for imp in sorted(improvements, key=lambda x: abs(x["percent"]), reverse=True):
             print(f"{imp['metric']}: {imp['percent']:+8.1f}% (delta {imp['delta']:+.2f})")
 
     # Regressions
-    regressions = comparison.get('regressions', [])
+    regressions = comparison.get("regressions", [])
     if regressions:
         print(f"Regressions ({len(regressions)}):")
-        for reg in sorted(regressions, key=lambda x: abs(x['percent']), reverse=True):
+        for reg in sorted(regressions, key=lambda x: abs(x["percent"]), reverse=True):
             print(f"{reg['metric']}: {reg['percent']:+8.1f}% (delta {reg['delta']:+.2f})")
 
     # Stable metrics
-    metrics_delta = comparison.get('metrics_delta', {})
-    stable = [k for k, v in metrics_delta.items()
-              if abs(v['percent_change']) < 1]
+    metrics_delta = comparison.get("metrics_delta", {})
+    stable = [k for k, v in metrics_delta.items() if abs(v["percent_change"]) < 1]
 
     if stable:
         print(f"Stable ({len(stable)} metrics):")
@@ -129,7 +126,7 @@ def print_metric_trend(tracker, metric_name):
 
     trend = tracker.generate_trend_report(metric_name, limit=20)
 
-    if not trend['data_points']:
+    if not trend["data_points"]:
         print(f"No data found for metric: {metric_name}")
         return
 
@@ -137,13 +134,13 @@ def print_metric_trend(tracker, metric_name):
     print(f"Data points: {len(trend['data_points'])}")
 
     # Print data points
-    for i, point in enumerate(trend['data_points'], 1):
-        timestamp = format_timestamp(point['timestamp'])
-        value = point['value']
+    for i, point in enumerate(trend["data_points"], 1):
+        timestamp = format_timestamp(point["timestamp"])
+        value = point["value"]
 
         # Calculate change from previous
         if i > 1:
-            prev_value = trend['data_points'][i-2]['value']
+            prev_value = trend["data_points"][i - 2]["value"]
             if isinstance(value, (int, float)) and isinstance(prev_value, (int, float)):
                 change = value - prev_value
                 percent = (change / prev_value * 100) if prev_value != 0 else 0
@@ -155,12 +152,12 @@ def print_metric_trend(tracker, metric_name):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='View performance trends')
-    parser.add_argument('--list', action='store_true',
-                       help='List all saved snapshots')
-    parser.add_argument('--compare', nargs=2, metavar=('ID1', 'ID2'),
-                       help='Compare two specific snapshots')
-    parser.add_argument('--metric', help='Show trend for specific metric')
+    parser = argparse.ArgumentParser(description="View performance trends")
+    parser.add_argument("--list", action="store_true", help="List all saved snapshots")
+    parser.add_argument(
+        "--compare", nargs=2, metavar=("ID1", "ID2"), help="Compare two specific snapshots"
+    )
+    parser.add_argument("--metric", help="Show trend for specific metric")
 
     args = parser.parse_args()
 
@@ -178,5 +175,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
