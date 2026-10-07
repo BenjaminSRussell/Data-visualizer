@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Domains - Data Visualizer{% endblock %}
+{% block nav_domains %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Domains</h2>
+    <p>Hosts ranked by URL count from <code>GET /api/domains</code>.</p>
+</div>
+
+<div class="card">
+    <div id="domains-status" role="status" aria-live="polite" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;"></div>
+    <div id="domains-error" class="error" style="display:none;" role="alert"></div>
+    <div id="domains-empty" class="empty" style="display:none;">No domains found.</div>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Domain</th>
+                    <th>URL count</th>
+                </tr>
+            </thead>
+            <tbody id="domains-body">
+                <tr><td colspan="2" class="loading">Loading domains...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <nav aria-label="Pagination">
+        <div class="pagination">
+            <button id="prev-btn" onclick="prevPage()" disabled>Previous</button>
+            <span id="page-info" style="padding: 0.5rem 1rem;">Page 1</span>
+            <button id="next-btn" onclick="nextPage()">Next</button>
+        </div>
+    </nav>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let page = 0;
+    const pageSize = 50;
+    let hasMore = false;
+
+    async function loadDomains() {
+        const body = document.getElementById('domains-body');
+        const err = document.getElementById('domains-error');
+        const empty = document.getElementById('domains-empty');
+        err.style.display = 'none';
+        empty.style.display = 'none';
+        body.innerHTML = '<tr><td colspan="2" class="loading">Loading domains...</td></tr>';
+        try {
+            const resp = await fetch(`/api/domains?limit=${pageSize}&offset=${page * pageSize}`);
+            if (resp.status === 503) {
+                throw new Error('Service unavailable (503). Database may be down.');
+            }
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const payload = await resp.json();
+            const rows = payload.data || payload.domains || payload || [];
+            const list = Array.isArray(rows) ? rows : [];
+            hasMore = list.length >= pageSize;
+            if (!list.length) {
+                body.innerHTML = '';
+                empty.style.display = 'block';
+            } else {
+                body.innerHTML = list.map(r => {
+                    const domain = r.domain || r.name || r[0] || '';
+                    const count = r.url_count ?? r.count ?? r[1] ?? 0;
+                    return `<tr><td>${domain}</td><td>${count}</td></tr>`;
+                }).join('');
+            }
+            document.getElementById('page-info').textContent = `Page ${page + 1}`;
+            document.getElementById('prev-btn').disabled = page === 0;
+            document.getElementById('next-btn').disabled = !hasMore;
+            document.getElementById('domains-status').textContent = `Loaded ${list.length} domains`;
+        } catch (e) {
+            body.innerHTML = '';
+            err.style.display = 'block';
+            err.textContent = e.message || String(e);
+        }
+    }
+    function prevPage() { if (page > 0) { page--; loadDomains(); } }
+    function nextPage() { if (hasMore) { page++; loadDomains(); } }
+    loadDomains();
+</script>
+{% endblock %}
