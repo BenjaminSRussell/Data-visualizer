@@ -44,15 +44,15 @@ class PathwayMapper:
         self._build_graph(data)
 
         results = {
-            'architecture': self._analyze_architecture(),
-            'entry_points': self._find_entry_points(),
-            'navigation_hubs': self._find_navigation_hubs(),
-            'dead_ends': self._find_dead_ends(),
-            'pathways': self._extract_common_pathways(),
-            'depth_flow': self._analyze_depth_flow(),
-            'connectivity': self._analyze_connectivity(),
-            'breadcrumb_analysis': self._analyze_breadcrumbs(),
-            'page_importance': self._calculate_page_importance()
+            "architecture": self._analyze_architecture(),
+            "entry_points": self._find_entry_points(),
+            "navigation_hubs": self._find_navigation_hubs(),
+            "dead_ends": self._find_dead_ends(),
+            "pathways": self._extract_common_pathways(),
+            "depth_flow": self._analyze_depth_flow(),
+            "connectivity": self._analyze_connectivity(),
+            "breadcrumb_analysis": self._analyze_breadcrumbs(),
+            "page_importance": self._calculate_page_importance(),
         }
 
         return results
@@ -61,17 +61,17 @@ class PathwayMapper:
         """Build URL relationship graph."""
 
         for item in data:
-            url = item.get('url', '')
+            url = item.get("url", "")
             self.url_to_data[url] = item
 
             # record parent-child relationships
-            parent = item.get('parent_url')
+            parent = item.get("parent_url")
             if parent and parent != url:
                 self.parent_child_map[parent].append(url)
                 self.child_parent_map[url] = parent
 
             # populate link graph
-            links = item.get('links', [])
+            links = item.get("links", [])
             base_url = get_base_url(url)  # Use shared utility
 
             for link in links:
@@ -89,43 +89,48 @@ class PathwayMapper:
         max_depth_value = get_max_depth(data_list)
 
         architecture = {
-            'total_pages': len(self.url_to_data),
-            'total_relationships': sum(len(children) for children in self.parent_child_map.values()),
-            'max_depth': max_depth_value,
-            'avg_children_per_parent': 0,
-            'orphan_pages': 0,
-            'architecture_type': 'unknown'
+            "total_pages": len(self.url_to_data),
+            "total_relationships": sum(
+                len(children) for children in self.parent_child_map.values()
+            ),
+            "max_depth": max_depth_value,
+            "avg_children_per_parent": 0,
+            "orphan_pages": 0,
+            "architecture_type": "unknown",
         }
 
         # calculate average children per parent
         if self.parent_child_map:
-            architecture['avg_children_per_parent'] = (
-                sum(len(children) for children in self.parent_child_map.values()) /
-                len(self.parent_child_map)
-            )
+            architecture["avg_children_per_parent"] = sum(
+                len(children) for children in self.parent_child_map.values()
+            ) / len(self.parent_child_map)
 
         # find orphan pages without parents
-        orphans = [url for url in self.url_to_data if url not in self.child_parent_map and url not in self.parent_child_map]
-        architecture['orphan_pages'] = len(orphans)
+        orphans = [
+            url
+            for url in self.url_to_data
+            if url not in self.child_parent_map and url not in self.parent_child_map
+        ]
+        architecture["orphan_pages"] = len(orphans)
 
         # determine architecture type
-        architecture['architecture_type'] = self._classify_architecture(architecture)
+        architecture["architecture_type"] = self._classify_architecture(architecture)
 
         return architecture
 
     def _classify_architecture(self, arch: Dict) -> str:
         """Classify site architecture type."""
-        max_depth = arch['max_depth']
-        avg_children = arch['avg_children_per_parent']
+        max_depth = arch["max_depth"]
+        avg_children = arch["avg_children_per_parent"]
 
         if max_depth <= 3 and avg_children > 10:
-            return 'flat'
+            return "flat"
         elif max_depth > 5 and avg_children < 5:
-            return 'deep'
+            return "deep"
         elif avg_children > 7:
-            return 'wide'
+            return "wide"
         else:
-            return 'balanced'
+            return "balanced"
 
     def _find_entry_points(self) -> Dict:
         """Find potential entry points (low depth, high importance)."""
@@ -133,27 +138,23 @@ class PathwayMapper:
         entry_points = []
 
         for url, item in self.url_to_data.items():
-            depth = item.get('depth', 0)
+            depth = item.get("depth", 0)
 
             # treat depth 0-2 pages as entry candidates
             if depth <= 2:
-                entry_points.append({
-                    'url': url,
-                    'depth': depth,
-                    'children_count': len(self.parent_child_map.get(url, [])),
-                    'links_count': len(self.url_graph.get(url, set()))
-                })
+                entry_points.append(
+                    {
+                        "url": url,
+                        "depth": depth,
+                        "children_count": len(self.parent_child_map.get(url, [])),
+                        "links_count": len(self.url_graph.get(url, set())),
+                    }
+                )
 
         # sort entry points by combined child and link counts
-        entry_points.sort(
-            key=lambda x: x['children_count'] + x['links_count'],
-            reverse=True
-        )
+        entry_points.sort(key=lambda x: x["children_count"] + x["links_count"], reverse=True)
 
-        return {
-            'count': len(entry_points),
-            'top_entry_points': entry_points[:20]
-        }
+        return {"count": len(entry_points), "top_entry_points": entry_points[:20]}
 
     def _find_navigation_hubs(self) -> Dict:
         """Find navigation hub pages (high connectivity)."""
@@ -169,20 +170,19 @@ class PathwayMapper:
 
             # qualify hubs by high outbound reach
             if outbound > 20 or inbound > 10:
-                hubs.append({
-                    'url': url,
-                    'outbound_links': outbound,
-                    'inbound_links': inbound,
-                    'total_connectivity': outbound + inbound,
-                    'depth': item.get('depth', 0)
-                })
+                hubs.append(
+                    {
+                        "url": url,
+                        "outbound_links": outbound,
+                        "inbound_links": inbound,
+                        "total_connectivity": outbound + inbound,
+                        "depth": item.get("depth", 0),
+                    }
+                )
 
-        hubs.sort(key=lambda x: x['total_connectivity'], reverse=True)
+        hubs.sort(key=lambda x: x["total_connectivity"], reverse=True)
 
-        return {
-            'count': len(hubs),
-            'top_hubs': hubs[:20]
-        }
+        return {"count": len(hubs), "top_hubs": hubs[:20]}
 
     def _find_dead_ends(self) -> Dict:
         """Find dead-end pages (no outbound links)."""
@@ -193,16 +193,18 @@ class PathwayMapper:
             outbound = len(self.url_graph.get(url, set()))
 
             if outbound == 0:
-                dead_ends.append({
-                    'url': url,
-                    'depth': item.get('depth', 0),
-                    'has_parent': url in self.child_parent_map
-                })
+                dead_ends.append(
+                    {
+                        "url": url,
+                        "depth": item.get("depth", 0),
+                        "has_parent": url in self.child_parent_map,
+                    }
+                )
 
         return {
-            'count': len(dead_ends),
-            'percentage': (len(dead_ends) / len(self.url_to_data)) * 100 if self.url_to_data else 0,
-            'examples': dead_ends[:20]
+            "count": len(dead_ends),
+            "percentage": (len(dead_ends) / len(self.url_to_data)) * 100 if self.url_to_data else 0,
+            "examples": dead_ends[:20],
         }
 
     def _extract_common_pathways(self) -> Dict:
@@ -214,22 +216,17 @@ class PathwayMapper:
         for url in self.url_to_data:
             pathway = self._trace_pathway(url)
             if pathway:
-                pathway_str = ' -> '.join(self._simplify_urls(pathway))
+                pathway_str = " -> ".join(self._simplify_urls(pathway))
                 pathways[pathway_str] += 1
 
         # rank top pathways
-        sorted_pathways = sorted(
-            pathways.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )
+        sorted_pathways = sorted(pathways.items(), key=lambda x: x[1], reverse=True)
 
         return {
-            'total_unique_pathways': len(pathways),
-            'top_pathways': [
-                {'pathway': path, 'frequency': count}
-                for path, count in sorted_pathways[:30]
-            ]
+            "total_unique_pathways": len(pathways),
+            "top_pathways": [
+                {"pathway": path, "frequency": count} for path, count in sorted_pathways[:30]
+            ],
         }
 
     def _trace_pathway(self, url: str, max_depth: int = 10) -> List[str]:
@@ -256,18 +253,18 @@ class PathwayMapper:
         for url in urls:
             # Use shared utility for parsing
             components = parse_url_components(url)
-            path = components['path'].strip('/')
+            path = components["path"].strip("/")
 
             # use last segment or fallback to root
             if path:
-                segments = path.split('/')
+                segments = path.split("/")
                 # prefer last two segments when available
                 if len(segments) >= 2:
-                    simplified.append('/'.join(segments[-2:]))
+                    simplified.append("/".join(segments[-2:]))
                 else:
                     simplified.append(segments[-1])
             else:
-                simplified.append('root')
+                simplified.append("root")
 
         return simplified
 
@@ -279,24 +276,24 @@ class PathwayMapper:
 
         # Add link count information which is specific to pathway mapper
         for url, item in self.url_to_data.items():
-            depth = item.get('depth', 0)
+            depth = item.get("depth", 0)
             if depth in depth_flow_metrics:
                 # Add average links if not already present
-                if 'avg_links' not in depth_flow_metrics[depth]:
-                    depth_flow_metrics[depth]['avg_links'] = 0
-                    depth_flow_metrics[depth]['total_links'] = 0
+                if "avg_links" not in depth_flow_metrics[depth]:
+                    depth_flow_metrics[depth]["avg_links"] = 0
+                    depth_flow_metrics[depth]["total_links"] = 0
 
         # Calculate link metrics per depth
         link_counts = defaultdict(list)
         for url, item in self.url_to_data.items():
-            depth = item.get('depth', 0)
+            depth = item.get("depth", 0)
             links_count = len(self.url_graph.get(url, set()))
             link_counts[depth].append(links_count)
 
         # Add link averages to metrics
         for depth, links in link_counts.items():
             if depth in depth_flow_metrics:
-                depth_flow_metrics[depth]['avg_links'] = sum(links) / len(links) if links else 0
+                depth_flow_metrics[depth]["avg_links"] = sum(links) / len(links) if links else 0
 
         return depth_flow_metrics
 
@@ -318,11 +315,13 @@ class PathwayMapper:
         largest_component = max(len(comp) for comp in components) if components else 0
 
         connectivity = {
-            'total_components': len(components),
-            'largest_component_size': largest_component,
-            'largest_component_percentage': (largest_component / total_urls) * 100 if total_urls > 0 else 0,
-            'is_fully_connected': len(components) == 1,
-            'isolated_pages': sum(1 for comp in components if len(comp) == 1)
+            "total_components": len(components),
+            "largest_component_size": largest_component,
+            "largest_component_percentage": (
+                (largest_component / total_urls) * 100 if total_urls > 0 else 0
+            ),
+            "is_fully_connected": len(components) == 1,
+            "isolated_pages": sum(1 for comp in components if len(comp) == 1),
         }
 
         return connectivity
@@ -363,9 +362,9 @@ class PathwayMapper:
         """Analyze breadcrumb structure quality."""
 
         breadcrumb_quality = {
-            'clear_hierarchy': 0,
-            'unclear_hierarchy': 0,
-            'avg_breadcrumb_length': 0
+            "clear_hierarchy": 0,
+            "unclear_hierarchy": 0,
+            "avg_breadcrumb_length": 0,
         }
 
         total_length = 0
@@ -376,20 +375,21 @@ class PathwayMapper:
 
             # treat consistent depth as clear hierarchy
             expected_depth = len(pathway) - 1
-            actual_depth = item.get('depth', 0)
+            actual_depth = item.get("depth", 0)
 
             if expected_depth == actual_depth:
-                breadcrumb_quality['clear_hierarchy'] += 1
+                breadcrumb_quality["clear_hierarchy"] += 1
             else:
-                breadcrumb_quality['unclear_hierarchy'] += 1
+                breadcrumb_quality["unclear_hierarchy"] += 1
 
-        breadcrumb_quality['avg_breadcrumb_length'] = (
+        breadcrumb_quality["avg_breadcrumb_length"] = (
             total_length / len(self.url_to_data) if self.url_to_data else 0
         )
 
-        breadcrumb_quality['hierarchy_clarity_percentage'] = (
-            (breadcrumb_quality['clear_hierarchy'] / len(self.url_to_data)) * 100
-            if self.url_to_data else 0
+        breadcrumb_quality["hierarchy_clarity_percentage"] = (
+            (breadcrumb_quality["clear_hierarchy"] / len(self.url_to_data)) * 100
+            if self.url_to_data
+            else 0
         )
 
         return breadcrumb_quality
@@ -404,7 +404,7 @@ class PathwayMapper:
             score = 0
 
             # factor 1 rewards shallow depth
-            depth = item.get('depth', 0)
+            depth = item.get("depth", 0)
             score += max(0, 10 - depth) * 10
 
             # factor 2 rewards outbound reach
@@ -419,21 +419,21 @@ class PathwayMapper:
             children = len(self.parent_child_map.get(url, []))
             score += min(children, 30) * 3
 
-            importance_scores.append({
-                'url': url,
-                'importance_score': score,
-                'depth': depth,
-                'inbound_links': inbound,
-                'outbound_links': outbound,
-                'children_count': children
-            })
+            importance_scores.append(
+                {
+                    "url": url,
+                    "importance_score": score,
+                    "depth": depth,
+                    "inbound_links": inbound,
+                    "outbound_links": outbound,
+                    "children_count": children,
+                }
+            )
 
         # sort pages by importance
-        importance_scores.sort(key=lambda x: x['importance_score'], reverse=True)
+        importance_scores.sort(key=lambda x: x["importance_score"], reverse=True)
 
-        return {
-            'top_important_pages': importance_scores[:30]
-        }
+        return {"top_important_pages": importance_scores[:30]}
 
 
 def execute(data: List[Dict]) -> Dict:
@@ -456,7 +456,7 @@ def print_summary(results: Dict):
     print("Pathway mapping summary")
 
     # report architecture metrics
-    arch = results['architecture']
+    arch = results["architecture"]
     print("Site architecture:")
     print(f"Total pages: {arch['total_pages']:,}")
     print(f"Architecture type: {arch['architecture_type'].upper()}")
@@ -465,24 +465,24 @@ def print_summary(results: Dict):
     print(f"Orphan pages: {arch['orphan_pages']}")
 
     # report entry point highlights
-    entry = results['entry_points']
+    entry = results["entry_points"]
     print(f"Entry points: {entry['count']}")
-    if entry['top_entry_points']:
+    if entry["top_entry_points"]:
         print(f"Top entry point: {entry['top_entry_points'][0]['url']}")
 
     # report hub statistics
-    hubs = results['navigation_hubs']
+    hubs = results["navigation_hubs"]
     print(f"Navigation hubs: {hubs['count']}")
-    if hubs['top_hubs']:
-        top_hub = hubs['top_hubs'][0]
+    if hubs["top_hubs"]:
+        top_hub = hubs["top_hubs"][0]
         print(f"Top hub: {top_hub['url']} ({top_hub['total_connectivity']} connections)")
 
     # report dead-end metrics
-    dead = results['dead_ends']
+    dead = results["dead_ends"]
     print(f"Dead ends: {dead['count']} ({dead['percentage']:.1f}%)")
 
     # report connectivity status
-    conn = results['connectivity']
+    conn = results["connectivity"]
     print("Connectivity:")
     print(f"Components: {conn['total_components']}")
     print(f"Largest component: {conn['largest_component_percentage']:.1f}%")

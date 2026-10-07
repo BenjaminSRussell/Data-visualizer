@@ -34,7 +34,9 @@ def valid_record(url: str) -> dict:
 
 def test_validate_records_success(tmp_path):
     jsonl_path = tmp_path / "valid.jsonl"
-    write_jsonl(jsonl_path, [valid_record("https://example.com"), valid_record("https://example.com/about")])
+    write_jsonl(
+        jsonl_path, [valid_record("https://example.com"), valid_record("https://example.com/about")]
+    )
 
     result = validate_records(jsonl_path)
 

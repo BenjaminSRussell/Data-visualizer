@@ -1,4 +1,5 @@
 """Application configuration."""
+
 import os
 from typing import Optional
 
@@ -8,8 +9,7 @@ class Settings:
 
     # Database
     DATABASE_URL: str = os.getenv(
-        "DATABASE_URL",
-        "postgresql://user:password@localhost:5432/data_visualizer"
+        "DATABASE_URL", "postgresql://user:password@localhost:5432/data_visualizer"
     )
 
     # Server

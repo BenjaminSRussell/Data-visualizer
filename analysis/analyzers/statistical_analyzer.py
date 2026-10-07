@@ -41,15 +41,15 @@ class StatisticalAnalyzer:
         self._extract_features(data)
 
         results = {
-            'summary_stats': self._compute_summary_stats(),
-            'distributions': self._analyze_distributions(),
-            'correlations': self._compute_correlations(),
-            'anomalies': self._detect_anomalies(),
-            'depth_analysis': self._analyze_depth_patterns(),
-            'link_analysis': self._analyze_link_patterns(),
-            'url_health': self._compute_url_health(),
-            'temporal_patterns': self._analyze_temporal_patterns(data),
-            'content_analysis': self._analyze_content_patterns(data)
+            "summary_stats": self._compute_summary_stats(),
+            "distributions": self._analyze_distributions(),
+            "correlations": self._compute_correlations(),
+            "anomalies": self._detect_anomalies(),
+            "depth_analysis": self._analyze_depth_patterns(),
+            "link_analysis": self._analyze_link_patterns(),
+            "url_health": self._compute_url_health(),
+            "temporal_patterns": self._analyze_temporal_patterns(data),
+            "content_analysis": self._analyze_content_patterns(data),
         }
 
         return results
@@ -57,11 +57,11 @@ class StatisticalAnalyzer:
     def _extract_features(self, data: List[Dict]):
         """Extract numerical features from URL data."""
         for item in data:
-            url = item.get('url', '')
+            url = item.get("url", "")
             self.urls.append(url)
 
             # depth
-            depth = item.get('depth', 0)
+            depth = item.get("depth", 0)
             self.depths.append(depth)
 
             # Use shared url_utilities instead of redundant parsing
@@ -84,7 +84,7 @@ class StatisticalAnalyzer:
                 self.fragment_counts.append(0)
 
             # links
-            links = item.get('links', [])
+            links = item.get("links", [])
             self.link_counts.append(len(links))
 
     def _compute_summary_stats(self) -> Dict:
@@ -93,24 +93,24 @@ class StatisticalAnalyzer:
         def stats_dict(data, name):
             arr = np.array(data)
             return {
-                f'{name}_count': len(arr),
-                f'{name}_mean': float(np.mean(arr)) if len(arr) > 0 else 0,
-                f'{name}_median': float(np.median(arr)) if len(arr) > 0 else 0,
-                f'{name}_std': float(np.std(arr)) if len(arr) > 0 else 0,
-                f'{name}_min': float(np.min(arr)) if len(arr) > 0 else 0,
-                f'{name}_max': float(np.max(arr)) if len(arr) > 0 else 0,
-                f'{name}_q25': float(np.percentile(arr, 25)) if len(arr) > 0 else 0,
-                f'{name}_q75': float(np.percentile(arr, 75)) if len(arr) > 0 else 0,
+                f"{name}_count": len(arr),
+                f"{name}_mean": float(np.mean(arr)) if len(arr) > 0 else 0,
+                f"{name}_median": float(np.median(arr)) if len(arr) > 0 else 0,
+                f"{name}_std": float(np.std(arr)) if len(arr) > 0 else 0,
+                f"{name}_min": float(np.min(arr)) if len(arr) > 0 else 0,
+                f"{name}_max": float(np.max(arr)) if len(arr) > 0 else 0,
+                f"{name}_q25": float(np.percentile(arr, 25)) if len(arr) > 0 else 0,
+                f"{name}_q75": float(np.percentile(arr, 75)) if len(arr) > 0 else 0,
             }
 
         summary = {
-            'total_urls': len(self.urls),
+            "total_urls": len(self.urls),
         }
 
-        summary.update(stats_dict(self.depths, 'depth'))
-        summary.update(stats_dict(self.path_lengths, 'path_length'))
-        summary.update(stats_dict(self.query_counts, 'query_params'))
-        summary.update(stats_dict(self.link_counts, 'outbound_links'))
+        summary.update(stats_dict(self.depths, "depth"))
+        summary.update(stats_dict(self.path_lengths, "path_length"))
+        summary.update(stats_dict(self.query_counts, "query_params"))
+        summary.update(stats_dict(self.link_counts, "outbound_links"))
 
         return summary
 
@@ -122,25 +122,25 @@ class StatisticalAnalyzer:
         # depth distribution using shared utility (eliminates redundancy)
         # Note: Still need local Counter for backward compatibility with histogram
         depth_dist = Counter(self.depths)
-        distributions['depth_distribution'] = dict(sorted(depth_dist.items()))
-        distributions['depth_histogram'] = self._create_histogram(self.depths, 'Depth')
+        distributions["depth_distribution"] = dict(sorted(depth_dist.items()))
+        distributions["depth_histogram"] = self._create_histogram(self.depths, "Depth")
 
         # path length distribution
-        distributions['path_length_histogram'] = self._create_histogram(
-            self.path_lengths, 'Path Length', bins=20
+        distributions["path_length_histogram"] = self._create_histogram(
+            self.path_lengths, "Path Length", bins=20
         )
 
         # link count distribution
-        distributions['link_count_histogram'] = self._create_histogram(
-            self.link_counts, 'Link Count', bins=20
+        distributions["link_count_histogram"] = self._create_histogram(
+            self.link_counts, "Link Count", bins=20
         )
 
         # test for normality
         if len(self.depths) > 8:
             _, p_value = stats.shapiro(self.depths[:5000])  # shapiro test max 5000 samples
-            distributions['depth_normality_test'] = {
-                'is_normal': p_value > 0.05,
-                'p_value': float(p_value)
+            distributions["depth_normality_test"] = {
+                "is_normal": p_value > 0.05,
+                "p_value": float(p_value),
             }
 
         return distributions
@@ -148,14 +148,14 @@ class StatisticalAnalyzer:
     def _create_histogram(self, data, name, bins=10) -> Dict:
         """Create histogram data."""
         if not data:
-            return {'bins': [], 'counts': []}
+            return {"bins": [], "counts": []}
 
         counts, bin_edges = np.histogram(data, bins=bins)
 
         return {
-            'bins': [float(x) for x in bin_edges],
-            'counts': [int(x) for x in counts],
-            'name': name
+            "bins": [float(x) for x in bin_edges],
+            "counts": [int(x) for x in counts],
+            "name": name,
         }
 
     def _compute_correlations(self) -> Dict:
@@ -166,31 +166,31 @@ class StatisticalAnalyzer:
         # depth vs link count
         if len(self.depths) > 1 and len(self.link_counts) > 1:
             corr, p_value = stats.pearsonr(self.depths, self.link_counts)
-            correlations['depth_vs_link_count'] = {
-                'correlation': float(corr),
-                'p_value': float(p_value),
-                'significant': p_value < 0.05,
-                'interpretation': self._interpret_correlation(corr)
+            correlations["depth_vs_link_count"] = {
+                "correlation": float(corr),
+                "p_value": float(p_value),
+                "significant": p_value < 0.05,
+                "interpretation": self._interpret_correlation(corr),
             }
 
         # depth vs path length
         if len(self.depths) > 1 and len(self.path_lengths) > 1:
             corr, p_value = stats.pearsonr(self.depths, self.path_lengths)
-            correlations['depth_vs_path_length'] = {
-                'correlation': float(corr),
-                'p_value': float(p_value),
-                'significant': p_value < 0.05,
-                'interpretation': self._interpret_correlation(corr)
+            correlations["depth_vs_path_length"] = {
+                "correlation": float(corr),
+                "p_value": float(p_value),
+                "significant": p_value < 0.05,
+                "interpretation": self._interpret_correlation(corr),
             }
 
         # path length vs link count
         if len(self.path_lengths) > 1 and len(self.link_counts) > 1:
             corr, p_value = stats.pearsonr(self.path_lengths, self.link_counts)
-            correlations['path_length_vs_link_count'] = {
-                'correlation': float(corr),
-                'p_value': float(p_value),
-                'significant': p_value < 0.05,
-                'interpretation': self._interpret_correlation(corr)
+            correlations["path_length_vs_link_count"] = {
+                "correlation": float(corr),
+                "p_value": float(p_value),
+                "significant": p_value < 0.05,
+                "interpretation": self._interpret_correlation(corr),
             }
 
         return correlations
@@ -219,18 +219,16 @@ class StatisticalAnalyzer:
         anomalies = {}
 
         # depth anomalies (using iqr method)
-        anomalies['depth_outliers'] = self._find_outliers(
-            self.depths, self.urls, 'depth'
-        )
+        anomalies["depth_outliers"] = self._find_outliers(self.depths, self.urls, "depth")
 
         # path length anomalies
-        anomalies['path_length_outliers'] = self._find_outliers(
-            self.path_lengths, self.urls, 'path_length'
+        anomalies["path_length_outliers"] = self._find_outliers(
+            self.path_lengths, self.urls, "path_length"
         )
 
         # link count anomalies
-        anomalies['link_count_outliers'] = self._find_outliers(
-            self.link_counts, self.urls, 'link_count'
+        anomalies["link_count_outliers"] = self._find_outliers(
+            self.link_counts, self.urls, "link_count"
         )
 
         return anomalies
@@ -238,7 +236,7 @@ class StatisticalAnalyzer:
     def _find_outliers(self, data, urls, feature_name) -> Dict:
         """Find outliers using IQR method."""
         if len(data) == 0:
-            return {'count': 0, 'examples': []}
+            return {"count": 0, "examples": []}
 
         arr = np.array(data)
         q1 = np.percentile(arr, 25)
@@ -252,18 +250,22 @@ class StatisticalAnalyzer:
 
         examples = []
         for idx in outlier_indices[:10]:  # limit to 10 examples
-            examples.append({
-                'url': urls[idx],
-                'value': float(data[idx]),
-                'z_score': float((data[idx] - np.mean(arr)) / np.std(arr)) if np.std(arr) > 0 else 0
-            })
+            examples.append(
+                {
+                    "url": urls[idx],
+                    "value": float(data[idx]),
+                    "z_score": (
+                        float((data[idx] - np.mean(arr)) / np.std(arr)) if np.std(arr) > 0 else 0
+                    ),
+                }
+            )
 
         return {
-            'count': len(outlier_indices),
-            'percentage': (len(outlier_indices) / len(data)) * 100,
-            'lower_bound': float(lower_bound),
-            'upper_bound': float(upper_bound),
-            'examples': examples
+            "count": len(outlier_indices),
+            "percentage": (len(outlier_indices) / len(data)) * 100,
+            "lower_bound": float(lower_bound),
+            "upper_bound": float(upper_bound),
+            "examples": examples,
         }
 
     def _analyze_depth_patterns(self) -> Dict:
@@ -272,29 +274,31 @@ class StatisticalAnalyzer:
         # with general_metrics.analyze_depth_patterns() in the future.
         # For now, keeping local implementation to avoid breaking changes.
 
-        depth_patterns = defaultdict(lambda: {
-            'count': 0,
-            'avg_links': 0,
-            'avg_path_length': 0,
-            'has_fragment': 0,
-            'has_query': 0
-        })
+        depth_patterns = defaultdict(
+            lambda: {
+                "count": 0,
+                "avg_links": 0,
+                "avg_path_length": 0,
+                "has_fragment": 0,
+                "has_query": 0,
+            }
+        )
 
         for i, depth in enumerate(self.depths):
             pattern = depth_patterns[depth]
-            pattern['count'] += 1
-            pattern['avg_links'] += self.link_counts[i]
-            pattern['avg_path_length'] += self.path_lengths[i]
-            pattern['has_fragment'] += self.fragment_counts[i]
-            pattern['has_query'] += 1 if self.query_counts[i] > 0 else 0
+            pattern["count"] += 1
+            pattern["avg_links"] += self.link_counts[i]
+            pattern["avg_path_length"] += self.path_lengths[i]
+            pattern["has_fragment"] += self.fragment_counts[i]
+            pattern["has_query"] += 1 if self.query_counts[i] > 0 else 0
 
         # calculate averages
         for depth, pattern in depth_patterns.items():
-            count = pattern['count']
-            pattern['avg_links'] = pattern['avg_links'] / count
-            pattern['avg_path_length'] = pattern['avg_path_length'] / count
-            pattern['fragment_percentage'] = (pattern['has_fragment'] / count) * 100
-            pattern['query_percentage'] = (pattern['has_query'] / count) * 100
+            count = pattern["count"]
+            pattern["avg_links"] = pattern["avg_links"] / count
+            pattern["avg_path_length"] = pattern["avg_path_length"] / count
+            pattern["fragment_percentage"] = (pattern["has_fragment"] / count) * 100
+            pattern["query_percentage"] = (pattern["has_query"] / count) * 100
 
         return dict(depth_patterns)
 
@@ -305,9 +309,9 @@ class StatisticalAnalyzer:
 
         # pages with no links
         no_links = sum(1 for count in self.link_counts if count == 0)
-        link_analysis['dead_end_pages'] = {
-            'count': no_links,
-            'percentage': (no_links / len(self.link_counts)) * 100 if self.link_counts else 0
+        link_analysis["dead_end_pages"] = {
+            "count": no_links,
+            "percentage": (no_links / len(self.link_counts)) * 100 if self.link_counts else 0,
         }
 
         # hub pages (top 5% by link count)
@@ -315,13 +319,13 @@ class StatisticalAnalyzer:
             threshold = np.percentile(self.link_counts, 95)
             hub_indices = [i for i, count in enumerate(self.link_counts) if count >= threshold]
 
-            link_analysis['hub_pages'] = {
-                'count': len(hub_indices),
-                'threshold': float(threshold),
-                'examples': [
-                    {'url': self.urls[i], 'link_count': self.link_counts[i]}
+            link_analysis["hub_pages"] = {
+                "count": len(hub_indices),
+                "threshold": float(threshold),
+                "examples": [
+                    {"url": self.urls[i], "link_count": self.link_counts[i]}
                     for i in hub_indices[:10]
-                ]
+                ],
             }
 
         return link_analysis
@@ -337,54 +341,62 @@ class StatisticalAnalyzer:
             if 50 <= len(url) <= 100:
                 optimal_length += 1
 
-        health['url_length_score'] = (optimal_length / len(self.urls)) * 100 if self.urls else 0
+        health["url_length_score"] = (optimal_length / len(self.urls)) * 100 if self.urls else 0
 
         # depth health using shared utility (eliminates redundancy)
         depth_health = compute_depth_health_score(self.urls, optimal_range=(2, 4))
-        health['depth_score'] = depth_health['depth_score']
+        health["depth_score"] = depth_health["depth_score"]
 
         # fragment health (fragments can cause duplicate content)
-        fragment_rate = (sum(self.fragment_counts) / len(self.fragment_counts)) * 100 if self.fragment_counts else 0
-        health['fragment_score'] = max(0, 100 - fragment_rate)
+        fragment_rate = (
+            (sum(self.fragment_counts) / len(self.fragment_counts)) * 100
+            if self.fragment_counts
+            else 0
+        )
+        health["fragment_score"] = max(0, 100 - fragment_rate)
 
         # overall health score
-        health['overall_health'] = (
-            health['url_length_score'] * 0.3 +
-            health['depth_score'] * 0.4 +
-            health['fragment_score'] * 0.3
+        health["overall_health"] = (
+            health["url_length_score"] * 0.3
+            + health["depth_score"] * 0.4
+            + health["fragment_score"] * 0.3
         )
 
-        health['health_grade'] = self._get_health_grade(health['overall_health'])
+        health["health_grade"] = self._get_health_grade(health["overall_health"])
 
         return health
 
     def _get_health_grade(self, score: float) -> str:
         """Convert health score to letter grade."""
         if score >= 90:
-            return 'A'
+            return "A"
         elif score >= 80:
-            return 'B'
+            return "B"
         elif score >= 70:
-            return 'C'
+            return "C"
         elif score >= 60:
-            return 'D'
+            return "D"
         else:
-            return 'F'
+            return "F"
 
     def _analyze_temporal_patterns(self, data: List[Dict]) -> Dict:
         """Analyze temporal patterns from discovered_at timestamps."""
 
-        timestamps = [item.get('discovered_at') for item in data if item.get('discovered_at')]
+        timestamps = [item.get("discovered_at") for item in data if item.get("discovered_at")]
 
         if not timestamps:
-            return {'available': False}
+            return {"available": False}
 
         temporal = {
-            'available': True,
-            'first_discovered': min(timestamps),
-            'last_discovered': max(timestamps),
-            'time_span_seconds': max(timestamps) - min(timestamps),
-            'discovery_rate': len(timestamps) / (max(timestamps) - min(timestamps)) if max(timestamps) != min(timestamps) else 0
+            "available": True,
+            "first_discovered": min(timestamps),
+            "last_discovered": max(timestamps),
+            "time_span_seconds": max(timestamps) - min(timestamps),
+            "discovery_rate": (
+                len(timestamps) / (max(timestamps) - min(timestamps))
+                if max(timestamps) != min(timestamps)
+                else 0
+            ),
         }
 
         # discovery timeline (buckets)
@@ -395,7 +407,7 @@ class StatisticalAnalyzer:
             for ts in timestamps:
                 bucket = int((ts - min(timestamps)) / bucket_size)
                 buckets[bucket] += 1
-            temporal['discovery_timeline'] = dict(buckets)
+            temporal["discovery_timeline"] = dict(buckets)
 
         return temporal
 
@@ -407,27 +419,29 @@ class StatisticalAnalyzer:
         # content types
         content_types = Counter()
         for item in data:
-            ct = item.get('content_type')
+            ct = item.get("content_type")
             if ct:
                 # simplify content type
-                simplified = ct.split(';')[0].strip()
+                simplified = ct.split(";")[0].strip()
                 content_types[simplified] += 1
 
-        content['content_types'] = dict(content_types.most_common(10))
+        content["content_types"] = dict(content_types.most_common(10))
 
         # status codes
         status_codes = Counter()
         for item in data:
-            sc = item.get('status_code')
+            sc = item.get("status_code")
             if sc:
                 status_codes[sc] += 1
 
-        content['status_codes'] = dict(status_codes)
+        content["status_codes"] = dict(status_codes)
 
         # success rate
         successful = sum(count for code, count in status_codes.items() if code == 200)
         total_with_status = sum(status_codes.values())
-        content['success_rate'] = (successful / total_with_status * 100) if total_with_status > 0 else 0
+        content["success_rate"] = (
+            (successful / total_with_status * 100) if total_with_status > 0 else 0
+        )
 
         return content
 
@@ -451,16 +465,18 @@ def print_summary(results: Dict):
 
     print("Statistical analysis summary")
 
-    summary = results['summary_stats']
+    summary = results["summary_stats"]
     print(f"Total URLs: {summary['total_urls']:,}")
-    print(f"Depth: {summary['depth_min']:.0f} - {summary['depth_max']:.0f} (avg: {summary['depth_mean']:.2f})")
+    print(
+        f"Depth: {summary['depth_min']:.0f} - {summary['depth_max']:.0f} (avg: {summary['depth_mean']:.2f})"
+    )
     print(f"Avg Links per Page: {summary['outbound_links_mean']:.2f}")
 
-    health = results['url_health']
+    health = results["url_health"]
     print(f"URL Health Score: {health['overall_health']:.1f}/100 (Grade: {health['health_grade']})")
 
-    if results['correlations']:
+    if results["correlations"]:
         print("Key correlations:")
-        for name, corr in results['correlations'].items():
-            if corr.get('significant'):
+        for name, corr in results["correlations"].items():
+            if corr.get("significant"):
                 print(f"{name}: {corr['interpretation']}")

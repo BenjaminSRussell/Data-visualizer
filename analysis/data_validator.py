@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
+
 try:
     from jsonschema import Draft7Validator
 except ImportError:  # pragma: no cover - optional dependency
@@ -76,6 +77,7 @@ else:
 
 # validation results container
 
+
 @dataclass
 class ValidationResult:
     valid: bool = True
@@ -107,6 +109,7 @@ class ValidationResult:
 
 # core validation logic
 
+
 def iterate_records(path: Path) -> Iterable[Dict[str, Any]]:
     """yield parsed json from a jsonl file."""
     with path.open("r", encoding="utf-8") as handle:
@@ -121,7 +124,9 @@ def iterate_records(path: Path) -> Iterable[Dict[str, Any]]:
                 raise ValueError(f"Line {line_number}: invalid JSON ({exc})") from exc
 
 
-def _schema_errors(record: Dict[str, Any], validator: Optional[Draft7Validator]) -> List[Tuple[str, str]]:
+def _schema_errors(
+    record: Dict[str, Any], validator: Optional[Draft7Validator]
+) -> List[Tuple[str, str]]:
     if validator is None:
         errors: List[Tuple[str, str]] = []
         required_fields = ["url", "depth", "status_code", "content_type", "links"]

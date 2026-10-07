@@ -25,8 +25,9 @@ class MetricsTracker:
         self.trends_dir.mkdir(parents=True, exist_ok=True)
         self.reports_dir.mkdir(parents=True, exist_ok=True)
 
-    def save_snapshot(self, metrics: Dict, run_id: Optional[str] = None,
-                     metadata: Optional[Dict] = None) -> str:
+    def save_snapshot(
+        self, metrics: Dict, run_id: Optional[str] = None, metadata: Optional[Dict] = None
+    ) -> str:
         """
         Save a snapshot of current metrics.
 
@@ -45,14 +46,14 @@ class MetricsTracker:
             "snapshot_id": snapshot_id,
             "timestamp": timestamp.isoformat(),
             "metadata": metadata or {},
-            "metrics": metrics
+            "metrics": metrics,
         }
 
         # Persist the snapshot for later comparisons.
         filename = f"{snapshot_id}.json"
         filepath = self.snapshots_dir / filename
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(snapshot, f, indent=2)
 
         print(f" Saved metrics snapshot: {filename}")
@@ -73,77 +74,77 @@ class MetricsTracker:
             "total_urls": 0,
             "unique_urls": 0,
             "total_links": 0,
-
             # Performance metrics
             "crawl_duration_seconds": 0,
             "urls_per_second": 0,
             "avg_response_time_ms": 0,
-
             # Quality metrics
             "data_quality_score": 0,
             "extraction_success_rate": 0,
             "error_rate": 0,
-
             # Efficiency metrics
             "duplication_rate": 0,
             "storage_efficiency": 0,
             "depth_efficiency": 0,
-
             # Coverage metrics
             "max_depth_reached": 0,
             "avg_depth": 0,
             "unique_domains": 0,
-
             # Link graph metrics
             "graph_density": 0,
             "isolated_components": 0,
             "largest_component_percent": 0,
-
             # Content metrics
             "pages_with_title": 0,
             "pages_with_links": 0,
-            "avg_links_per_page": 0
+            "avg_links_per_page": 0,
         }
 
         # Extract from statistical analysis
-        if 'statistical' in analysis_results:
-            stats = analysis_results['statistical']
-            if 'summary_stats' in stats:
-                summary = stats['summary_stats']
-                key_metrics['total_urls'] = summary.get('total_urls', 0)
-                key_metrics['avg_depth'] = summary.get('depth_mean', 0)
-                key_metrics['max_depth_reached'] = summary.get('depth_max', 0)
-                key_metrics['avg_links_per_page'] = summary.get('outbound_links_mean', 0)
+        if "statistical" in analysis_results:
+            stats = analysis_results["statistical"]
+            if "summary_stats" in stats:
+                summary = stats["summary_stats"]
+                key_metrics["total_urls"] = summary.get("total_urls", 0)
+                key_metrics["avg_depth"] = summary.get("depth_mean", 0)
+                key_metrics["max_depth_reached"] = summary.get("depth_max", 0)
+                key_metrics["avg_links_per_page"] = summary.get("outbound_links_mean", 0)
 
         # Extract from data quality analysis
-        if 'data_quality' in analysis_results:
-            quality = analysis_results['data_quality']
-            key_metrics['data_quality_score'] = quality.get('overall_quality_score', 0)
+        if "data_quality" in analysis_results:
+            quality = analysis_results["data_quality"]
+            key_metrics["data_quality_score"] = quality.get("overall_quality_score", 0)
 
-            if 'fragment_inflation' in quality:
-                key_metrics['duplication_rate'] = quality['fragment_inflation'].get('inflation_rate_percent', 0)
+            if "fragment_inflation" in quality:
+                key_metrics["duplication_rate"] = quality["fragment_inflation"].get(
+                    "inflation_rate_percent", 0
+                )
 
-            if 'normalized_efficiency' in quality:
-                key_metrics['storage_efficiency'] = quality['normalized_efficiency'].get('efficiency_score', 0)
+            if "normalized_efficiency" in quality:
+                key_metrics["storage_efficiency"] = quality["normalized_efficiency"].get(
+                    "efficiency_score", 0
+                )
 
         # Extract from network analysis
-        if 'network' in analysis_results:
-            network = analysis_results['network']
-            if 'network_metrics' in network:
-                metrics = network['network_metrics']
-                key_metrics['graph_density'] = metrics.get('density', 0)
+        if "network" in analysis_results:
+            network = analysis_results["network"]
+            if "network_metrics" in network:
+                metrics = network["network_metrics"]
+                key_metrics["graph_density"] = metrics.get("density", 0)
 
-            if 'connectivity' in network:
-                conn = network['connectivity']
-                key_metrics['isolated_components'] = conn.get('isolated_pages', 0)
-                key_metrics['largest_component_percent'] = conn.get('largest_component_percentage', 0)
+            if "connectivity" in network:
+                conn = network["connectivity"]
+                key_metrics["isolated_components"] = conn.get("isolated_pages", 0)
+                key_metrics["largest_component_percent"] = conn.get(
+                    "largest_component_percentage", 0
+                )
 
         # Extract from pathway analysis
-        if 'pathway' in analysis_results:
-            pathway = analysis_results['pathway']
-            if 'architecture' in pathway:
-                arch = pathway['architecture']
-                key_metrics['depth_efficiency'] = 100 - min(arch.get('max_depth', 0) * 10, 100)
+        if "pathway" in analysis_results:
+            pathway = analysis_results["pathway"]
+            if "architecture" in pathway:
+                arch = pathway["architecture"]
+                key_metrics["depth_efficiency"] = 100 - min(arch.get("max_depth", 0) * 10, 100)
 
         return key_metrics
 
@@ -155,7 +156,7 @@ class MetricsTracker:
             print(f" Snapshot not found: {snapshot_id}")
             return None
 
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             return json.load(f)
 
     def list_snapshots(self) -> List[Dict]:
@@ -164,13 +165,15 @@ class MetricsTracker:
 
         for filepath in sorted(self.snapshots_dir.glob("*.json")):
             try:
-                with open(filepath, 'r') as f:
+                with open(filepath, "r") as f:
                     snapshot = json.load(f)
-                    snapshots.append({
-                        "snapshot_id": snapshot['snapshot_id'],
-                        "timestamp": snapshot['timestamp'],
-                        "metadata": snapshot.get('metadata', {})
-                    })
+                    snapshots.append(
+                        {
+                            "snapshot_id": snapshot["snapshot_id"],
+                            "timestamp": snapshot["timestamp"],
+                            "metadata": snapshot.get("metadata", {}),
+                        }
+                    )
             except Exception as e:
                 print(f"Warning: Could not load {filepath.name}: {e}")
 
@@ -194,22 +197,16 @@ class MetricsTracker:
             return {}
 
         comparison = {
-            "baseline": {
-                "snapshot_id": snapshot1_id,
-                "timestamp": snap1['timestamp']
-            },
-            "comparison": {
-                "snapshot_id": snapshot2_id,
-                "timestamp": snap2['timestamp']
-            },
+            "baseline": {"snapshot_id": snapshot1_id, "timestamp": snap1["timestamp"]},
+            "comparison": {"snapshot_id": snapshot2_id, "timestamp": snap2["timestamp"]},
             "metrics_delta": {},
             "improvements": [],
-            "regressions": []
+            "regressions": [],
         }
 
         # Calculate deltas
-        metrics1 = snap1['metrics']
-        metrics2 = snap2['metrics']
+        metrics1 = snap1["metrics"]
+        metrics2 = snap2["metrics"]
 
         for key in metrics1.keys():
             if key in metrics2:
@@ -220,26 +217,22 @@ class MetricsTracker:
                     delta = val2 - val1
                     percent_change = (delta / val1 * 100) if val1 != 0 else 0
 
-                    comparison['metrics_delta'][key] = {
+                    comparison["metrics_delta"][key] = {
                         "baseline": val1,
                         "current": val2,
                         "delta": delta,
-                        "percent_change": percent_change
+                        "percent_change": percent_change,
                     }
 
                     # Identify improvements/regressions
                     if self._is_improvement(key, delta):
-                        comparison['improvements'].append({
-                            "metric": key,
-                            "delta": delta,
-                            "percent": percent_change
-                        })
+                        comparison["improvements"].append(
+                            {"metric": key, "delta": delta, "percent": percent_change}
+                        )
                     elif self._is_regression(key, delta):
-                        comparison['regressions'].append({
-                            "metric": key,
-                            "delta": delta,
-                            "percent": percent_change
-                        })
+                        comparison["regressions"].append(
+                            {"metric": key, "delta": delta, "percent": percent_change}
+                        )
 
         return comparison
 
@@ -247,15 +240,22 @@ class MetricsTracker:
         """Determine if a delta represents an improvement."""
         # Metrics where increase is good
         positive_metrics = {
-            'data_quality_score', 'extraction_success_rate', 'storage_efficiency',
-            'depth_efficiency', 'largest_component_percent', 'pages_with_title',
-            'pages_with_links', 'urls_per_second'
+            "data_quality_score",
+            "extraction_success_rate",
+            "storage_efficiency",
+            "depth_efficiency",
+            "largest_component_percent",
+            "pages_with_title",
+            "pages_with_links",
+            "urls_per_second",
         }
 
         # Metrics where decrease is good
         negative_metrics = {
-            'error_rate', 'duplication_rate', 'isolated_components',
-            'avg_response_time_ms'
+            "error_rate",
+            "duplication_rate",
+            "isolated_components",
+            "avg_response_time_ms",
         }
 
         if metric_name in positive_metrics:
@@ -269,14 +269,21 @@ class MetricsTracker:
         """Determine if a delta represents a regression."""
         # Opposite of improvement
         positive_metrics = {
-            'data_quality_score', 'extraction_success_rate', 'storage_efficiency',
-            'depth_efficiency', 'largest_component_percent', 'pages_with_title',
-            'pages_with_links', 'urls_per_second'
+            "data_quality_score",
+            "extraction_success_rate",
+            "storage_efficiency",
+            "depth_efficiency",
+            "largest_component_percent",
+            "pages_with_title",
+            "pages_with_links",
+            "urls_per_second",
         }
 
         negative_metrics = {
-            'error_rate', 'duplication_rate', 'isolated_components',
-            'avg_response_time_ms'
+            "error_rate",
+            "duplication_rate",
+            "isolated_components",
+            "avg_response_time_ms",
         }
 
         if metric_name in positive_metrics:
@@ -299,32 +306,35 @@ class MetricsTracker:
         """
         snapshots = self.list_snapshots()[-limit:]  # Get most recent
 
-        trend_data = {
-            "metric": metric_name,
-            "data_points": [],
-            "trend": "unknown"
-        }
+        trend_data = {"metric": metric_name, "data_points": [], "trend": "unknown"}
 
         for snapshot_info in snapshots:
-            snapshot = self.load_snapshot(snapshot_info['snapshot_id'])
-            if snapshot and metric_name in snapshot['metrics']:
-                trend_data['data_points'].append({
-                    "timestamp": snapshot['timestamp'],
-                    "value": snapshot['metrics'][metric_name]
-                })
+            snapshot = self.load_snapshot(snapshot_info["snapshot_id"])
+            if snapshot and metric_name in snapshot["metrics"]:
+                trend_data["data_points"].append(
+                    {"timestamp": snapshot["timestamp"], "value": snapshot["metrics"][metric_name]}
+                )
 
         # Determine trend direction
-        if len(trend_data['data_points']) >= 2:
-            first_val = trend_data['data_points'][0]['value']
-            last_val = trend_data['data_points'][-1]['value']
+        if len(trend_data["data_points"]) >= 2:
+            first_val = trend_data["data_points"][0]["value"]
+            last_val = trend_data["data_points"][-1]["value"]
 
             if isinstance(first_val, (int, float)) and isinstance(last_val, (int, float)):
                 if last_val > first_val * 1.05:
-                    trend_data['trend'] = "improving" if self._is_improvement(metric_name, last_val - first_val) else "worsening"
+                    trend_data["trend"] = (
+                        "improving"
+                        if self._is_improvement(metric_name, last_val - first_val)
+                        else "worsening"
+                    )
                 elif last_val < first_val * 0.95:
-                    trend_data['trend'] = "worsening" if self._is_improvement(metric_name, last_val - first_val) else "improving"
+                    trend_data["trend"] = (
+                        "worsening"
+                        if self._is_improvement(metric_name, last_val - first_val)
+                        else "improving"
+                    )
                 else:
-                    trend_data['trend'] = "stable"
+                    trend_data["trend"] = "stable"
 
         return trend_data
 
@@ -335,22 +345,22 @@ class MetricsTracker:
         if len(snapshots) < 2:
             return {
                 "status": "insufficient_data",
-                "message": "Need at least 2 snapshots to generate trends"
+                "message": "Need at least 2 snapshots to generate trends",
             }
 
         # Compare latest with previous
         latest = snapshots[-1]
         previous = snapshots[-2]
 
-        comparison = self.compare_snapshots(previous['snapshot_id'], latest['snapshot_id'])
+        comparison = self.compare_snapshots(previous["snapshot_id"], latest["snapshot_id"])
 
         # Key metrics to track
         key_metrics = [
-            'data_quality_score',
-            'duplication_rate',
-            'urls_per_second',
-            'error_rate',
-            'storage_efficiency'
+            "data_quality_score",
+            "duplication_rate",
+            "urls_per_second",
+            "error_rate",
+            "storage_efficiency",
         ]
 
         trends = {}
@@ -363,13 +373,13 @@ class MetricsTracker:
             "latest_snapshot": latest,
             "comparison_with_previous": comparison,
             "trends": trends,
-            "summary": self._generate_text_summary(comparison, trends)
+            "summary": self._generate_text_summary(comparison, trends),
         }
 
     def _generate_text_summary(self, comparison: Dict, trends: Dict) -> str:
         """Generate human-readable summary."""
-        improvements = comparison.get('improvements', [])
-        regressions = comparison.get('regressions', [])
+        improvements = comparison.get("improvements", [])
+        regressions = comparison.get("regressions", [])
 
         summary = []
         summary.append(f"Performance Comparison:")

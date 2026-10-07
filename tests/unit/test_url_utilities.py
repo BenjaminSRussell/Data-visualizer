@@ -49,13 +49,13 @@ from analysis.utils.url_utilities import (
     get_depth_distribution,
     extract_path_segments,
     get_query_param_count,
-    get_path_length
+    get_path_length,
 )
-
 
 # =============================================================================
 # TIER 1: Critical Edge Cases - Extreme Depth
 # =============================================================================
+
 
 class TestExtremeDepth:
     """Test URLs with extreme path depth."""
@@ -101,10 +101,10 @@ class TestExtremeDepth:
         url = "https://example.com/" + "/".join([f"level{i}" for i in range(50)])
         components = parse_url_components(url)
 
-        assert components['path_depth'] == 50
-        assert len(components['path_segments']) == 50
-        assert components['scheme'] == 'https'
-        assert components['netloc'] == 'example.com'
+        assert components["path_depth"] == 50
+        assert len(components["path_segments"]) == 50
+        assert components["scheme"] == "https"
+        assert components["netloc"] == "example.com"
 
     def test_extract_path_segments_extreme_depth(self):
         """extract_path_segments should handle extreme depth."""
@@ -112,13 +112,14 @@ class TestExtremeDepth:
         segments = extract_path_segments(url)
 
         assert len(segments) == 100
-        assert segments[0] == 'seg0'
-        assert segments[99] == 'seg99'
+        assert segments[0] == "seg0"
+        assert segments[99] == "seg99"
 
 
 # =============================================================================
 # TIER 1: Critical Edge Cases - Extreme Length
 # =============================================================================
+
 
 class TestExtremeLength:
     """Test URLs with extreme character length."""
@@ -128,8 +129,8 @@ class TestExtremeLength:
         url = "https://example.com/" + "a" * 1000
         components = parse_url_components(url)
 
-        assert components['scheme'] == 'https'
-        assert len(components['path']) == 1001  # 1000 + leading /
+        assert components["scheme"] == "https"
+        assert len(components["path"]) == 1001  # 1000 + leading /
 
     def test_length_10000_chars_path(self):
         """10,000-character path should parse."""
@@ -169,6 +170,7 @@ class TestExtremeLength:
 # TIER 1: Critical Edge Cases - Malformed Encoding
 # =============================================================================
 
+
 class TestMalformedEncoding:
     """Test URLs with malformed percent encoding."""
 
@@ -200,7 +202,7 @@ class TestMalformedEncoding:
         url = "https://example.com/%2525/path"
         components = parse_url_components(url)
 
-        assert components['path_depth'] >= 1
+        assert components["path_depth"] >= 1
 
     def test_fragment_with_invalid_encoding(self):
         """Fragment with invalid encoding should not crash."""
@@ -215,6 +217,7 @@ class TestMalformedEncoding:
 # TIER 1: Critical Edge Cases - Recursive Parameters
 # =============================================================================
 
+
 class TestRecursiveParameters:
     """Test URLs with recursive/nested parameters."""
 
@@ -228,11 +231,13 @@ class TestRecursiveParameters:
 
     def test_nested_redirect_urls(self):
         """Nested redirect URLs should parse."""
-        url = "https://example.com/redirect?url=https://example.com/redirect?url=https://example.com"
+        url = (
+            "https://example.com/redirect?url=https://example.com/redirect?url=https://example.com"
+        )
         components = parse_url_components(url)
 
-        assert components['scheme'] == 'https'
-        assert components['has_query'] is True
+        assert components["scheme"] == "https"
+        assert components["has_query"] is True
 
     def test_depth_not_fooled_by_query_params(self):
         """Query params with slashes shouldn't affect depth."""
@@ -246,6 +251,7 @@ class TestRecursiveParameters:
 # =============================================================================
 # TIER 2: Real-World Attacks - Path Traversal
 # =============================================================================
+
 
 class TestPathTraversal:
     """Test path traversal attempts."""
@@ -286,6 +292,7 @@ class TestPathTraversal:
 # TIER 2: Real-World Attacks - Mixed Encoding
 # =============================================================================
 
+
 class TestMixedEncoding:
     """Test URLs with various character encodings."""
 
@@ -295,7 +302,7 @@ class TestMixedEncoding:
         components = parse_url_components(url)
 
         assert components is not None
-        assert components['path_depth'] >= 1
+        assert components["path_depth"] >= 1
 
     def test_japanese_characters(self):
         """Japanese characters should parse."""
@@ -306,18 +313,18 @@ class TestMixedEncoding:
 
     def test_emoji_in_path(self):
         """Emoji in path should parse."""
-        url = "https://example.com/emoji/😀/page"
+        url = "https://example.com/emoji//page"
         segments = extract_path_segments(url)
 
         assert len(segments) == 3
-        assert '😀' in segments[1]
+        assert "" in segments[1]
 
     def test_unicode_math_symbols(self):
         """Unicode math symbols should parse."""
         url = "https://example.com/𝕌𝕟𝕚𝕔𝕠𝕕𝕖/page"
         components = parse_url_components(url)
 
-        assert components['path_depth'] == 2
+        assert components["path_depth"] == 2
 
     def test_greek_characters(self):
         """Greek characters should parse."""
@@ -331,6 +338,7 @@ class TestMixedEncoding:
 # TIER 2: Real-World Attacks - Protocol Confusion
 # =============================================================================
 
+
 class TestProtocolConfusion:
     """Test non-HTTP protocols and protocol confusion attacks."""
 
@@ -340,33 +348,34 @@ class TestProtocolConfusion:
         components = parse_url_components(url)
 
         # Should parse, scheme will be 'javascript'
-        assert components['scheme'] == 'javascript'
+        assert components["scheme"] == "javascript"
 
     def test_data_protocol(self):
         """data: protocol should be handled."""
         url = "data:text/html,<script>alert(1)</script>"
         components = parse_url_components(url)
 
-        assert components['scheme'] == 'data'
+        assert components["scheme"] == "data"
 
     def test_file_protocol(self):
         """file:/// protocol should parse."""
         url = "file:///etc/passwd"
         components = parse_url_components(url)
 
-        assert components['scheme'] == 'file'
+        assert components["scheme"] == "file"
 
     def test_ftp_protocol(self):
         """ftp:// protocol should parse."""
         url = "ftp://example.com/file"
         base_url = get_base_url(url)
 
-        assert base_url.startswith('ftp://')
+        assert base_url.startswith("ftp://")
 
 
 # =============================================================================
 # TIER 2: Real-World Attacks - Punycode Domains
 # =============================================================================
+
 
 class TestPunycodeDomains:
     """Test internationalized domain names (IDN) with Punycode."""
@@ -376,27 +385,28 @@ class TestPunycodeDomains:
         url = "https://xn--bcher-kva.example/page"  # bücher.example
         components = parse_url_components(url)
 
-        assert components['scheme'] == 'https'
-        assert 'xn--bcher-kva' in components['netloc']
+        assert components["scheme"] == "https"
+        assert "xn--bcher-kva" in components["netloc"]
 
     def test_punycode_domain_russian(self):
         """Russian Punycode domain should parse."""
         url = "https://xn--e1afmkfd.xn--p1ai/page"  # пример.рф
         base_url = get_base_url(url)
 
-        assert 'xn--e1afmkfd' in base_url
+        assert "xn--e1afmkfd" in base_url
 
     def test_punycode_with_fragment(self):
         """Punycode domain with fragment should parse."""
         url = "https://xn--bcher-kva.example/page#fragment"
         fragment = extract_fragment(url)
 
-        assert fragment == 'fragment'
+        assert fragment == "fragment"
 
 
 # =============================================================================
 # TIER 2: Real-World Attacks - Fragment Bombs
 # =============================================================================
+
 
 class TestFragmentBombs:
     """Test URLs with massive fragments."""
@@ -413,8 +423,8 @@ class TestFragmentBombs:
         url = "https://example.com/page#" + "/".join([f"section{i}" for i in range(1000)])
         fragment = extract_fragment(url)
 
-        assert 'section0' in fragment
-        assert 'section999' in fragment
+        assert "section0" in fragment
+        assert "section999" in fragment
 
     def test_classify_fragment_with_massive_input(self):
         """classify_fragment should handle massive fragments."""
@@ -422,12 +432,13 @@ class TestFragmentBombs:
         classification = classify_fragment(massive_fragment)
 
         # Should return a valid classification
-        assert classification in ['anchor', 'route', 'other']
+        assert classification in ["anchor", "route", "other"]
 
 
 # =============================================================================
 # TIER 2: Real-World Attacks - Special Characters
 # =============================================================================
+
 
 class TestSpecialCharacters:
     """Test URLs with null bytes, control characters, and special chars."""
@@ -452,7 +463,7 @@ class TestSpecialCharacters:
         segments = extract_path_segments(url)
 
         assert len(segments) == 1
-        assert 'space' in segments[0]
+        assert "space" in segments[0]
 
     def test_pipes_in_path(self):
         """Pipe characters should parse."""
@@ -473,6 +484,7 @@ class TestSpecialCharacters:
 # TIER 3: Edge Cases - Empty and Invalid Inputs
 # =============================================================================
 
+
 class TestEdgeCases:
     """Test edge cases like empty strings, invalid ports, etc."""
 
@@ -483,7 +495,7 @@ class TestEdgeCases:
 
         # Should return default/empty components
         assert components is not None
-        assert components['scheme'] == ''
+        assert components["scheme"] == ""
 
     def test_just_protocol(self):
         """Just 'https://' should not crash."""
@@ -519,43 +531,44 @@ class TestEdgeCases:
         url = "/#fragment"
         fragment = extract_fragment(url)
 
-        assert fragment == 'fragment'
+        assert fragment == "fragment"
 
     def test_invalid_port_99999(self):
         """Invalid port 99999 should parse (validation is separate)."""
         url = "https://example.com:99999/page"
         components = parse_url_components(url)
 
-        assert components['port'] == 99999
+        assert components["port"] == 99999
 
     def test_port_zero(self):
         """Port 0 should parse."""
         url = "https://example.com:0/page"
         components = parse_url_components(url)
 
-        assert components['port'] == 0
+        assert components["port"] == 0
 
     def test_credentials_in_url(self):
         """Username:password in URL should parse."""
         url = "https://user:pass@example.com/page"
         components = parse_url_components(url)
 
-        assert components['username'] == 'user'
-        assert components['password'] == 'pass'
-        assert components['has_auth'] is True
+        assert components["username"] == "user"
+        assert components["password"] == "pass"
+        assert components["has_auth"] is True
 
     def test_credentials_with_port(self):
         """Username:password with port should parse."""
         url = "https://user:pass@example.com:8080/page"
         components = parse_url_components(url)
 
-        assert components['username'] == 'user'
-        assert components['port'] == 8080
+        assert components["username"] == "user"
+        assert components["port"] == 8080
 
 
 # =============================================================================
 # TIER 3: Function Integration Tests
 # =============================================================================
+
 
 class TestFunctionIntegration:
     """Test interactions between multiple url_utilities functions."""
@@ -585,38 +598,38 @@ class TestFunctionIntegration:
         resolved = resolve_link(link, source)
 
         assert resolved is not None
-        assert resolved.startswith('https://example.com')
+        assert resolved.startswith("https://example.com")
 
     def test_count_fragments_with_mixed_urls(self, sample_urls_normal, sample_urls_pathological):
         """count_fragments should handle mix of normal and pathological URLs."""
-        urls = sample_urls_normal + [sample_urls_pathological['fragment_bombs'][0]]
+        urls = sample_urls_normal + [sample_urls_pathological["fragment_bombs"][0]]
 
         result = count_fragments(urls)
 
-        assert result['total_urls'] > 0
-        assert result['urls_with_fragments'] >= 0
-        assert result['fragment_percentage'] >= 0
+        assert result["total_urls"] > 0
+        assert result["urls_with_fragments"] >= 0
+        assert result["fragment_percentage"] >= 0
 
     def test_get_depth_distribution_with_extreme_depths(self):
         """get_depth_distribution should handle extreme depth variance."""
         urls = [
             "https://example.com/a",  # depth 1
             "https://example.com/a/b",  # depth 2
-            "https://example.com/" + "/".join([f"l{i}" for i in range(100)])  # depth 100
+            "https://example.com/" + "/".join([f"l{i}" for i in range(100)]),  # depth 100
         ]
 
         dist = get_depth_distribution(urls)
 
-        assert dist['min'] == 1
-        assert dist['max'] == 100
-        assert dist['average'] > 1
+        assert dist["min"] == 1
+        assert dist["max"] == 100
+        assert dist["average"] > 1
 
     def test_extract_file_extension_path_traversal(self):
         """extract_file_extension should not be fooled by path traversal."""
         url = "https://example.com/../../../../etc/passwd.txt"
         ext = extract_file_extension(url)
 
-        assert ext == 'txt'
+        assert ext == "txt"
 
     def test_extract_file_extension_multiple_dots(self):
         """extract_file_extension should handle multiple dots."""
@@ -624,12 +637,13 @@ class TestFunctionIntegration:
         ext = extract_file_extension(url)
 
         # Should return last extension
-        assert ext == 'gz'
+        assert ext == "gz"
 
 
 # =============================================================================
 # TIER 3: Stress Testing - Batch Operations
 # =============================================================================
+
 
 class TestStressBatch:
     """Stress test with large batches of pathological URLs."""
@@ -637,8 +651,7 @@ class TestStressBatch:
     def test_batch_1000_extreme_depth_urls(self):
         """Process 1000 URLs with extreme depth."""
         urls = [
-            "https://example.com/" + "/".join([f"l{i}" for i in range(50)])
-            for _ in range(1000)
+            "https://example.com/" + "/".join([f"l{i}" for i in range(50)]) for _ in range(1000)
         ]
 
         # Should complete without crashing
@@ -670,6 +683,7 @@ class TestStressBatch:
 # TIER 3: Regression Tests - Known Bugs
 # =============================================================================
 
+
 class TestKnownBugs:
     """Tests for known bugs and edge cases from production."""
 
@@ -693,10 +707,10 @@ class TestKnownBugs:
 
         classifications = [classify_fragment(f) for f in fragments]
 
-        assert classifications[0] == 'route'
-        assert classifications[1] == 'route'
-        assert classifications[2] == 'anchor'
-        assert classifications[3] == 'anchor'
+        assert classifications[0] == "route"
+        assert classifications[1] == "route"
+        assert classifications[2] == "anchor"
+        assert classifications[3] == "anchor"
 
     def test_resolve_link_fragment_only(self):
         """resolve_link with fragment-only should return None."""

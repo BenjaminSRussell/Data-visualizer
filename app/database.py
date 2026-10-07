@@ -1,4 +1,5 @@
 """Database connection and session management with robust error handling."""
+
 import os
 import logging
 from typing import Generator, Optional
@@ -22,16 +23,13 @@ def _validate_database_url(url: str) -> bool:
     if not url or not isinstance(url, str):
         return False
 
-    valid_prefixes = ('postgresql://', 'postgresql+psycopg2://', 'sqlite://')
+    valid_prefixes = ("postgresql://", "postgresql+psycopg2://", "sqlite://")
     return any(url.startswith(prefix) for prefix in valid_prefixes)
 
 
 def get_database_url() -> str:
     """Get database URL from environment with validation."""
-    url = os.getenv(
-        "DATABASE_URL",
-        "postgresql://user:password@localhost:5432/data_visualizer"
-    )
+    url = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/data_visualizer")
 
     if not _validate_database_url(url):
         raise ValueError(f"Invalid DATABASE_URL format: {url}")
@@ -42,23 +40,19 @@ def get_database_url() -> str:
 def get_pool_config(database_url: str) -> dict:
     """Get database pool configuration from environment."""
     config = {
-        'poolclass': QueuePool,
-        'pool_size': int(os.getenv('DB_POOL_SIZE', '10')),
-        'max_overflow': int(os.getenv('DB_MAX_OVERFLOW', '20')),
-        'pool_timeout': int(os.getenv('DB_POOL_TIMEOUT', '30')),
-        'pool_recycle': int(os.getenv('DB_POOL_RECYCLE', '3600')),
-        'pool_pre_ping': True,
-        'echo': os.getenv('DB_ECHO', 'false').lower() == 'true'
+        "poolclass": QueuePool,
+        "pool_size": int(os.getenv("DB_POOL_SIZE", "10")),
+        "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "20")),
+        "pool_timeout": int(os.getenv("DB_POOL_TIMEOUT", "30")),
+        "pool_recycle": int(os.getenv("DB_POOL_RECYCLE", "3600")),
+        "pool_pre_ping": True,
+        "echo": os.getenv("DB_ECHO", "false").lower() == "true",
     }
 
-    if database_url.startswith('postgresql'):
-        config['connect_args'] = {
-            'connect_timeout': int(os.getenv('DB_CONNECT_TIMEOUT', '10'))
-        }
-    elif database_url.startswith('sqlite'):
-        config['connect_args'] = {
-            'check_same_thread': False
-        }
+    if database_url.startswith("postgresql"):
+        config["connect_args"] = {"connect_timeout": int(os.getenv("DB_CONNECT_TIMEOUT", "10"))}
+    elif database_url.startswith("sqlite"):
+        config["connect_args"] = {"check_same_thread": False}
 
     return config
 
@@ -97,10 +91,7 @@ def get_session_factory() -> sessionmaker:
     try:
         engine = get_engine()
         _session_factory = sessionmaker(
-            autocommit=False,
-            autoflush=False,
-            bind=engine,
-            expire_on_commit=False
+            autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
         )
         logger.info("Session factory created successfully")
         return _session_factory
