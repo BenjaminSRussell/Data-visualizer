@@ -304,7 +304,7 @@ class MetricsTracker:
         Returns:
             Trend data
         """
-        snapshots = self.list_snapshots()[-limit:]  # Get most recent
+        snapshots = self.list_snapshots()[-limit:]
 
         trend_data = {"metric": metric_name, "data_points": [], "trend": "unknown"}
 

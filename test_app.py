@@ -43,7 +43,6 @@ def test_models():
     try:
         from app import models
 
-        # Get all model classes
         model_classes = [
             (name, getattr(models, name))
             for name in dir(models)
@@ -83,7 +82,6 @@ def test_datasets():
 
         print(f"  [OK] {len(PREDEFINED_DATASETS)} predefined datasets")
 
-        # Check SQL queries
         queries_with_sql = sum(1 for ds in PREDEFINED_DATASETS.values() if ds.sql_query)
         simple_queries = len(PREDEFINED_DATASETS) - queries_with_sql
 
