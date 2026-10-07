@@ -487,6 +487,23 @@ async def list_domains(
         )
 
 
+@router.get("/pattern-types", tags=["patterns"])
+async def list_pattern_types(db: Session = Depends(get_db)):
+    """Distinct pattern types for filter dropdown (#3)."""
+    try:
+        rows = (
+            db.query(models.Pattern.pattern_type)
+            .filter(models.Pattern.pattern_type.isnot(None))
+            .distinct()
+            .order_by(models.Pattern.pattern_type)
+            .all()
+        )
+        return {"types": [r[0] for r in rows if r[0]]}
+    except Exception as exc:
+        logger.warning("Failed to list pattern types: %s", exc)
+        return {"types": []}
+
+
 @router.get("/patterns", tags=["patterns"])
 async def list_patterns(
     pattern_type: Optional[str] = Query(None, max_length=50, description="Filter by pattern type"),

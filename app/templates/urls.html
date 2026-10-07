@@ -3,6 +3,12 @@
 {% block title %}URL Explorer - Data Visualizer{% endblock %}
 {% block nav_urls %}active{% endblock %}
 
+{% block extra_styles %}
+<style>
+.url-cell { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.url-cell a { cursor: pointer; }
+</style>
+{% endblock %}
 {% block content %}
 <div class="card">
     <h2>URL Explorer</h2>
@@ -10,7 +16,7 @@
 
     <div class="filter-group">
         <label for="domain-filter">Domain
-            <input type="text" id="domain-filter" placeholder="e.g. example.com">
+            <input type="text" id="domain-filter" placeholder="e.g. example.com" onkeydown="handleDomainFilterKeydown(event)">
         </label>
         <label for="status-filter">Status
             <select id="status-filter">
@@ -107,7 +113,7 @@
         tbody.innerHTML = urls.map(url => `
             <tr>
                 <td>${url.id}</td>
-                <td><a href="${url.url}" target="_blank" rel="noopener noreferrer" class="url-link">${truncate(url.url, 60)}</a></td>
+                <td class="url-cell" title="${url.url}"><a href="${url.url}" target="_blank" rel="noopener noreferrer" class="url-link">${truncate(url.url, 80)}</a></td>
                 <td>${url.domain || 'N/A'}</td>
                 <td>${url.status_code || 'N/A'}</td>
                 <td>${truncate(url.content_type || 'N/A', 30)}</td>
@@ -117,6 +123,17 @@
     }
 
     // Apply filters
+    function handleDomainFilterKeydown(event) {
+        if (event.key === 'Enter' || event.keyCode === 13) {
+            event.preventDefault();
+            applyFilters();
+        }
+    }
+
+    function copyToClipboard(text) {
+        if (navigator.clipboard) navigator.clipboard.writeText(text);
+    }
+
     function applyFilters() {
         const domain = document.getElementById('domain-filter').value.trim();
         const statusCode = document.getElementById('status-filter').value;
