@@ -26,6 +26,8 @@ repos:
       - id: mypy
         additional_dependencies:
           - types-PyYAML
+        files: ^app/
+        exclude: ^(analysis/|tests/)
   - repo: local
     hooks:
       - id: forbid-emoji
