@@ -351,7 +351,9 @@ class NetworkAnalyzer:
                 {
                     "community": name,
                     "size": len(members),
-                    "percentage": (len(members) / len(self.url_data) * 100) if self.url_data else 0.0,
+                    "percentage": (
+                        (len(members) / len(self.url_data) * 100) if self.url_data else 0.0
+                    ),
                 }
                 for name, members in sorted_communities[:20]
             ],
