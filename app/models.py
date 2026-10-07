@@ -1,15 +1,16 @@
 """SQLAlchemy models matching the PostgreSQL schema."""
+
 from datetime import datetime
-from sqlalchemy import (
-    Column, Integer, String, Text, Float, Boolean,
-    TIMESTAMP, ForeignKey, ARRAY
-)
+
+from sqlalchemy import ARRAY, TIMESTAMP, Boolean, Column, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
 class URL(Base):
     """URLs table - main URL storage."""
+
     __tablename__ = "urls"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -24,12 +25,17 @@ class URL(Base):
     updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    classifications = relationship("Classification", back_populates="url", cascade="all, delete-orphan")
-    page_metadata = relationship("PageMetadata", back_populates="url", uselist=False, cascade="all, delete-orphan")
+    classifications = relationship(
+        "Classification", back_populates="url", cascade="all, delete-orphan"
+    )
+    page_metadata = relationship(
+        "PageMetadata", back_populates="url", uselist=False, cascade="all, delete-orphan"
+    )
 
 
 class Classification(Base):
     """Classifications table - URL classifications."""
+
     __tablename__ = "classifications"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -45,6 +51,7 @@ class Classification(Base):
 
 class PageMetadata(Base):
     """Page metadata table - page-level data."""
+
     __tablename__ = "page_metadata"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -65,6 +72,7 @@ class PageMetadata(Base):
 
 class Pattern(Base):
     """Patterns table - discovered patterns."""
+
     __tablename__ = "patterns"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -77,6 +85,7 @@ class Pattern(Base):
 
 class CrawlSession(Base):
     """Crawl sessions table - crawl tracking."""
+
     __tablename__ = "crawl_sessions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -91,6 +100,7 @@ class CrawlSession(Base):
 
 class URLAnalysis(Base):
     """Legacy URL analyses table."""
+
     __tablename__ = "url_analyses"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -110,6 +120,7 @@ class URLAnalysis(Base):
 
 class SitemapSource(Base):
     """Sitemap sources table."""
+
     __tablename__ = "sitemap_sources"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -126,6 +137,7 @@ class SitemapSource(Base):
 
 class Category(Base):
     """Categories table - classification categories."""
+
     __tablename__ = "categories"
 
     id = Column(Integer, primary_key=True, index=True)

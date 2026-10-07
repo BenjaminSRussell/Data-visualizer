@@ -3,26 +3,27 @@
 Comprehensive integration test with real data.
 Tests all functionality end-to-end with actual crawled URLs.
 """
-import os
-import sys
-import json
-import sqlite3
-from datetime import datetime
-from pathlib import Path
 
-sys.path.insert(0, '.')
+import json
+import os
+import sqlite3
+import sys
+from datetime import datetime
+
+sys.path.insert(0, ".")
 
 print("=" * 80)
 print("COMPREHENSIVE INTEGRATION TEST WITH REAL DATA")
 print("=" * 80)
 print()
 
-os.environ['DATABASE_URL'] = 'sqlite:///test_integration.db'
+os.environ["DATABASE_URL"] = "sqlite:///test_integration.db"
+
 
 def load_jsonl_data(filepath, limit=1000):
     """Load JSONL data file."""
     data = []
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         for i, line in enumerate(f):
             if i >= limit:
                 break
@@ -37,10 +38,10 @@ def setup_test_database():
     """Create SQLite database with schema."""
     print("[1/10] Setting up test database...")
 
-    if os.path.exists('test_integration.db'):
-        os.remove('test_integration.db')
+    if os.path.exists("test_integration.db"):
+        os.remove("test_integration.db")
 
-    conn = sqlite3.connect('test_integration.db')
+    conn = sqlite3.connect("test_integration.db")
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -105,12 +106,9 @@ def load_real_data():
     """Load real crawled data into database."""
     print("\n[2/10] Loading real crawled data...")
 
-    data_files = [
-        'data/input/site_01.jsonl',
-        'data/input/site_02.jsonl'
-    ]
+    data_files = ["data/input/site_01.jsonl", "data/input/site_02.jsonl"]
 
-    conn = sqlite3.connect('test_integration.db')
+    conn = sqlite3.connect("test_integration.db")
     cursor = conn.cursor()
 
     total_loaded = 0
@@ -124,31 +122,34 @@ def load_real_data():
 
         for item in data:
             try:
-                url = item.get('url', '')
-                domain = url.split('/')[2] if '//' in url else None
-                path = '/'.join(url.split('/')[3:]) if '//' in url else None
+                url = item.get("url", "")
+                domain = url.split("/")[2] if "//" in url else None
+                path = "/".join(url.split("/")[3:]) if "//" in url else None
 
                 crawled_at = None
-                if item.get('crawled_at'):
-                    crawled_at = datetime.fromtimestamp(item['crawled_at']).isoformat()
+                if item.get("crawled_at"):
+                    crawled_at = datetime.fromtimestamp(item["crawled_at"]).isoformat()
 
                 file_ext = None
-                if '.' in path.split('/')[-1] if path else '':
-                    file_ext = path.split('/')[-1].split('.')[-1]
+                if "." in path.split("/")[-1] if path else "":
+                    file_ext = path.split("/")[-1].split(".")[-1]
 
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT OR IGNORE INTO urls
                     (url, domain, path, status_code, content_type, file_extension, last_crawled)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    url,
-                    domain,
-                    path,
-                    item.get('status_code'),
-                    item.get('content_type'),
-                    file_ext,
-                    crawled_at
-                ))
+                """,
+                    (
+                        url,
+                        domain,
+                        path,
+                        item.get("status_code"),
+                        item.get("content_type"),
+                        file_ext,
+                        crawled_at,
+                    ),
+                )
 
                 if cursor.rowcount > 0:
                     total_loaded += 1
@@ -156,10 +157,13 @@ def load_real_data():
             except Exception as e:
                 continue
 
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO crawl_sessions (session_id, total_urls, processed_urls, status)
         VALUES ('test_session_001', ?, ?, 'completed')
-    """, (total_loaded, total_loaded))
+    """,
+        (total_loaded, total_loaded),
+    )
 
     cursor.execute("""
         INSERT INTO patterns (pattern_type, pattern_value, frequency, confidence)
@@ -180,7 +184,7 @@ def test_imports():
     """Test module imports."""
     print("\n[3/10] Testing module imports...")
     try:
-        from app import database, datasets, api, main, config
+
         print("  [OK] All modules imported")
         return True
     except Exception as e:
@@ -192,7 +196,7 @@ def test_database_connection():
     """Test database connectivity."""
     print("\n[4/10] Testing database connection...")
     try:
-        from app.database import test_connection, get_table_names
+        from app.database import get_table_names, test_connection
 
         connected = test_connection(max_retries=2)
         if not connected:
@@ -213,7 +217,7 @@ def test_dynamic_schema_discovery():
     print("\n[5/10] Testing dynamic schema discovery...")
     try:
         from app.database import get_session
-        from app.datasets import discover_tables, discover_columns, get_all_datasets
+        from app.datasets import discover_columns, discover_tables, get_all_datasets
 
         with get_session() as session:
             tables = discover_tables(session)
@@ -260,12 +264,7 @@ def test_sql_injection_protection():
 
         with get_session() as session:
             try:
-                result = execute_dataset_query(
-                    session,
-                    "urls",
-                    limit=10,
-                    offset=0
-                )
+                result = execute_dataset_query(session, "urls", limit=10, offset=0)
                 print(f"  [OK] Safe query returned {len(result)} rows")
             except Exception as e:
                 print(f"  [FAIL] Safe query failed: {e}")
@@ -282,16 +281,17 @@ def test_api_endpoints_with_real_data():
     """Test API endpoints with real data."""
     print("\n[7/10] Testing API endpoints with real data...")
     try:
-        from app.database import get_session
         from app import datasets
+        from app.database import get_session
 
         with get_session() as session:
             all_datasets = datasets.get_all_datasets(session)
             print(f"  [OK] {len(all_datasets)} datasets available for API")
 
-        from app.database import get_db
-        from app import models
         from sqlalchemy import func
+
+        from app import models
+        from app.database import get_db
 
         for db in get_db():
             url_count = db.query(func.count(models.URL.id)).scalar()
@@ -305,6 +305,7 @@ def test_api_endpoints_with_real_data():
     except Exception as e:
         print(f"  [FAIL] API test error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -313,15 +314,14 @@ def test_data_integrity():
     """Test data integrity and queries."""
     print("\n[8/10] Testing data integrity...")
     try:
-        from app.database import get_session
+        from sqlalchemy import func
+
         from app import models
-        from sqlalchemy import func, select
+        from app.database import get_session
 
         with get_session() as session:
             url_count = session.query(func.count(models.URL.id)).scalar()
-            domain_count = session.query(
-                func.count(func.distinct(models.URL.domain))
-            ).scalar()
+            domain_count = session.query(func.count(func.distinct(models.URL.domain))).scalar()
             pattern_count = session.query(func.count(models.Pattern.id)).scalar()
 
             print(f"  [OK] URLs in database: {url_count}")
@@ -338,9 +338,11 @@ def test_data_integrity():
                 print(f"      Domain: {sample_url.domain}")
                 print(f"      Status: {sample_url.status_code}")
 
-            status_200 = session.query(func.count(models.URL.id)).filter(
-                models.URL.status_code == 200
-            ).scalar()
+            status_200 = (
+                session.query(func.count(models.URL.id))
+                .filter(models.URL.status_code == 200)
+                .scalar()
+            )
             print(f"  [OK] Successful URLs (200): {status_200}")
 
         return True
@@ -348,6 +350,7 @@ def test_data_integrity():
     except Exception as e:
         print(f"  [FAIL] Data integrity error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -356,9 +359,9 @@ def test_error_handling():
     """Test error handling."""
     print("\n[9/10] Testing error handling...")
     try:
+        from app import models
         from app.database import get_session
         from app.datasets import execute_dataset_query, validate_identifier
-        from app import models
 
         with get_session() as session:
             try:
@@ -390,6 +393,7 @@ def test_error_handling():
     except Exception as e:
         print(f"  [FAIL] Error handling test error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -399,6 +403,7 @@ def test_performance():
     print("\n[10/10] Testing performance...")
     try:
         import time
+
         from app.database import get_session
         from app.datasets import execute_dataset_query
 
@@ -429,8 +434,8 @@ def test_performance():
 def cleanup():
     """Clean up test database."""
     try:
-        if os.path.exists('test_integration.db'):
-            os.remove('test_integration.db')
+        if os.path.exists("test_integration.db"):
+            os.remove("test_integration.db")
         print("\n[OK] Cleanup complete")
     except Exception as e:
         print(f"\n[WARN] Cleanup error: {e}")
@@ -480,5 +485,5 @@ def main():
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -1,24 +1,25 @@
 """
 Main FastAPI application with comprehensive security and error handling.
 """
-import os
+
 import logging
+import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from app.api import router as api_router
-from app.database import test_connection, init_db
 from app.config import settings
+from app.database import init_db, test_connection
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -60,12 +61,11 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
 )
 
 allowed_origins = os.getenv(
-    "CORS_ORIGINS",
-    "http://localhost,http://localhost:8000,http://127.0.0.1,http://127.0.0.1:8000"
+    "CORS_ORIGINS", "http://localhost,http://localhost:8000,http://127.0.0.1,http://127.0.0.1:8000"
 ).split(",")
 
 app.add_middleware(
@@ -74,7 +74,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    max_age=600
+    max_age=600,
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -107,11 +107,7 @@ async def not_found_handler(request: Request, exc: HTTPException):
         return {"error": "Endpoint not found", "path": request.url.path}
 
     try:
-        return templates.TemplateResponse(
-            "index.html",
-            {"request": request},
-            status_code=404
-        )
+        return templates.TemplateResponse("index.html", {"request": request}, status_code=404)
     except Exception:
         return {"error": "Page not found"}
 
@@ -132,7 +128,7 @@ async def index(request: Request):
         logger.error(f"Template rendering error: {template_error}")
         return HTMLResponse(
             content="<h1>Data Visualizer</h1><p>Dashboard loading error. Please check logs.</p>",
-            status_code=500
+            status_code=500,
         )
 
 
@@ -169,10 +165,4 @@ async def patterns_page(request: Request):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(
-        app,
-        host=settings.HOST,
-        port=settings.PORT,
-        log_level="info",
-        access_log=True
-    )
+    uvicorn.run(app, host=settings.HOST, port=settings.PORT, log_level="info", access_log=True)

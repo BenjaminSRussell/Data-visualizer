@@ -6,12 +6,11 @@ Purpose: Single source of truth for all URL parsing, decomposition, and
          across multiple analyzer modules.
 """
 
-from typing import Dict, List, Optional
-from urllib.parse import urlparse, urljoin, unquote
 from collections import Counter
+from urllib.parse import unquote, urljoin, urlparse
 
 
-def parse_url_components(url: str) -> Dict:
+def parse_url_components(url: str) -> dict:
     """
     Parse all components from a URL.
 
@@ -25,42 +24,42 @@ def parse_url_components(url: str) -> Dict:
         parsed = urlparse(url)
 
         # Extract path segments (non-empty)
-        path_segments = [s for s in parsed.path.split('/') if s]
+        path_segments = [s for s in parsed.path.split("/") if s]
 
         return {
-            'scheme': parsed.scheme,
-            'netloc': parsed.netloc,
-            'hostname': parsed.hostname,
-            'port': parsed.port,
-            'username': parsed.username,
-            'password': parsed.password,
-            'path': parsed.path,
-            'path_segments': path_segments,
-            'path_depth': len(path_segments),
-            'query': parsed.query,
-            'fragment': parsed.fragment,
-            'has_auth': bool(parsed.username),
-            'has_port': bool(parsed.port),
-            'has_query': bool(parsed.query),
-            'has_fragment': bool(parsed.fragment)
+            "scheme": parsed.scheme,
+            "netloc": parsed.netloc,
+            "hostname": parsed.hostname,
+            "port": parsed.port,
+            "username": parsed.username,
+            "password": parsed.password,
+            "path": parsed.path,
+            "path_segments": path_segments,
+            "path_depth": len(path_segments),
+            "query": parsed.query,
+            "fragment": parsed.fragment,
+            "has_auth": bool(parsed.username),
+            "has_port": bool(parsed.port),
+            "has_query": bool(parsed.query),
+            "has_fragment": bool(parsed.fragment),
         }
     except (ValueError, AttributeError, TypeError):
         return {
-            'scheme': '',
-            'netloc': '',
-            'hostname': None,
-            'port': None,
-            'username': None,
-            'password': None,
-            'path': '',
-            'path_segments': [],
-            'path_depth': 0,
-            'query': '',
-            'fragment': '',
-            'has_auth': False,
-            'has_port': False,
-            'has_query': False,
-            'has_fragment': False
+            "scheme": "",
+            "netloc": "",
+            "hostname": None,
+            "port": None,
+            "username": None,
+            "password": None,
+            "path": "",
+            "path_segments": [],
+            "path_depth": 0,
+            "query": "",
+            "fragment": "",
+            "has_auth": False,
+            "has_port": False,
+            "has_query": False,
+            "has_fragment": False,
         }
 
 
@@ -75,13 +74,13 @@ def get_path_depth(url_or_path: str) -> int:
         Number of non-empty path segments
     """
     # Check if it looks like a full URL
-    if '://' in url_or_path:
+    if "://" in url_or_path:
         parsed = urlparse(url_or_path)
         path = parsed.path
     else:
         path = url_or_path
 
-    segments = [s for s in path.split('/') if s]
+    segments = [s for s in path.split("/") if s]
     return len(segments)
 
 
@@ -136,7 +135,7 @@ def is_internal_link(source_url: str, target_url: str) -> bool:
     return is_same_domain(source_url, target_url)
 
 
-def resolve_link(link: str, source_url: str, base_url: Optional[str] = None) -> Optional[str]:
+def resolve_link(link: str, source_url: str, base_url: str | None = None) -> str | None:
     """
     Resolve a link (relative or absolute) to an absolute URL.
 
@@ -152,28 +151,28 @@ def resolve_link(link: str, source_url: str, base_url: Optional[str] = None) -> 
         return None
 
     # Skip fragment-only links
-    if link.startswith('#'):
+    if link.startswith("#"):
         return None
 
     # Protocol-relative URLs
-    if link.startswith('//'):
-        return 'https:' + link
+    if link.startswith("//"):
+        return "https:" + link
 
     # Root-relative URLs
-    if link.startswith('/'):
+    if link.startswith("/"):
         if base_url is None:
             base_url = get_base_url(source_url)
         return urljoin(base_url, link)
 
     # Absolute URLs
-    if link.startswith('http'):
+    if link.startswith("http"):
         return link
 
     # Relative URLs
     return urljoin(source_url, link)
 
 
-def extract_fragment(url: str) -> Optional[str]:
+def extract_fragment(url: str) -> str | None:
     """
     Extract and decode the fragment from a URL.
 
@@ -189,7 +188,7 @@ def extract_fragment(url: str) -> Optional[str]:
     return None
 
 
-def count_fragments(urls: List[str]) -> Dict:
+def count_fragments(urls: list[str]) -> dict:
     """
     Count fragment occurrences across multiple URLs.
 
@@ -209,11 +208,11 @@ def count_fragments(urls: List[str]) -> Dict:
             fragment_counter[fragment] += 1
 
     return {
-        'total_urls': len(urls),
-        'urls_with_fragments': urls_with_fragments,
-        'unique_fragments': len(fragment_counter),
-        'fragment_distribution': dict(fragment_counter),
-        'fragment_percentage': (urls_with_fragments / len(urls) * 100) if urls else 0
+        "total_urls": len(urls),
+        "urls_with_fragments": urls_with_fragments,
+        "unique_fragments": len(fragment_counter),
+        "fragment_distribution": dict(fragment_counter),
+        "fragment_percentage": (urls_with_fragments / len(urls) * 100) if urls else 0,
     }
 
 
@@ -230,17 +229,17 @@ def classify_fragment(fragment: str) -> str:
     import re
 
     # Anchor links (simple ID selectors)
-    if re.match(r'^[a-zA-Z][\w-]*$', fragment):
-        return 'anchor'
+    if re.match(r"^[a-zA-Z][\w-]*$", fragment):
+        return "anchor"
 
     # Client-side routes
-    if re.match(r'^(/|#/).*', fragment):
-        return 'route'
+    if re.match(r"^(/|#/).*", fragment):
+        return "route"
 
-    return 'other'
+    return "other"
 
 
-def extract_file_extension(url_or_path: str) -> Optional[str]:
+def extract_file_extension(url_or_path: str) -> str | None:
     """
     Extract file extension from URL or path.
 
@@ -251,17 +250,17 @@ def extract_file_extension(url_or_path: str) -> Optional[str]:
         Lowercase file extension (without dot), or None if no extension
     """
     # Extract the path from absolute URLs before checking for extensions.
-    if '://' in url_or_path:
+    if "://" in url_or_path:
         parsed = urlparse(url_or_path)
         path = parsed.path
     else:
         path = url_or_path
 
     # Remove query and fragment
-    path = path.split('?')[0].split('#')[0]
+    path = path.split("?")[0].split("#")[0]
 
-    if '.' in path:
-        parts = path.split('.')
+    if "." in path:
+        parts = path.split(".")
         if len(parts) > 1:
             ext = parts[-1].lower()
             # Validate: should be alphanumeric and reasonable length
@@ -271,7 +270,7 @@ def extract_file_extension(url_or_path: str) -> Optional[str]:
     return None
 
 
-def get_depth_distribution(urls: List[str]) -> Dict:
+def get_depth_distribution(urls: list[str]) -> dict:
     """
     Calculate depth distribution across multiple URLs.
 
@@ -290,15 +289,15 @@ def get_depth_distribution(urls: List[str]) -> Dict:
     min_depth = min(depths) if depths else 0
 
     return {
-        'distribution': dict(sorted(depth_counter.items())),
-        'average': avg_depth,
-        'max': max_depth,
-        'min': min_depth,
-        'total_urls': total
+        "distribution": dict(sorted(depth_counter.items())),
+        "average": avg_depth,
+        "max": max_depth,
+        "min": min_depth,
+        "total_urls": total,
     }
 
 
-def extract_path_segments(url: str) -> List[str]:
+def extract_path_segments(url: str) -> list[str]:
     """
     Extract non-empty path segments from a URL.
 
@@ -309,7 +308,7 @@ def extract_path_segments(url: str) -> List[str]:
         List of path segments
     """
     parsed = urlparse(url)
-    return [s for s in parsed.path.split('/') if s]
+    return [s for s in parsed.path.split("/") if s]
 
 
 def get_query_param_count(url: str) -> int:
@@ -324,7 +323,7 @@ def get_query_param_count(url: str) -> int:
     """
     parsed = urlparse(url)
     if parsed.query:
-        return len(parsed.query.split('&'))
+        return len(parsed.query.split("&"))
     return 0
 
 

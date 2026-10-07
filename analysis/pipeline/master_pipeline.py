@@ -1,29 +1,36 @@
 """Coordinate the analysis pipeline across analyzers and output writers."""
+
 from __future__ import annotations
 
 import json
 import logging
 import sys
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from config import Settings, get_settings
-from analysis.analyzers import network_analyzer, semantic_path_analyzer, statistical_analyzer
-from analysis.analyzers import subdomain_analyzer, url_component_parser
+from analysis.analyzers import (
+    network_analyzer,
+    semantic_path_analyzer,
+    statistical_analyzer,
+    subdomain_analyzer,
+    url_component_parser,
+)
 from analysis.mappers import pathway_mapper
+from config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-AnalyzerCallable = Callable[[List[Dict[str, Any]]], Dict[str, Any]]
-ANALYZERS: Dict[str, AnalyzerCallable] = {
+AnalyzerCallable = Callable[[list[dict[str, Any]]], dict[str, Any]]
+ANALYZERS: dict[str, AnalyzerCallable] = {
     "statistical": statistical_analyzer.execute,
     "network": network_analyzer.execute,
     "semantic_path": semantic_path_analyzer.execute,
@@ -56,10 +63,10 @@ class MasterPipeline:
     def __init__(
         self,
         input_file: str,
-        output_dir: Optional[str] = None,
-        config_path: Optional[str] = None,
+        output_dir: str | None = None,
+        config_path: str | None = None,
         *,
-        settings: Optional[Settings] = None,
+        settings: Settings | None = None,
     ) -> None:
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self.logger.addHandler(logging.NullHandler())
@@ -73,10 +80,10 @@ class MasterPipeline:
         configured_output = Path(output_dir) if output_dir else self.settings.data.output_dir
         self.output_dir = configured_output
 
-        self.data: List[Dict[str, Any]] = []
-        self.normalized_data: List[Dict[str, Any]] = []
-        self.results: Dict[str, Any] = {}
-        self.execution_times: Dict[str, float] = {}
+        self.data: list[dict[str, Any]] = []
+        self.normalized_data: list[dict[str, Any]] = []
+        self.results: dict[str, Any] = {}
+        self.execution_times: dict[str, float] = {}
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._setup_logging()
@@ -102,7 +109,7 @@ class MasterPipeline:
         self.logger.setLevel(logging.INFO)
         self.logger.propagate = False
 
-    def _load_config(self, path: Path) -> Dict[str, Any]:
+    def _load_config(self, path: Path) -> dict[str, Any]:
         if not path.exists():
             self.logger.warning("Config file %s not found. Using defaults.", path)
             return self._default_config()
@@ -119,7 +126,7 @@ class MasterPipeline:
 
         return self._merge_defaults(loaded)
 
-    def _default_config(self) -> Dict[str, Any]:
+    def _default_config(self) -> dict[str, Any]:
         return {
             "data": {"output_dir": str(self.settings.data.output_dir)},
             "analysis": {
@@ -152,13 +159,13 @@ class MasterPipeline:
             },
         }
 
-    def _merge_defaults(self, loaded: Dict[str, Any]) -> Dict[str, Any]:
+    def _merge_defaults(self, loaded: dict[str, Any]) -> dict[str, Any]:
         defaults = self._default_config()
         return self._deep_merge(defaults, loaded)
 
     @staticmethod
-    def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
-        result: Dict[str, Any] = dict(base)
+    def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+        result: dict[str, Any] = dict(base)
         for key, value in override.items():
             if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 result[key] = MasterPipeline._deep_merge(result[key], value)
@@ -166,12 +173,8 @@ class MasterPipeline:
                 result[key] = value
         return result
 
-    def _analysis_config(self, tier: str) -> Dict[str, Any]:
-        return (
-            self.config.get("analysis", {})
-            .get("types", {})
-            .get(tier, {})
-        ) or {}
+    def _analysis_config(self, tier: str) -> dict[str, Any]:
+        return (self.config.get("analysis", {}).get("types", {}).get(tier, {})) or {}
 
     def load_data(self) -> bool:
         self.logger.info("Loading data from %s", self.input_file)
@@ -204,7 +207,7 @@ class MasterPipeline:
             self.logger.error("Failed to read %s: %s", self.input_file, exc)
             return False
 
-    def _normalize_record(self, record: Any, line_num: int) -> Optional[Dict[str, Any]]:
+    def _normalize_record(self, record: Any, line_num: int) -> dict[str, Any] | None:
         if isinstance(record, dict):
             if record.get("url"):
                 return record
@@ -214,11 +217,13 @@ class MasterPipeline:
         if isinstance(record, str) and record:
             return {"url": record}
 
-        self.logger.warning("Line %s has unsupported payload type: %s", line_num, type(record).__name__)
+        self.logger.warning(
+            "Line %s has unsupported payload type: %s", line_num, type(record).__name__
+        )
         return None
 
-    def _select_analyzers(self, names: List[str]) -> Dict[str, AnalyzerCallable]:
-        selected: Dict[str, AnalyzerCallable] = {}
+    def _select_analyzers(self, names: list[str]) -> dict[str, AnalyzerCallable]:
+        selected: dict[str, AnalyzerCallable] = {}
         for name in names:
             func = ANALYZERS.get(name)
             if func:
@@ -231,14 +236,14 @@ class MasterPipeline:
         self,
         name: str,
         func: AnalyzerCallable,
-        data: List[Dict[str, Any]],
-    ) -> Tuple[str, Dict[str, Any], float]:
+        data: list[dict[str, Any]],
+    ) -> tuple[str, dict[str, Any], float]:
         self.logger.info("Running analyzer: %s", name)
         start_time = time.time()
 
         try:
             result = func(data)
-        except Exception as exc:  # noqa: BLE001 - analyzers may raise arbitrary exceptions
+        except Exception as exc:
             # Analyzer plugins vary widely; capture the failure instead of crashing the pipeline.
             self.logger.exception("Analyzer %s failed", name)
             return name, {"error": str(exc)}, 0.0
@@ -282,8 +287,8 @@ class MasterPipeline:
         self.logger.info("Starting pattern recognition analysis")
 
         try:
-            from analysis.url_normalizer import URLNormalizer
             from analysis.pattern_recognition import PatternRecognizer
+            from analysis.url_normalizer import URLNormalizer
         except ImportError as exc:
             self.logger.warning("Pattern recognition dependencies not available: %s", exc)
             self.results["mlx"] = {"error": "Pattern recognition modules not found"}
@@ -318,7 +323,7 @@ class MasterPipeline:
         self.results["patterns"] = pattern_recognizer.analyze_patterns(self.normalized_data)
         self.execution_times["pattern_recognition"] = time.time() - start_time
 
-    def _run_analyzers(self, analyzers: Dict[str, AnalyzerCallable], analysis_type: str) -> None:
+    def _run_analyzers(self, analyzers: dict[str, AnalyzerCallable], analysis_type: str) -> None:
         if not analyzers:
             return
 
@@ -346,7 +351,7 @@ class MasterPipeline:
     def _analyze_temporal_clusters(self) -> None:
         from collections import defaultdict
 
-        temporal_clusters: Dict[datetime, List[Dict[str, Any]]] = defaultdict(list)
+        temporal_clusters: dict[datetime, list[dict[str, Any]]] = defaultdict(list)
         data_to_analyze = self.normalized_data if self.normalized_data else self.data
         window_minutes = max(1, int(self.config.get("mlx", {}).get("temporal_window_minutes", 5)))
 
@@ -366,15 +371,13 @@ class MasterPipeline:
             window_bucket = window.replace(minute=minute_bucket)
             temporal_clusters[window_bucket].append(item)
 
-        cluster_analysis: List[Dict[str, Any]] = []
+        cluster_analysis: list[dict[str, Any]] = []
         for window_bucket, urls in temporal_clusters.items():
             if len(urls) < 10:
                 continue
 
             avg_depth = sum(url.get("depth", 0) for url in urls) / len(urls)
-            unique_parents = len(
-                {url.get("parent_url") for url in urls if url.get("parent_url")}
-            )
+            unique_parents = len({url.get("parent_url") for url in urls if url.get("parent_url")})
 
             cluster_analysis.append(
                 {
@@ -396,8 +399,8 @@ class MasterPipeline:
     def _analyze_parent_child_relationships(self) -> None:
         from collections import defaultdict
 
-        parent_children: Dict[str, List[str]] = defaultdict(list)
-        child_parent: Dict[str, str] = {}
+        parent_children: dict[str, list[str]] = defaultdict(list)
+        child_parent: dict[str, str] = {}
         data_to_analyze = self.normalized_data if self.normalized_data else self.data
 
         for item in data_to_analyze:
@@ -415,7 +418,9 @@ class MasterPipeline:
         avg_children = len(child_parent) / unique_parents if unique_parents else 0.0
         max_children = max((len(children) for children in parent_children.values()), default=0)
 
-        parent_counts = sorted(parent_children.items(), key=lambda entry: len(entry[1]), reverse=True)
+        parent_counts = sorted(
+            parent_children.items(), key=lambda entry: len(entry[1]), reverse=True
+        )
 
         self.results["parent_child_relationships"] = {
             "total_urls": total_urls,
@@ -430,7 +435,7 @@ class MasterPipeline:
             ],
         }
 
-    def execute(self) -> Optional[Dict[str, Any]]:
+    def execute(self) -> dict[str, Any] | None:
         self.logger.info("Starting master analysis pipeline")
         self.logger.info("Input file: %s", self.input_file)
         self.logger.info("Output directory: %s", self.output_dir)
@@ -531,7 +536,7 @@ class MasterPipeline:
 
         return "\n".join(lines).strip()
 
-    def write_summary(self, destination: Optional[Path] = None) -> Path:
+    def write_summary(self, destination: Path | None = None) -> Path:
         summary_text = self.format_summary()
 
         if destination is None:

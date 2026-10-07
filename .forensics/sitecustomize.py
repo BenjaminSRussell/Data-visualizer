@@ -1,25 +1,29 @@
 import os
 import sys
-import time
 import threading
+import time
 
-LOG_PATH = os.environ.get("PY_IMPORT_LOG", os.path.join(os.getcwd(), ".forensics", "python_imports.log"))
+LOG_PATH = os.environ.get(
+    "PY_IMPORT_LOG", os.path.join(os.getcwd(), ".forensics", "python_imports.log")
+)
 ROOT = os.environ.get("PY_IMPORT_ROOT", os.getcwd())
 _lock = threading.Lock()
 
+
 def _record(line: str) -> None:
     try:
-        with _lock:
-            with open(LOG_PATH, "a", encoding="utf-8") as fh:
-                fh.write(line)
+        with _lock, open(LOG_PATH, "a", encoding="utf-8") as fh:
+            fh.write(line)
     except Exception:
         pass
+
 
 def _normalize(path: str) -> str:
     try:
         return os.path.realpath(path)
     except OSError:
         return path
+
 
 def _should_log(path: str) -> bool:
     if not path:
@@ -30,6 +34,7 @@ def _should_log(path: str) -> bool:
     if not path.startswith(ROOT):
         return False
     return True
+
 
 def _audit(event, args):
     if event != "import":
@@ -49,6 +54,7 @@ def _audit(event, args):
     ts = f"{time.time():.6f}"
     line = f"{ts}\t{name}\t{_normalize(filename)}\n"
     _record(line)
+
 
 try:
     sys.addaudithook(_audit)

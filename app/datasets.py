@@ -1,31 +1,34 @@
 """
 Dynamic dataset management with SQL injection prevention and automatic schema discovery.
 """
+
 import logging
 import re
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
-from sqlalchemy import text, inspect
-from sqlalchemy.orm import Session
+from typing import Any
+
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
 MAX_LIMIT = 10000
 DEFAULT_LIMIT = 100
-SAFE_IDENTIFIER_PATTERN = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+SAFE_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
 @dataclass
 class Dataset:
     """Represents a queryable dataset."""
+
     name: str
     description: str
     table_name: str
-    sql_query: Optional[str] = None
-    columns: Optional[List[str]] = None
+    sql_query: str | None = None
+    columns: list[str] | None = None
     is_custom: bool = False
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
 
 
 def validate_identifier(identifier: str) -> bool:
@@ -57,7 +60,7 @@ def validate_offset(offset: int) -> int:
         return 0
 
 
-def discover_tables(session: Session) -> List[str]:
+def discover_tables(session: Session) -> list[str]:
     """Discover all table names in the database dynamically."""
     try:
         engine = session.get_bind()
@@ -70,7 +73,7 @@ def discover_tables(session: Session) -> List[str]:
         return []
 
 
-def discover_columns(session: Session, table_name: str) -> List[Dict[str, Any]]:
+def discover_columns(session: Session, table_name: str) -> list[dict[str, Any]]:
     """Discover columns for a table dynamically."""
     if not validate_identifier(table_name):
         logger.warning(f"Invalid table name: {table_name}")
@@ -93,7 +96,7 @@ def discover_columns(session: Session, table_name: str) -> List[Dict[str, Any]]:
         return []
 
 
-def create_dynamic_datasets(session: Session) -> Dict[str, Dataset]:
+def create_dynamic_datasets(session: Session) -> dict[str, Dataset]:
     """Create datasets dynamically based on database schema."""
     datasets = {}
 
@@ -105,15 +108,15 @@ def create_dynamic_datasets(session: Session) -> Dict[str, Dataset]:
         if not columns_info:
             continue
 
-        column_names = [col['name'] for col in columns_info]
+        column_names = [col["name"] for col in columns_info]
 
         dataset_key = table_name.lower()
         datasets[dataset_key] = Dataset(
-            name=table_name.replace('_', ' ').title(),
+            name=table_name.replace("_", " ").title(),
             description=f"All data from {table_name} table",
             table_name=table_name,
             columns=column_names,
-            is_custom=False
+            is_custom=False,
         )
 
     logger.info(f"Created {len(datasets)} dynamic datasets")
@@ -137,7 +140,7 @@ PREDEFINED_DATASETS = {
             WHERE domain IS NOT NULL
             GROUP BY domain
             ORDER BY url_count DESC
-        """
+        """,
     ),
     "classifications_with_urls": Dataset(
         name="URL Classifications",
@@ -156,7 +159,7 @@ PREDEFINED_DATASETS = {
             FROM classifications c
             JOIN urls u ON c.url_id = u.id
             ORDER BY c.created_at DESC
-        """
+        """,
     ),
     "page_metadata_with_urls": Dataset(
         name="Page Metadata",
@@ -179,7 +182,7 @@ PREDEFINED_DATASETS = {
             FROM page_metadata pm
             JOIN urls u ON pm.url_id = u.id
             ORDER BY pm.extracted_at DESC
-        """
+        """,
     ),
     "domain_statistics": Dataset(
         name="Domain Statistics",
@@ -201,7 +204,7 @@ PREDEFINED_DATASETS = {
             GROUP BY domain
             HAVING COUNT(*) > 0
             ORDER BY total_urls DESC
-        """
+        """,
     ),
     "content_types_distribution": Dataset(
         name="Content Types Distribution",
@@ -217,7 +220,7 @@ PREDEFINED_DATASETS = {
             WHERE content_type IS NOT NULL
             GROUP BY content_type
             ORDER BY count DESC
-        """
+        """,
     ),
     "status_codes_distribution": Dataset(
         name="HTTP Status Codes",
@@ -233,14 +236,14 @@ PREDEFINED_DATASETS = {
             WHERE status_code IS NOT NULL
             GROUP BY status_code
             ORDER BY status_code
-        """
-    )
+        """,
+    ),
 }
 
-_cached_datasets: Optional[Dict[str, Dataset]] = None
+_cached_datasets: dict[str, Dataset] | None = None
 
 
-def get_all_datasets(session: Session, force_refresh: bool = False) -> Dict[str, Dataset]:
+def get_all_datasets(session: Session, force_refresh: bool = False) -> dict[str, Dataset]:
     """
     Get all datasets (predefined + dynamically discovered).
 
@@ -267,7 +270,7 @@ def get_all_datasets(session: Session, force_refresh: bool = False) -> Dict[str,
         return PREDEFINED_DATASETS
 
 
-def get_dataset(dataset_name: str, session: Optional[Session] = None) -> Optional[Dataset]:
+def get_dataset(dataset_name: str, session: Session | None = None) -> Dataset | None:
     """Get a dataset by name."""
     if session:
         datasets = get_all_datasets(session)
@@ -276,7 +279,7 @@ def get_dataset(dataset_name: str, session: Optional[Session] = None) -> Optiona
         return PREDEFINED_DATASETS.get(dataset_name)
 
 
-def list_datasets(session: Optional[Session] = None) -> List[Dataset]:
+def list_datasets(session: Session | None = None) -> list[Dataset]:
     """List all available datasets."""
     if session:
         datasets = get_all_datasets(session)
@@ -285,7 +288,7 @@ def list_datasets(session: Optional[Session] = None) -> List[Dataset]:
         return list(PREDEFINED_DATASETS.values())
 
 
-def build_safe_where_clause(filters: Dict[str, Any]) -> tuple[str, Dict[str, Any]]:
+def build_safe_where_clause(filters: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     """
     Build a safe WHERE clause using parameterized queries.
 
@@ -318,8 +321,8 @@ def execute_dataset_query(
     dataset_name: str,
     limit: int = DEFAULT_LIMIT,
     offset: int = 0,
-    filters: Optional[Dict[str, Any]] = None
-) -> List[Dict[str, Any]]:
+    filters: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     """
     Execute a dataset query with SQL injection prevention.
 
@@ -366,9 +369,9 @@ def execute_dataset_query(
         else:
             full_query = base_query
 
-        full_query += f" LIMIT :limit OFFSET :offset"
-        params['limit'] = limit
-        params['offset'] = offset
+        full_query += " LIMIT :limit OFFSET :offset"
+        params["limit"] = limit
+        params["offset"] = offset
 
         result = db.execute(text(full_query), params)
         column_names = result.keys()
@@ -386,9 +389,7 @@ def execute_dataset_query(
 
 
 def get_dataset_count(
-    db: Session,
-    dataset_name: str,
-    filters: Optional[Dict[str, Any]] = None
+    db: Session, dataset_name: str, filters: dict[str, Any] | None = None
 ) -> int:
     """
     Get total count for a dataset with SQL injection prevention.
