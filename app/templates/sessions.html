@@ -8,13 +8,15 @@
     <h2>Crawl Sessions</h2>
     <p>Session status from <code>GET /api/sessions</code>.</p>
     <div class="filter-group">
-        <select id="status-filter">
-            <option value="">All statuses</option>
-            <option value="running">running</option>
-            <option value="completed">completed</option>
-            <option value="failed">failed</option>
-        </select>
-        <button class="btn" onclick="page=0; loadSessions()">Apply</button>
+        <label for="status-filter">Status
+            <select id="status-filter">
+                <option value="">All statuses</option>
+                <option value="running">running</option>
+                <option value="completed">completed</option>
+                <option value="failed">failed</option>
+            </select>
+        </label>
+        <button class="btn" type="button" onclick="page=0; loadSessions()">Apply</button>
     </div>
 </div>
 
