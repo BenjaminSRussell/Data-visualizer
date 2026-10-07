@@ -114,12 +114,14 @@ def is_same_domain(url1: str, url2: str) -> bool:
         return False
 
     try:
-        domain1 = urlparse(url1).netloc
-        domain2 = urlparse(url2).netloc
+        # Compare hostnames only — ports differ between local/prod but are
+        # still the same site for internal-link / domain checks.
+        domain1 = (urlparse(url1).hostname or "").lower()
+        domain2 = (urlparse(url2).hostname or "").lower()
     except (ValueError, AttributeError, TypeError):
         return False
 
-    return domain1 == domain2
+    return bool(domain1) and domain1 == domain2
 
 
 def is_internal_link(source_url: str, target_url: str) -> bool:
